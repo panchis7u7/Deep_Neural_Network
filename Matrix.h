@@ -9,14 +9,10 @@
 
 class Matrix {
 public:
-<<<<<<< HEAD
 	Matrix();
 	Matrix(int filas, int columnas);
 	~Matrix();
 	float** alloc(int filas, int columnas);
-=======
-	Matrix(int filas, int columnas);
->>>>>>> fdfa4062146079e037e2f009f37baee121cf997b
 	void print();
 	void suma(int n);
 	void sumar(Matrix*);
@@ -53,10 +49,6 @@ public:
 private:
 	unsigned filas;
 	unsigned columnas;
-<<<<<<< HEAD
 	float** datos;
-=======
-	float* datos[];
->>>>>>> fdfa4062146079e037e2f009f37baee121cf997b
 protected:
 };
