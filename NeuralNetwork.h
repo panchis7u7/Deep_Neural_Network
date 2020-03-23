@@ -6,6 +6,7 @@
 class NeuralNetwork {
 public:
 	NeuralNetwork(int i, int h, int o);
+	~NeuralNetwork();
 	std::vector<float>* feedForward(std::vector<float>*);
 	static float sigmoid(float n);
 private:

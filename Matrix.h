@@ -47,8 +47,8 @@ public:
 	}
 
 private:
+	float** datos;
 	unsigned filas;
 	unsigned columnas;
-	float** datos;
 protected:
 };

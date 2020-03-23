@@ -6,7 +6,7 @@ Matrix::Matrix(int filas, int columnas) {
 	this->filas = filas;
 	this->columnas = columnas;
 	this->datos = new float* [this->filas];
-	for (size_t i = 0; i < this->columnas; i++)
+	for (size_t i = 0; i < this->filas; i++)
 	{
 		this->datos[i] = new float[this->columnas];
 	}
@@ -29,7 +29,7 @@ float** Matrix::alloc(int filas, int columnas) {
 	this->filas = filas;
 	this->columnas = columnas;
 	float** datos = new float* [this->filas];
-	for (size_t i = 0; i < this->columnas; i++)
+	for (size_t i = 0; i < this->filas; i++)
 	{
 		datos[i] = new float[this->columnas];
 	}

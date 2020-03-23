@@ -7,17 +7,24 @@ NeuralNetwork::NeuralNetwork(int i, int h, int o) {
 	this->hiddenLayerNodes = h;
 	this->outputLayerNodes = o;
 	//Matriz que representa los pesos entre las capa de Entrada-Oculta
-	this->pesos_ih = new Matrix(this->hiddenLayerNodes, this->inputLayerNodes);
+	pesos_ih = new Matrix(this->hiddenLayerNodes, this->inputLayerNodes);
 	//Matriz que representa los pesos entre las capa Oculta-Salida
-	this->pesos_ho = new Matrix(this->outputLayerNodes, this->hiddenLayerNodes);
+	pesos_ho = new Matrix(this->outputLayerNodes, this->hiddenLayerNodes);
 	//Asignamos valores aleatorios a las matrices
-	this->pesos_ih->aleatorizar();
-	this->pesos_ho->aleatorizar();
+	pesos_ih->aleatorizar();
+	pesos_ho->aleatorizar();
 	//Asignamos un sesgo o predisposicion a las neuronas
-	this->bias_h = new Matrix(this->hiddenLayerNodes, 1);
-	this->bias_o = new Matrix(this->outputLayerNodes, 1);
-	this->bias_h->aleatorizar();
-	this->bias_o->aleatorizar();
+	bias_h = new Matrix(this->hiddenLayerNodes, 1);
+	bias_o = new Matrix(this->outputLayerNodes, 1);
+	bias_h->aleatorizar();
+	bias_o->aleatorizar();
+}
+
+NeuralNetwork::~NeuralNetwork() {
+	delete(pesos_ih);
+	delete(pesos_ho);
+	delete(bias_h);
+	delete(bias_o);
 }
 
 std::vector<float>* NeuralNetwork::feedForward(std::vector<float>* vecEntrada) {

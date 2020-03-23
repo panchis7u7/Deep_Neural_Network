@@ -10,9 +10,11 @@
 int main()
 {
 	//NeuralNetwork* nn = new NeuralNetwork(2, 2, 2);
-	Matrix* a = new Matrix(3, 3);
+	Matrix* a = new Matrix(3, 2);
 	a->aleatorizar();
 	a->print();
 	delete(a);
+	NeuralNetwork* nn = new NeuralNetwork(2,2,2);
+	delete(nn);
 	return 0;
 }   
