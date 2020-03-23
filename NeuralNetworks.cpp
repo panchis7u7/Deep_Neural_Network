@@ -9,12 +9,13 @@
 
 int main()
 {
-	//NeuralNetwork* nn = new NeuralNetwork(2, 2, 2);
-	Matrix* a = new Matrix(3, 2);
-	a->aleatorizar();
-	a->print();
-	delete(a);
-	NeuralNetwork* nn = new NeuralNetwork(2,2,2);
+	NeuralNetwork* nn = new NeuralNetwork(2, 2, 2);
+	std::vector<float> entradas = {1, 0};
+	std::vector<float>* salida = nn->feedForward(&entradas);
+	for (size_t i = 0; i < salida->size(); i++)
+	{
+		std::cout << salida->at(i) << std::endl;
+	}
 	delete(nn);
 	return 0;
 }   

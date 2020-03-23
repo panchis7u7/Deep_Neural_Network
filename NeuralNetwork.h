@@ -5,10 +5,12 @@
 
 class NeuralNetwork {
 public:
-	NeuralNetwork(int i, int h, int o);
+	NeuralNetwork(int, int, int);
 	~NeuralNetwork();
 	std::vector<float>* feedForward(std::vector<float>*);
-	static float sigmoid(float n);
+	std::vector<float>* train(std::vector<float>*, std::vector<float>*);
+	static float sigmoid(float);
+	static float dsigmoid(float);
 private:
 	int inputLayerNodes;
 	int hiddenLayerNodes;

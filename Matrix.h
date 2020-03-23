@@ -29,6 +29,18 @@ public:
 		return resultado;
 	}
 
+	static std::vector<float>* toVector(Matrix* entradas) {
+		std::vector<float>* resultado = new std::vector<float>();
+		for (size_t i = 0; i < entradas->filas; i++)
+		{
+			for (size_t j = 0; j < entradas->columnas; j++)
+			{
+				resultado->push_back(entradas->datos[i][j]);
+			}
+		}
+		return resultado;
+	}
+
 	static Matrix* multiplicar(Matrix* A, Matrix* B) {
 		Matrix* resultado = new Matrix(A->filas, B->columnas);
 		for (short i = 0; i < resultado->filas; i++)
