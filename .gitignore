@@ -1,14 +1,5 @@
 x64/
-<<<<<<< HEAD
 .vs/
-*.user
-*.filters
-=======
-*.sln
-*.vcxproj
-*.filters
-*.user
->>>>>>> fdfa4062146079e037e2f009f37baee121cf997b
 *.meta
 *.obj
 *.iobj
@@ -23,11 +14,6 @@ x64/
 *.tli
 *.tlh
 *.tmp
-<<<<<<< HEAD
-=======
-*.tmp_proj
-*_wpftmp.csproj
->>>>>>> fdfa4062146079e037e2f009f37baee121cf997b
 *.log
 *.vspscc
 *.vssscc
