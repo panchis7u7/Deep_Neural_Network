@@ -1,0 +1,37 @@
+x64/
+<<<<<<< HEAD
+.vs/
+*.user
+*.filters
+=======
+*.sln
+*.vcxproj
+*.filters
+*.user
+>>>>>>> fdfa4062146079e037e2f009f37baee121cf997b
+*.meta
+*.obj
+*.iobj
+*.pch
+*.pdb
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+<<<<<<< HEAD
+=======
+*.tmp_proj
+*_wpftmp.csproj
+>>>>>>> fdfa4062146079e037e2f009f37baee121cf997b
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
