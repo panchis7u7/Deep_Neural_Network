@@ -1,5 +1,4 @@
 #include "Matrix.h"
-#include <random>
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
 
@@ -63,14 +62,11 @@ void Matrix::suma(int n) {
 }
 
 void Matrix::aleatorizar() {
-    float x;
-	srand((unsigned int)time(nullptr));
 	for (size_t i = 0; i < this->filas; i++)
 	{
 		for (size_t j = 0; j < this->columnas; j++)
 		{
-			x = (float(rand())/float((RAND_MAX)) * 2) - 1; //Genera numero aleatorio entre -1 y 1 
-			this->datos[i][j] = x;
+			this->datos[i][j] = -1 + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1 - (-1)))); //Genera numero aleatorio entre -1 y 1 
 		}
 	}
 }

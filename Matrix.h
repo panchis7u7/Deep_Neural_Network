@@ -1,10 +1,9 @@
 #pragma once
 #include <iostream>
 #include <time.h>
-#include <stdlib.h>
 #include <math.h>
 #include <vector>
-#include <conio.h>
+#include <cstdlib>
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
 
@@ -18,6 +17,7 @@ public:
 	void suma(int n);
 	void sumar(Matrix*);
 	void aleatorizar();
+	float normalRandom();
 	void map(float (*func)(float));
 	Matrix* transpuesta();
 
