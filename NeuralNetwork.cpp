@@ -54,6 +54,8 @@ std::vector<float>* NeuralNetwork::feedForward(std::vector<float>* vecEntrada) {
 
 std::vector<float>* NeuralNetwork::train(std::vector<float>* entradas, std::vector<float>* respuestas) {
 
+	//Error = respuesta - salida
+
 	return 0;
 }
 

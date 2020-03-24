@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <vector>
+#include <conio.h>
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
 
@@ -39,6 +40,39 @@ public:
 			}
 		}
 		return resultado;
+	}
+
+	static Matrix* productoHadamard(Matrix* A, Matrix* B) {
+		if ((A->filas != B->filas) || (A->columnas != B->columnas)){
+			return NULL;
+		} else {
+			Matrix* resultado = new Matrix(A->filas, B->columnas);
+			for (size_t i = 0; i < A->filas; i++)
+			{
+				for (size_t j = 0; j < B->columnas; j++)
+				{
+					resultado->datos[i][j] = A->datos[i][j] * B->datos[i][j];
+				}
+			}
+			return resultado;
+		}
+	}
+
+	static Matrix* restaElementWise(Matrix* A, Matrix* B) {
+		if ((A->filas != B->filas) || (A->columnas != B->columnas)) {
+			return NULL;
+		}
+		else {
+			Matrix* resultado = new Matrix(A->filas, B->columnas);
+			for (size_t i = 0; i < A->filas; i++)
+			{
+				for (size_t j = 0; j < B->columnas; j++)
+				{
+					resultado->datos[i][j] = A->datos[i][j] - B->datos[i][j];
+				}
+			}
+			return resultado;
+		}
 	}
 
 	static Matrix* multiplicar(Matrix* A, Matrix* B) {
