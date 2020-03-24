@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <conio.h>
 #include <time.h>
 #include <math.h>
 #include <vector>

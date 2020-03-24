@@ -66,7 +66,8 @@ void Matrix::aleatorizar() {
 	{
 		for (size_t j = 0; j < this->columnas; j++)
 		{
-			this->datos[i][j] = -1 + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1 - (-1)))); //Genera numero aleatorio entre -1 y 1 
+			//Genera numero aleatorio entre -1 y 1
+			this->datos[i][j] = -1 + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1 - (-1)))); 
 		}
 	}
 }
