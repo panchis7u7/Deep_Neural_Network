@@ -52,10 +52,14 @@ std::vector<float>* NeuralNetwork::feedForward(std::vector<float>* vecEntrada) {
 	return Matrix::toVector(salidas);
 }
 
-std::vector<float>* NeuralNetwork::train(std::vector<float>* entradas, std::vector<float>* respuestas) {
-
-	//Error = respuesta - salida
-
+std::vector<float>* NeuralNetwork::train(std::vector<float>* vecEntradas, std::vector<float>* vecRespuestas) {
+	std::vector<float>* vecSalidas = this->feedForward(vecEntradas);
+	//Errores de la Salida = respuesta - salida
+	Matrix* respuestas = Matrix::fromVector(vecRespuestas);
+	Matrix* salidas = Matrix::fromVector(vecSalidas);
+	Matrix* erroresSalida = Matrix::restaElementWise(respuestas, salidas);
+	//Calcular los errores de la capa oculta->salida 
+	Matrix::multiplicar(Matrix::transpuesta(pesos_ho), erroresSalida);
 	return 0;
 }
 
@@ -64,5 +68,5 @@ float NeuralNetwork::sigmoid(float n) {
 }
 
 float NeuralNetwork::dsigmoid(float n) {
-	return 0;
+	return sigmoid(n) * (1 - sigmoid(n));
 }

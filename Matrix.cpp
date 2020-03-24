@@ -72,18 +72,6 @@ void Matrix::aleatorizar() {
 	}
 }
 
-Matrix* Matrix::transpuesta() {
-	Matrix* resultado = new Matrix(this->columnas, this->filas);
-	for (size_t i = 0; i < this->filas; i++)
-	{
-		for (size_t j = 0; j < this->columnas; j++)
-		{
-			resultado->datos[j][i] = this->datos[i][j];
-		}
-	}
-	return resultado;
-}
-
 void Matrix::sumar(Matrix* sumando) {
 	for (size_t i = 0; i < this->filas; i++)
 	{

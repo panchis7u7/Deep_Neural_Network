@@ -93,6 +93,18 @@ public:
 		return resultado;
 	}
 
+	static Matrix* transpuesta(Matrix* A) {
+		Matrix* resultado = new Matrix(A->columnas, A->filas);
+		for (size_t i = 0; i < A->filas; i++)
+		{
+			for (size_t j = 0; j < A->columnas; j++)
+			{
+				resultado->datos[j][i] = A->datos[i][j];
+			}
+		}
+		return resultado;
+	}
+
 private:
 	float** datos;
 	unsigned filas;
