@@ -12,6 +12,7 @@ public:
 	static float sigmoid(float);
 	static float dsigmoid(float);
 private:
+	float learning_rate = 0.1;
 	int inputLayerNodes;
 	int hiddenLayerNodes;
 	int outputLayerNodes;

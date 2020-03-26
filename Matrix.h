@@ -105,6 +105,18 @@ public:
 		return resultado;
 	}
 
+	static Matrix* map(Matrix* A, float (*func)(float)) {
+		Matrix* resultado = new Matrix(A->filas, A->columnas);
+		for (size_t i = 0; i < A->filas; i++)
+		{
+			for (size_t j = 0; j < A->columnas; j++)
+			{
+				A->datos[i][j] = func(A->datos[i][j]);
+			}
+		}
+		return resultado;
+	}
+
 private:
 	float** datos;
 	unsigned filas;

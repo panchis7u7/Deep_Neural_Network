@@ -52,14 +52,20 @@ std::vector<float>* NeuralNetwork::feedForward(std::vector<float>* vecEntrada) {
 	return Matrix::toVector(salidas);
 }
 
-std::vector<float>* NeuralNetwork::train(std::vector<float>* vecEntradas, std::vector<float>* vecRespuestas) {
-	std::vector<float>* vecSalidas = this->feedForward(vecEntradas);
+std::vector<float>* NeuralNetwork::train(std::vector<float>* vec_entradas, std::vector<float>* vec_respuestas) {
+	std::vector<float>* vec_salidas = this->feedForward(vec_entradas);
 	//Errores de la Salida = respuesta - salida
-	Matrix* respuestas = Matrix::fromVector(vecRespuestas);
-	Matrix* salidas = Matrix::fromVector(vecSalidas);
-	Matrix* erroresSalida = Matrix::restaElementWise(respuestas, salidas);
+	Matrix* respuestas = Matrix::fromVector(vec_respuestas);
+	Matrix* salidas = Matrix::fromVector(vec_salidas);
+	//Calcular el error => respuestas - salidas
+	Matrix* errores_salida = Matrix::restaElementWise(respuestas, salidas);
 	//Calcular los errores de la capa oculta->salida 
-	Matrix::multiplicar(Matrix::transpuesta(pesos_ho), erroresSalida);
+	Matrix* errores_capa_oculta = Matrix::multiplicar(Matrix::transpuesta(pesos_ho), errores_salida);
+
+	//Obtener los gradientes o deltas
+	//pesos_delta = learning_rate * errores * dsigmoid(salidas) * pesos(T)
+
+
 	return 0;
 }
 
