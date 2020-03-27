@@ -9,10 +9,11 @@ public:
 	~NeuralNetwork();
 	std::vector<float>* feedForward(std::vector<float>*);
 	void train(std::vector<float>*, std::vector<float>*);
+	void print();
 	static float sigmoid(float);
 	static float dsigmoid(float);
 private:
-	float learning_rate = 0.1;
+	float learning_rate = 0.25f;
 	int inputLayerNodes;
 	int hiddenLayerNodes;
 	int outputLayerNodes;
@@ -22,5 +23,6 @@ private:
 	Matrix* bias_o;
 	Matrix* oculta;
 	Matrix* entradas;
+	Matrix* salidas;
 protected:
 };

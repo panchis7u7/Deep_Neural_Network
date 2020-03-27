@@ -22,7 +22,6 @@ Matrix::~Matrix() {
 		delete[] datos[i];
 	}
 	delete[] datos;
-	std::cout << "Se borro la matriz!" << std::endl;
 }
 
 float** Matrix::alloc(int filas, int columnas) {

@@ -20,6 +20,7 @@ NeuralNetwork::NeuralNetwork(int i, int h, int o) {
 	this->bias_o->aleatorizar();
 	this->oculta = nullptr;
 	this->entradas = nullptr;
+	this->salidas = nullptr;
 }
 
 NeuralNetwork::~NeuralNetwork() {
@@ -27,6 +28,15 @@ NeuralNetwork::~NeuralNetwork() {
 	delete(pesos_ho);
 	delete(bias_h);
 	delete(bias_o);
+}
+
+void NeuralNetwork::print() {
+	std::cout << "Entradas: " << std::endl;
+	entradas->print();
+	std::cout << "Pesos capa oculta: " << std::endl;
+	oculta->print();
+	std::cout << "Salidas: " << std::endl;
+	salidas->print();
 }
 
 std::vector<float>* NeuralNetwork::feedForward(std::vector<float>* vec_entrada) {
@@ -46,7 +56,7 @@ std::vector<float>* NeuralNetwork::feedForward(std::vector<float>* vec_entrada) 
 		Generando la salida
 	*/
 	//Se multiplica la matriz de pesos entre la capa de salida y la matriz de salidas de la capa oculta
-	Matrix* salidas = Matrix::multiplicar(this->pesos_ho, oculta);
+	salidas = Matrix::multiplicar(this->pesos_ho, oculta);
 	//Al resultado de la multiplicacion se le agrega el sesgo
 	salidas->suma(this->bias_o);
 	//sig((W * i) * b) se aplica la funcion sigmoide
