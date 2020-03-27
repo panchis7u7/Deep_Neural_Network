@@ -8,7 +8,7 @@ public:
 	NeuralNetwork(int, int, int);
 	~NeuralNetwork();
 	std::vector<float>* feedForward(std::vector<float>*);
-	std::vector<float>* train(std::vector<float>*, std::vector<float>*);
+	void train(std::vector<float>*, std::vector<float>*);
 	static float sigmoid(float);
 	static float dsigmoid(float);
 private:
@@ -20,5 +20,7 @@ private:
 	Matrix* pesos_ho;
 	Matrix* bias_h;
 	Matrix* bias_o;
+	Matrix* oculta;
+	Matrix* entradas;
 protected:
 };

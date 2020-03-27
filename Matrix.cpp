@@ -72,12 +72,32 @@ void Matrix::aleatorizar() {
 	}
 }
 
-void Matrix::sumar(Matrix* sumando) {
+void Matrix::suma(Matrix* sumando) {
 	for (size_t i = 0; i < this->filas; i++)
 	{
 		for (size_t j = 0; j < this-> columnas; j++)
 		{
 			this->datos[i][j] += sumando->datos[i][j];
+		}
+	}
+}
+
+void Matrix::productoScalar(float n) {
+	for (size_t i = 0; i < this->filas; i++)
+	{
+		for (size_t j = 0; j < this->columnas; j++)
+		{
+			this->datos[i][j] *= n;
+		}
+	}
+}
+
+void Matrix::productoHadamard(Matrix* A) {
+	for (size_t i = 0; i < this->filas; i++)
+	{
+		for (size_t j = 0; j < this->columnas; j++)
+		{
+			this->datos[i][j] *= A->datos[i][j];
 		}
 	}
 }

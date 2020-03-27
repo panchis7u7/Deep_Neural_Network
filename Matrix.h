@@ -11,16 +11,16 @@
 class Matrix {
 public:
 	Matrix();
-	Matrix(int filas, int columnas);
+	Matrix(int, int);
 	~Matrix();
-	float** alloc(int filas, int columnas);
+	float** alloc(int, int);
 	void print();
-	void suma(int n);
-	void sumar(Matrix*);
+	void suma(int);
+	void suma(Matrix*);
 	void aleatorizar();
-	float normalRandom();
+	void productoScalar(float);
+	void productoHadamard(Matrix*);
 	void map(float (*func)(float));
-	Matrix* transpuesta();
 
 	static Matrix* fromVector(std::vector<float>* entradas) {
 		Matrix* resultado = new Matrix(entradas->size(), 1);

@@ -10,8 +10,13 @@
 int main()
 {
 	srand(static_cast<unsigned>(time(0)));
-	NeuralNetwork* nn = new NeuralNetwork(2, 4, 1);
+	NeuralNetwork* nn = new NeuralNetwork(2, 2, 1);
 	std::vector<float> entradas = {1, 0};
+	std::vector<float> esperado = {1};
+	for (size_t i = 0; i < 5; i++)
+	{
+		//nn->train(&entradas, &esperado);
+	}
 	std::vector<float>* salida = nn->feedForward(&entradas);
 	for (size_t i = 0; i < salida->size(); i++)
 	{

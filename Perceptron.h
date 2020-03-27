@@ -5,7 +5,7 @@
 class Perceptron {
 public:
 	Perceptron();
-	int sign(float n);
+	int sign(float);
 	int guess(float[]);
 private:
 
