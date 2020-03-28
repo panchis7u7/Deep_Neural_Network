@@ -15,7 +15,7 @@ public:
 	~Matrix();
 	float** alloc(int, int);
 	void print();
-	void suma(int);
+	void suma(float);
 	void suma(Matrix*);
 	void aleatorizar();
 	void productoScalar(float);
@@ -111,7 +111,7 @@ public:
 		{
 			for (size_t j = 0; j < A->columnas; j++)
 			{
-				A->datos[i][j] = func(A->datos[i][j]);
+				resultado->datos[i][j] = func(A->datos[i][j]);
 			}
 		}
 		return resultado;

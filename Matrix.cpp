@@ -49,13 +49,12 @@ void Matrix::print() {
 	std::cout << std::endl;
 }
 
-void Matrix::suma(int n) {
+void Matrix::suma(float n) {
 	for (size_t i = 0; i < this->filas; i++)
 	{
 		for (size_t j = 0; j < this->columnas; j++)
 		{
 			this->datos[i][j] += n;
-			datos[i][j] += n;
 		}
 	}
 }
@@ -66,7 +65,7 @@ void Matrix::aleatorizar() {
 		for (size_t j = 0; j < this->columnas; j++)
 		{
 			//Genera numero aleatorio entre -1 y 1
-			this->datos[i][j] = -1 + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1 - (-1)))); 
+			this->datos[i][j] = (-1) + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1 - (-1)))); 
 		}
 	}
 }
