@@ -1,4 +1,5 @@
 #include "NeuralNetwork.h"
+#include <memory>
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
 
@@ -26,6 +27,7 @@ NeuralNetwork::~NeuralNetwork() {
 	delete(pesos_ho);
 	delete(bias_h);
 	delete(bias_o);
+	delete(salidas_capa_oculta);
 }
 
 std::vector<float>* NeuralNetwork::feedForward(std::vector<float>* vec_entrada) {
