@@ -22,13 +22,11 @@
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="NeuralNetwork.cpp" />
     <ClCompile Include="NeuralNetworks.cpp" />
-    <ClCompile Include="Perceptron.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="NeuralNetwork.h" />
     <ClInclude Include="olcConsoleGameEngine.h" />
-    <ClInclude Include="Perceptron.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

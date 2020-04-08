@@ -24,9 +24,6 @@
     <ClCompile Include="NeuralNetworks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Perceptron.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Matrix.h">
@@ -36,9 +33,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="olcConsoleGameEngine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Perceptron.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

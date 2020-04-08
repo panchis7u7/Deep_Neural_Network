@@ -1,5 +1,4 @@
 #include <iostream>
-#include "Perceptron.h"
 #include "Matrix.h"
 #include "NeuralNetwork.h"
 #include "olcConsoleGameEngine.h"
@@ -25,6 +24,9 @@ int main()
 	std::cout << "0,1: " << nn->feedForward(&entradas[1])->at(0) << std::endl;
 	std::cout << "1,0: " << nn->feedForward(&entradas[2])->at(0) << std::endl;
 	std::cout << "1,1: " << nn->feedForward(&entradas[3])->at(0) << std::endl;
+	
+	std::vector<int> f1 = {3,2,3,4};
+	NeuralNetwork* nn2 = new NeuralNetwork(2, f1, 2);
 	delete(nn);
 	return 0;
 }   

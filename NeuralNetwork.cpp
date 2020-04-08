@@ -22,6 +22,27 @@ NeuralNetwork::NeuralNetwork(int i, int h, int o) {
 	this->salidas_capa_oculta = nullptr;
 }
 
+NeuralNetwork::NeuralNetwork(int i, std::vector<int>& h, int o) {
+	this->hiddenLayerNodes = 0;
+	this->inputLayerNodes = i;
+	this->outputLayerNodes = o;
+	this->pesos_ih = new Matrix(h[0], this->inputLayerNodes);
+	this->pesos_ih->aleatorizar();
+	for (size_t i = 0; i <= (h.size()-1); i++)
+	{
+		this->pesos_hn.at(i) = new Matrix(h[i + 1], h[i]);
+		this->pesos_hn.at(i)->aleatorizar();
+		this->pesos_hn.at(i)->print();
+	}
+	this->pesos_ho = new Matrix(this->outputLayerNodes, h[h.size()- 1]);
+	this->pesos_ho->aleatorizar();
+	this->bias_h = new Matrix(1,1);
+	this->bias_h->aleatorizar();
+	this->bias_o = new Matrix(1,1);
+	this->bias_o->aleatorizar();
+	this->salidas_capa_oculta = nullptr;
+}
+
 NeuralNetwork::~NeuralNetwork() {
 	delete(pesos_ih);
 	delete(pesos_ho);
