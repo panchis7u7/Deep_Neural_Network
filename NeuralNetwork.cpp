@@ -11,36 +11,48 @@ NeuralNetwork::NeuralNetwork(int i, int h, int o) {
 	this->pesos_ih = new Matrix(this->hiddenLayerNodes, this->inputLayerNodes);
 	//Matriz que representa los pesos entre las capa Oculta-Salida
 	this->pesos_ho = new Matrix(this->outputLayerNodes, this->hiddenLayerNodes);
-	//Asignamos valores aleatorios a las matrices
+	//Se asigna valores aleatorios a las matrices
 	this->pesos_ih->aleatorizar();
 	this->pesos_ho->aleatorizar();
-	//Asignamos un sesgo o predisposicion a las neuronas
+	//Se asigna un sesgo o predisposicion a las neuronas
 	this->bias_h = new Matrix(this->hiddenLayerNodes, 1);
 	this->bias_o = new Matrix(this->outputLayerNodes, 1);
+	//Se asigna valores aleatorios a las matrices
 	this->bias_h->aleatorizar();
 	this->bias_o->aleatorizar();
 	this->salidas_capa_oculta = nullptr;
 }
 
 NeuralNetwork::NeuralNetwork(int i, std::vector<int>& h, int o) {
-	this->hiddenLayerNodes = 0;
 	this->inputLayerNodes = i;
 	this->outputLayerNodes = o;
+	//Matriz que representa los pesos entre las capa de Entrada-Oculta[0]
 	this->pesos_ih = new Matrix(h[0], this->inputLayerNodes);
+	//Se asigna valores aleatorios a las matrices
 	this->pesos_ih->aleatorizar();
-	for (size_t i = 0; i <= (h.size()-1); i++)
+	for (size_t i = 0; i < (h.size()-1); i++)
 	{
-		this->pesos_hn.at(i) = new Matrix(h[i + 1], h[i]);
+		this->pesos_hn.push_back(new Matrix(h[i + 1], h[i]));
+		//Se asigna un sesgo o predisposicion a las neuronas
+		this->bias_hn.push_back(new Matrix(h[i], 1));
+		//Se asigna valores aleatorios a las matrices
 		this->pesos_hn.at(i)->aleatorizar();
-		this->pesos_hn.at(i)->print();
+		this->bias_hn.at(i)->aleatorizar();
 	}
+	//Matriz que representa los pesos entre las capa enesima(oculta)-Salida
 	this->pesos_ho = new Matrix(this->outputLayerNodes, h[h.size()- 1]);
+	//Se asigna un sesgo o predisposicion a la enesima capa oculta
+	this->bias_hn.push_back(new Matrix(h[h.size()-1], 1));
+	//Se asigna valores aleatorios a la enesima matriz de sesgos
 	this->pesos_ho->aleatorizar();
-	this->bias_h = new Matrix(1,1);
-	this->bias_h->aleatorizar();
+	//Se asigna un sesgo o predisposicion a las neuronas
 	this->bias_o = new Matrix(1,1);
+	//Se asigna valores aleatorios a la matrices de sesgos
 	this->bias_o->aleatorizar();
+	//Variables por eliminar
+	this->hiddenLayerNodes = 0;
 	this->salidas_capa_oculta = nullptr;
+	this->bias_h = nullptr;
 }
 
 NeuralNetwork::~NeuralNetwork() {

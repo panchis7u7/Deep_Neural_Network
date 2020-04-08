@@ -19,6 +19,7 @@ private:
 	int outputLayerNodes;
 	Matrix* pesos_ih;
 	std::vector<Matrix*> pesos_hn;
+	std::vector<Matrix*> bias_hn;
 	Matrix* pesos_ho;
 	Matrix* bias_h;
 	Matrix* bias_o;
