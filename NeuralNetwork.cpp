@@ -6,6 +6,7 @@
 NeuralNetwork::NeuralNetwork(int i, int h, int o) {
 	this->inputLayerNodes = i;
 	this->hiddenLayerNodes = h;
+	this->hiddenLayerSize = 1;
 	this->outputLayerNodes = o;
 	//Matriz que representa los pesos entre las capa de Entrada-Oculta
 	this->pesos_ih = new Matrix(this->hiddenLayerNodes, this->inputLayerNodes);
@@ -25,28 +26,32 @@ NeuralNetwork::NeuralNetwork(int i, int h, int o) {
 
 NeuralNetwork::NeuralNetwork(int i, std::vector<int>& h, int o) {
 	this->inputLayerNodes = i;
+	this->hiddenLayerSize = h.size();
 	this->outputLayerNodes = o;
 	//Matriz que representa los pesos entre las capa de Entrada-Oculta[0]
 	this->pesos_ih = new Matrix(h[0], this->inputLayerNodes);
 	//Se asigna valores aleatorios a las matrices
 	this->pesos_ih->aleatorizar();
-	for (size_t i = 0; i < (h.size()-1); i++)
+	for (size_t i = 0; i < h.size()-1; i++)
 	{
 		this->pesos_hn.push_back(new Matrix(h[i + 1], h[i]));
-		//Se asigna un sesgo o predisposicion a las neuronas
-		this->bias_hn.push_back(new Matrix(h[i], 1));
 		//Se asigna valores aleatorios a las matrices
 		this->pesos_hn.at(i)->aleatorizar();
+	}
+	for (size_t i = 0; i < h.size(); i++)
+	{
+		//Se asigna un sesgo o predisposicion a las neuronas
+		this->bias_hn.push_back(new Matrix(h[i], 1));
 		this->bias_hn.at(i)->aleatorizar();
 	}
 	//Matriz que representa los pesos entre las capa enesima(oculta)-Salida
 	this->pesos_ho = new Matrix(this->outputLayerNodes, h[h.size()- 1]);
 	//Se asigna un sesgo o predisposicion a la enesima capa oculta
-	this->bias_hn.push_back(new Matrix(h[h.size()-1], 1));
+	this->bias_hn.push_back(new Matrix(h[h.size() - 1], 1));
 	//Se asigna valores aleatorios a la enesima matriz de sesgos
 	this->pesos_ho->aleatorizar();
 	//Se asigna un sesgo o predisposicion a las neuronas
-	this->bias_o = new Matrix(1,1);
+	this->bias_o = new Matrix(this->outputLayerNodes,1);
 	//Se asigna valores aleatorios a la matrices de sesgos
 	this->bias_o->aleatorizar();
 	//Variables por eliminar
@@ -58,9 +63,41 @@ NeuralNetwork::NeuralNetwork(int i, std::vector<int>& h, int o) {
 NeuralNetwork::~NeuralNetwork() {
 	delete(pesos_ih);
 	delete(pesos_ho);
+	delete[] (&pesos_hn);
+	delete[] (&bias_hn);
 	delete(bias_h);
 	delete(bias_o);
 	delete(salidas_capa_oculta);
+}
+
+std::vector<float>* NeuralNetwork::feedForwardDNN(std::vector<float>* vec_entrada) {
+	//----Generando las salidas de la capas ocultas----
+	//Convierte el vector de entrada a una matriz
+	Matrix* entradas = Matrix::fromVector(vec_entrada);
+	//Se multiplica la matriz de pesos entre la capa oculta y la matriz de entradas
+	Matrix* entradas_capa_oculta = Matrix::multiplicar(this->pesos_ih, entradas);
+	//Al resultado de la multiplicacion se le agrega el sesgo
+	entradas_capa_oculta->suma(this->bias_hn.at(0));
+	//sig((W * i) + b) se aplica la funcion sigmoide
+	this->salidas_capas_ocultas.push_back(Matrix::map(entradas_capa_oculta, sigmoid));
+	//Se multiplica la matriz de pesos entre la capas ocultas y la matriz de entradas previas
+	for (size_t i = 0; i < this->hiddenLayerSize - 1; i++)
+	{
+		//Se multiplica la matriz de pesos entre la capa oculta y la matriz de entradas de la enesima capa oculta
+		this->salidas_capas_ocultas.push_back(Matrix::multiplicar(this->pesos_hn.at(i), this->salidas_capas_ocultas.at(i)));
+		//Al resultado de la multiplicacion se le agrega el sesgo
+		this->salidas_capas_ocultas.at(i + 1)->suma(this->bias_hn.at(i + 1));
+		//sig((W * i) + b) se aplica la funcion sigmoide
+		this->salidas_capas_ocultas.at(i + 1)->map(sigmoid);
+	}
+	//----Generando las salida----
+	//Se multiplica la matriz de pesos entre la capa de salida y la matriz de salidas de la capa oculta
+	Matrix* entradas_capa_salida = Matrix::multiplicar(this->pesos_ho, this->salidas_capas_ocultas.at(this->hiddenLayerSize - 1));
+	//Al resultado de la multiplicacion se le agrega el sesgo
+	entradas_capa_salida->suma(this->bias_o);
+	//sig((W * i) * b) se aplica la funcion sigmoide
+	Matrix* salidas = Matrix::map(entradas_capa_salida, sigmoid);
+	return Matrix::toVector(salidas);
 }
 
 std::vector<float>* NeuralNetwork::feedForward(std::vector<float>* vec_entrada) {
