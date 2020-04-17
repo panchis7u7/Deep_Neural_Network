@@ -11,6 +11,7 @@ public:
 	std::vector<float>* feedForward(std::vector<float>*);
 	std::vector<float>* feedForwardDNN(std::vector<float>*); //DNN -> Deep Neural Network
 	void train(std::vector<float>*, std::vector<float>*);
+	void trainDNN(std::vector<float>*, std::vector<float>*);
 	static float sigmoid(float);
 	static float dsigmoid(float);
 private:
@@ -23,6 +24,8 @@ private:
 	std::vector<Matrix*> pesos_hn;
 	std::vector<Matrix*> bias_hn;
 	std::vector<Matrix*> salidas_capas_ocultas;
+	std::vector<Matrix*> gradientes_capas_ocultas;
+	std::vector<Matrix*> deltas_capas_ocultas;
 	Matrix* pesos_ho;
 	Matrix* bias_h;
 	Matrix* bias_o;

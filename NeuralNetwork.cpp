@@ -35,19 +35,18 @@ NeuralNetwork::NeuralNetwork(int i, std::vector<int>& h, int o) {
 	for (size_t i = 0; i < h.size()-1; i++)
 	{
 		this->pesos_hn.push_back(new Matrix(h[i + 1], h[i]));
-		//Se asigna valores aleatorios a las matrices
-		this->pesos_hn.at(i)->aleatorizar();
-	}
-	for (size_t i = 0; i < h.size(); i++)
-	{
 		//Se asigna un sesgo o predisposicion a las neuronas
 		this->bias_hn.push_back(new Matrix(h[i], 1));
+		//Se asigna valores aleatorios a las matrices
+		this->pesos_hn.at(i)->aleatorizar();
 		this->bias_hn.at(i)->aleatorizar();
 	}
-	//Matriz que representa los pesos entre las capa enesima(oculta)-Salida
-	this->pesos_ho = new Matrix(this->outputLayerNodes, h[h.size()- 1]);
 	//Se asigna un sesgo o predisposicion a la enesima capa oculta
 	this->bias_hn.push_back(new Matrix(h[h.size() - 1], 1));
+	//Se asigna valores aleatorios al sesgo o predisposicion de la enesima capa oculta
+	this->bias_hn.at(h.size() - 1)->aleatorizar();
+	//Matriz que representa los pesos entre las capa enesima(oculta)-Salida
+	this->pesos_ho = new Matrix(this->outputLayerNodes, h[h.size()- 1]);
 	//Se asigna valores aleatorios a la enesima matriz de sesgos
 	this->pesos_ho->aleatorizar();
 	//Se asigna un sesgo o predisposicion a las neuronas
@@ -63,8 +62,11 @@ NeuralNetwork::NeuralNetwork(int i, std::vector<int>& h, int o) {
 NeuralNetwork::~NeuralNetwork() {
 	delete(pesos_ih);
 	delete(pesos_ho);
-	delete[] (&pesos_hn);
-	delete[] (&bias_hn);
+	delete[](&pesos_hn);
+	delete[](&bias_hn);
+	delete[](&salidas_capas_ocultas);
+	delete[](&gradientes_capas_ocultas);
+	delete[](&deltas_capas_ocultas);
 	delete(bias_h);
 	delete(bias_o);
 	delete(salidas_capa_oculta);
@@ -90,6 +92,9 @@ std::vector<float>* NeuralNetwork::feedForwardDNN(std::vector<float>* vec_entrad
 		//sig((W * i) + b) se aplica la funcion sigmoide
 		this->salidas_capas_ocultas.at(i + 1)->map(sigmoid);
 	}
+	//this->salidas_capas_ocultas.push_back(Matrix::multiplicar(this->pesos_ho, this->salidas_capas_ocultas.at(this->hiddenLayerSize - 1)));
+	//this->salidas_capas_ocultas.at(this->hiddenLayerSize - 1)->suma(this->bias_o);
+	//this->salidas_capas_ocultas.at(this->hiddenLayerSize - 1)->map(sigmoid);
 	//----Generando las salida----
 	//Se multiplica la matriz de pesos entre la capa de salida y la matriz de salidas de la capa oculta
 	Matrix* entradas_capa_salida = Matrix::multiplicar(this->pesos_ho, this->salidas_capas_ocultas.at(this->hiddenLayerSize - 1));
@@ -135,7 +140,7 @@ void NeuralNetwork::train(std::vector<float>* vec_entradas, std::vector<float>* 
 	Matrix* errores_salida = Matrix::restaElementWise(respuestas, salidas);
 
 	//Calcular los errores de la capa oculta->salida 
-	Matrix* errores_capa_oculta = Matrix::multiplicar(Matrix::transpuesta(pesos_ho), errores_salida);
+	Matrix* errores_capa_oculta_salida = Matrix::multiplicar(Matrix::transpuesta(pesos_ho), errores_salida);
 
 	//Calcular el gradiente de la capa de salida = learning_rate * errores_salida * dsigmoid(salidas)
 	Matrix* gradiente_salida = Matrix::map(salidas, dsigmoid);
@@ -144,7 +149,7 @@ void NeuralNetwork::train(std::vector<float>* vec_entradas, std::vector<float>* 
 
 	//Calcular los gradientes de la capa oculta = learning_rate * errores_capa_oculta * dsigmoid(salidas_capa_oculta)
 	Matrix* gradientes_capa_oculta = Matrix::map(this->salidas_capa_oculta, dsigmoid);
-	gradientes_capa_oculta->productoHadamard(errores_capa_oculta);
+	gradientes_capa_oculta->productoHadamard(errores_capa_oculta_salida);
 	gradientes_capa_oculta->productoScalar(learning_rate);
 
 	//Calcular deltas de la capa oculta-salida
@@ -157,6 +162,32 @@ void NeuralNetwork::train(std::vector<float>* vec_entradas, std::vector<float>* 
 	Matrix* deltas_pesos_ih = Matrix::multiplicar(gradientes_capa_oculta, Matrix::transpuesta(entradas));
 	this->pesos_ih->suma(deltas_pesos_ih);
 	this->bias_h->suma(gradientes_capa_oculta);
+}
+
+void NeuralNetwork::trainDNN(std::vector<float>* vec_entradas, std::vector<float>* vec_respuestas) {
+	std::vector<float>* vec_salidas = this->feedForwardDNN(vec_entradas);
+	//Convertir vectores a matrices
+	Matrix* entradas = Matrix::fromVector(vec_entradas);
+	Matrix* respuestas = Matrix::fromVector(vec_respuestas);
+	Matrix* salidas = Matrix::fromVector(vec_salidas);
+
+	//Calcular el error => respuestas - salidas
+	Matrix* errores_salida = Matrix::restaElementWise(respuestas, salidas);
+
+	//Calcular los errores de la capa oculta->salida 
+	Matrix* errores_capa_oculta = Matrix::multiplicar(Matrix::transpuesta(this->pesos_ho), errores_salida);
+
+	//Calcular el gradiente de la capa de salida = learning_rate * errores_salida * dsigmoid(salidas)
+	Matrix* gradiente_salida = Matrix::map(salidas, dsigmoid);
+	gradiente_salida->productoHadamard(errores_salida);
+	gradiente_salida->productoScalar(learning_rate);
+
+	for (size_t i = 0; i < hiddenLayerSize-1; i++)
+	{
+		this->gradientes_capas_ocultas.push_back(Matrix::map(this->salidas_capas_ocultas.at(i), dsigmoid));
+		/*this->gradientes_capas_ocultas.at ->productoHadamard(errores_capa_oculta_salida);
+		gradientes_capa_oculta->productoScalar(learning_rate);*/
+	}
 }
 
 float NeuralNetwork::sigmoid(float n) {
