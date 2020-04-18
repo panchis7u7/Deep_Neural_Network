@@ -41,17 +41,14 @@ NeuralNetwork::NeuralNetwork(int i, std::vector<int>& h, int o) {
 		this->pesos_hn.at(i)->aleatorizar();
 		this->bias_hn.at(i)->aleatorizar();
 	}
-	//Se asigna un sesgo o predisposicion a la enesima capa oculta
+	//Se asigna un sesgo o predisposicion a la enesima capa oculta y se aleatoriza
 	this->bias_hn.push_back(new Matrix(h[h.size() - 1], 1));
-	//Se asigna valores aleatorios al sesgo o predisposicion de la enesima capa oculta
 	this->bias_hn.at(h.size() - 1)->aleatorizar();
-	//Matriz que representa los pesos entre las capa enesima(oculta)-Salida
-	this->pesos_ho = new Matrix(this->outputLayerNodes, h[h.size()- 1]);
-	//Se asigna valores aleatorios a la enesima matriz de sesgos
-	this->pesos_ho->aleatorizar();
-	//Se asigna un sesgo o predisposicion a las neuronas
-	this->bias_o = new Matrix(this->outputLayerNodes,1);
-	//Se asigna valores aleatorios a la matrices de sesgos
+	//Matriz que representa los pesos entre las capa enesima(oculta)-Salida y su sesgo
+	this->pesos_hn.push_back(new Matrix(this->outputLayerNodes, h[h.size()-1]));
+	this->bias_o = new Matrix(this->outputLayerNodes, 1);
+	//Se asigna valores aleatorios a la enesima matriz y su sesgo
+	this->pesos_hn.at(h.size()-1)->aleatorizar();
 	this->bias_o->aleatorizar();
 	//Variables por eliminar
 	this->hiddenLayerNodes = 0;
@@ -92,16 +89,13 @@ std::vector<float>* NeuralNetwork::feedForwardDNN(std::vector<float>* vec_entrad
 		//sig((W * i) + b) se aplica la funcion sigmoide
 		this->salidas_capas_ocultas.at(i + 1)->map(sigmoid);
 	}
-	//this->salidas_capas_ocultas.push_back(Matrix::multiplicar(this->pesos_ho, this->salidas_capas_ocultas.at(this->hiddenLayerSize - 1)));
-	//this->salidas_capas_ocultas.at(this->hiddenLayerSize - 1)->suma(this->bias_o);
-	//this->salidas_capas_ocultas.at(this->hiddenLayerSize - 1)->map(sigmoid);
 	//----Generando las salida----
 	//Se multiplica la matriz de pesos entre la capa de salida y la matriz de salidas de la capa oculta
-	Matrix* entradas_capa_salida = Matrix::multiplicar(this->pesos_ho, this->salidas_capas_ocultas.at(this->hiddenLayerSize - 1));
+	Matrix* salidas = Matrix::multiplicar(this->pesos_hn.at(this->hiddenLayerSize-1), this->salidas_capas_ocultas.at(this->hiddenLayerSize - 1));
 	//Al resultado de la multiplicacion se le agrega el sesgo
-	entradas_capa_salida->suma(this->bias_o);
+	salidas->suma(this->bias_o);
 	//sig((W * i) * b) se aplica la funcion sigmoide
-	Matrix* salidas = Matrix::map(entradas_capa_salida, sigmoid);
+	salidas->map(sigmoid);
 	return Matrix::toVector(salidas);
 }
 
