@@ -92,7 +92,14 @@ std::vector<float>* NeuralNetwork::feedForwardDNN(std::vector<float>* vec_entrad
 		//sig((W * i) + b) se aplica la funcion sigmoide
 		this->salidas_capas_ocultas.at(i + 1)->map(sigmoid);
 	}
-	return Matrix::toVector(salidas_capas_ocultas.at(hiddenLayerSize-1));
+	//----Generando las salida----
+	//Se multiplica la matriz de pesos entre la capa de salida y la matriz de salidas de la capa oculta
+	Matrix* salidas = Matrix::multiplicar(this->pesos_hn.at(this->hiddenLayerSize-1), this->salidas_capas_ocultas.at(this->hiddenLayerSize - 1));
+	//Al resultado de la multiplicacion se le agrega el sesgo
+	salidas->suma(bias_hn.at(hiddenLayerSize-1));
+	//sig((W * i) * b) se aplica la funcion sigmoide
+	salidas->map(sigmoid);
+	return Matrix::toVector(salidas);
 }
 
 std::vector<float>* NeuralNetwork::feedForward(std::vector<float>* vec_entrada) {
