@@ -22,10 +22,11 @@ private:
 	int outputLayerNodes;
 	Matrix* pesos_ih;
 	std::vector<Matrix*> pesos_hn;
-	std::vector<Matrix*> bias_hn;
+	std::vector<Matrix*> bias;
 	std::vector<Matrix*> salidas_capas_ocultas;
-	std::vector<Matrix*> gradientes_capas_ocultas;
-	std::vector<Matrix*> deltas_capas_ocultas;
+	std::vector<Matrix*> errores;
+	std::vector<Matrix*> gradientes;
+	std::vector<Matrix*> deltas;
 	Matrix* pesos_ho;
 	Matrix* bias_h;
 	Matrix* bias_o;

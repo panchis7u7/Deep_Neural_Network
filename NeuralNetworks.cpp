@@ -24,11 +24,18 @@ int main()
 	std::cout << "0,1: " << nn->feedForward(&entradas[1])->at(0) << std::endl;
 	std::cout << "1,0: " << nn->feedForward(&entradas[2])->at(0) << std::endl;
 	std::cout << "1,1: " << nn->feedForward(&entradas[3])->at(0) << std::endl;
+
 	std::cout << std::endl;
-	std::vector<int> f1 = {3,2,3,4};
-	NeuralNetwork* nn2 = new NeuralNetwork(2, f1, 2);
+	std::vector<int> f1 = {6,6};
+	NeuralNetwork* nn2 = new NeuralNetwork(2, f1, 1);
+	for (size_t i = 0; i < 30000; i++)
+	{
+		int index = rand() % 4;
+		nn2->trainDNN(&entradas[index], &esperado[index]);
+	}
 	std::cout << "0,0: " << nn2->feedForwardDNN(&entradas[0])->at(0) << std::endl;
-	std::cout << "0,1: " << nn2->feedForwardDNN(&entradas[0])->at(1) << std::endl;
-	delete(nn);
+	std::cout << "0,1: " << nn2->feedForwardDNN(&entradas[1])->at(0) << std::endl;
+	std::cout << "1,0: " << nn2->feedForwardDNN(&entradas[2])->at(0) << std::endl;
+	std::cout << "1,1: " << nn2->feedForwardDNN(&entradas[3])->at(0) << std::endl;
 	return 0;
 }   
