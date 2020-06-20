@@ -32,8 +32,23 @@ NeuralNetwork::NeuralNetwork(int i, std::vector<int>& h, int o) {
 	this->pesos_ih = new Matrix(h[0], this->inputLayerNodes);
 	//Se asigna valores aleatorios a las matrices
 	this->pesos_ih->aleatorizar();
+	//reserva espacio en memoria para los pesos de las n capas ocultas de la red (Optimizacion, evita la redimiension del vector cada vez que se inserta).
+	this->pesos_hn.reserve(h.size() - 1);
+	this->gradientes.reserve(h.size() - 1);
+	this->deltas.reserve(h.size() - 1);
+	this->salidas_capas_ocultas.reserve(h.size());
+	this->errores.reserve(h.size());
+	for (int i = 0; i < h.size(); i++) {
+		salidas_capas_ocultas.push_back(nullptr);
+		errores.push_back(nullptr);
+	}
+	//reserva espacio en memoria para los sesgos de las n capas ocultas y de salida de la red (Optimizacion, evita la redimiension del vector cada vez que se inserta).
+	this->bias.reserve(h.size());
+	
 	for (size_t i = 0; i < h.size()-1; i++)
 	{
+		this->gradientes.push_back(nullptr);
+		this->deltas.push_back(nullptr);
 		this->pesos_hn.push_back(new Matrix(h[i+1], h[i]));
 		//Se asigna un sesgo o predisposicion a las neuronas
 		this->bias.push_back(new Matrix(h[i], 1));
@@ -61,16 +76,16 @@ NeuralNetwork::NeuralNetwork(int i, std::vector<int>& h, int o) {
 NeuralNetwork::~NeuralNetwork() {
 	delete(pesos_ih);
 	delete(pesos_ho);
-	for (auto matrix : this->errores) {
+	for (auto& matrix : this->errores) {
 		delete matrix;
 	}
-	for (auto matrix : this->gradientes) {
+	for (auto& matrix : this->gradientes) {
 		delete matrix;
 	}
-	for (auto matrix : this->deltas) {
+	for (auto& matrix : this->deltas) {
 		delete matrix;
 	}
-	for (auto matrix : this->salidas_capas_ocultas) {
+	for (auto& matrix : this->salidas_capas_ocultas) {
 		delete matrix;
 	}
 }
@@ -84,12 +99,15 @@ std::vector<float>* NeuralNetwork::feedForwardDNN(std::vector<float>* vec_entrad
 	//Al resultado de la multiplicacion se le agrega el sesgo
 	entradas_capa_oculta->suma(this->bias.at(0));
 	//sig((W * i) + b) se aplica la funcion sigmoide
-	this->salidas_capas_ocultas.push_back(Matrix::map(entradas_capa_oculta, sigmoid));
+	////this->salidas_capas_ocultas.push_back(Matrix::map(entradas_capa_oculta, sigmoid));
+
+	this->salidas_capas_ocultas.at(0) = Matrix::map(entradas_capa_oculta, sigmoid);
 	//Se multiplica la matriz de pesos entre la capas ocultas y la matriz de entradas previas
 	for (size_t i = 0; i < (hiddenLayerSize-1); i++)
 	{
 		//Se multiplica la matriz de pesos entre la capa oculta y la matriz de entradas de la enesima capa oculta
-		this->salidas_capas_ocultas.push_back(Matrix::multiplicar(this->pesos_hn.at(i), this->salidas_capas_ocultas.at(i)));
+		////this->salidas_capas_ocultas.push_back(Matrix::multiplicar(this->pesos_hn.at(i), this->salidas_capas_ocultas.at(i)));
+		this->salidas_capas_ocultas.at(i+1) = Matrix::multiplicar(this->pesos_hn.at(i), this->salidas_capas_ocultas.at(i));
 		//Al resultado de la multiplicacion se le agrega el sesgo
 		this->salidas_capas_ocultas.at(i+1)->suma(this->bias.at(i+1));
 		//sig((W * i) + b) se aplica la funcion sigmoide
@@ -103,7 +121,7 @@ std::vector<float>* NeuralNetwork::feedForwardDNN(std::vector<float>* vec_entrad
 	//sig((W * i) * b) se aplica la funcion sigmoide
 	salidas->map(sigmoid);
 
-	delete entradas_capa_oculta;
+	//delete entradas_capa_oculta;
 	return Matrix::toVector(salidas);
 }
 
@@ -164,15 +182,6 @@ void NeuralNetwork::train(std::vector<float>* vec_entradas, std::vector<float>* 
 	Matrix* deltas_pesos_ih = Matrix::multiplicar(gradientes_capa_oculta, Matrix::transpuesta(entradas));
 	this->pesos_ih->suma(deltas_pesos_ih);
 	this->bias_h->suma(gradientes_capa_oculta);
-	delete entradas;
-	delete respuestas;
-	delete salidas;
-	delete errores_salida;
-	delete errores_capa_oculta_salida;
-	delete gradientes_capa_oculta;
-	delete gradiente_salida;
-	delete deltas_pesos_ho;
-	delete deltas_pesos_ih;
 }
 
 void NeuralNetwork::trainDNN(std::vector<float>* vec_entradas, std::vector<float>* vec_respuestas) {
@@ -222,14 +231,7 @@ void NeuralNetwork::trainDNN(std::vector<float>* vec_entradas, std::vector<float
 	}
 	//Calcular deltas de la capa de entrada-oculta
 	Matrix* deltas_pesos_ih = Matrix::multiplicar(gradiente_entrada_oculta, Matrix::transpuesta(entradas));
-	delete entradas;
-	delete respuestas;
-	delete salidas;
-	delete errores_salida;
-	delete gradiente_entrada_oculta;
-	delete gradiente_salida;
-	delete deltas_pesos_ho;
-	delete deltas_pesos_ih;
+	pesos_ho->suma(deltas_pesos_ho);
 }
 
 float NeuralNetwork::sigmoid(float n) {
