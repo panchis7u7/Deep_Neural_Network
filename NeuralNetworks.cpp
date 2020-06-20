@@ -28,7 +28,7 @@ int main()
 	std::cout << std::endl;
 	std::vector<int> f1 = {6,6};
 	NeuralNetwork* nn2 = new NeuralNetwork(2, f1, 1);
-	for (size_t i = 0; i < 30000; i++)
+	for (size_t i = 0; i < 200000; i++)
 	{
 		int index = rand() % 4;
 		nn2->trainDNN(&entradas[index], &esperado[index]);
