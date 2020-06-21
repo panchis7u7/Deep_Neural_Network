@@ -26,9 +26,9 @@ int main()
 	std::cout << "1,1: " << nn->feedForward(&entradas[3])->at(0) << std::endl;
 
 	std::cout << std::endl;
-	std::vector<int> f1 = {6,6};
+	std::vector<int> f1 = { 4, 4 };
 	NeuralNetwork* nn2 = new NeuralNetwork(2, f1, 1);
-	for (size_t i = 0; i < 200000; i++)
+	for (size_t i = 0; i < 20000; i++)
 	{
 		int index = rand() % 4;
 		nn2->trainDNN(&entradas[index], &esperado[index]);
