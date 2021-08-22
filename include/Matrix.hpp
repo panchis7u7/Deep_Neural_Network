@@ -1,6 +1,5 @@
 #pragma once
 #include <iostream>
-#include <conio.h>
 #include <time.h>
 #include <math.h>
 #include <vector>
@@ -24,7 +23,7 @@ public:
 
 	static Matrix* fromVector(std::vector<float>* entradas) {
 		Matrix* resultado = new Matrix(entradas->size(), 1);
-		for (size_t i = 0; i < entradas->size(); i++)
+		for (unsigned i = 0; i < entradas->size(); i++)
 		{
 			resultado->datos[i][0] = entradas->at(i);
 		}
@@ -33,9 +32,9 @@ public:
 
 	static std::vector<float>* toVector(Matrix* entradas) {
 		std::vector<float>* resultado = new std::vector<float>();
-		for (size_t i = 0; i < entradas->filas; i++)
+		for (unsigned i = 0; i < entradas->filas; i++)
 		{
-			for (size_t j = 0; j < entradas->columnas; j++)
+			for (unsigned j = 0; j < entradas->columnas; j++)
 			{
 				resultado->push_back(entradas->datos[i][j]);
 			}
@@ -48,9 +47,9 @@ public:
 			return NULL;
 		} else {
 			Matrix* resultado = new Matrix(A->filas, B->columnas);
-			for (size_t i = 0; i < A->filas; i++)
+			for (unsigned i = 0; i < A->filas; i++)
 			{
-				for (size_t j = 0; j < B->columnas; j++)
+				for (unsigned j = 0; j < B->columnas; j++)
 				{
 					resultado->datos[i][j] = A->datos[i][j] * B->datos[i][j];
 				}
@@ -65,9 +64,9 @@ public:
 		}
 		else {
 			Matrix* resultado = new Matrix(A->filas, B->columnas);
-			for (size_t i = 0; i < A->filas; i++)
+			for (unsigned i = 0; i < A->filas; i++)
 			{
-				for (size_t j = 0; j < B->columnas; j++)
+				for (unsigned j = 0; j < B->columnas; j++)
 				{
 					resultado->datos[i][j] = A->datos[i][j] - B->datos[i][j];
 				}
@@ -78,12 +77,12 @@ public:
 
 	static Matrix* multiplicar(Matrix* A, Matrix* B) {
 		Matrix* resultado = new Matrix(A->filas, B->columnas);
-		for (short i = 0; i < resultado->filas; i++)
+		for (unsigned i = 0; i < resultado->filas; i++)
 		{
-			for (short j = 0; j < resultado->columnas; j++)
+			for (unsigned j = 0; j < resultado->columnas; j++)
 			{
 				float suma = 0;
-				for (short k = 0; k < A->columnas; k++)
+				for (unsigned k = 0; k < A->columnas; k++)
 				{
 					suma += A->datos[i][k] * B->datos[k][j];
 				}
@@ -95,9 +94,9 @@ public:
 
 	static Matrix* transpuesta(Matrix* A) {
 		Matrix* resultado = new Matrix(A->columnas, A->filas);
-		for (size_t i = 0; i < A->filas; i++)
+		for (unsigned i = 0; i < A->filas; i++)
 		{
-			for (size_t j = 0; j < A->columnas; j++)
+			for (unsigned j = 0; j < A->columnas; j++)
 			{
 				resultado->datos[j][i] = A->datos[i][j];
 			}
@@ -107,9 +106,9 @@ public:
 
 	static Matrix* map(Matrix* A, float (*func)(float)) {
 		Matrix* resultado = new Matrix(A->filas, A->columnas);
-		for (size_t i = 0; i < A->filas; i++)
+		for (unsigned i = 0; i < A->filas; i++)
 		{
-			for (size_t j = 0; j < A->columnas; j++)
+			for (unsigned j = 0; j < A->columnas; j++)
 			{
 				resultado->datos[i][j] = func(A->datos[i][j]);
 			}

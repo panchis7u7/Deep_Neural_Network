@@ -1,4 +1,4 @@
-#include "NeuralNetwork.h"
+#include "NeuralNetwork.hpp"
 #include <memory>
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
@@ -40,7 +40,7 @@ NeuralNetwork::NeuralNetwork(int i, std::vector<int>& h, int o) {
 	this->errores.reserve(h.size());
 	this->bias.reserve(h.size()+1);
 
-	for (int i = 0; i < h.size(); i++)
+	for (size_t i = 0; i < h.size(); i++)
 	{
 		errores.push_back(nullptr);
 		salidas_capas_ocultas.push_back(nullptr);
@@ -103,7 +103,7 @@ std::vector<float>* NeuralNetwork::feedForwardDNN(std::vector<float>* vec_entrad
 
 	this->salidas_capas_ocultas.at(0) = Matrix::map(entradas_capa_oculta, sigmoid);
 	//Se multiplica la matriz de pesos entre la capas ocultas y la matriz de entradas previas
-	for (size_t i = 0; i < (hiddenLayerSize-1); i++)
+	for (int i = 0; i < (hiddenLayerSize-1); i++)
 	{
 		//Se multiplica la matriz de pesos entre la capa oculta y la matriz de entradas de la enesima capa oculta
 		////this->salidas_capas_ocultas.push_back(Matrix::multiplicar(this->pesos_hn.at(i), this->salidas_capas_ocultas.at(i)));

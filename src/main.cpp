@@ -1,7 +1,6 @@
 #include <iostream>
-#include "Matrix.h"
-#include "NeuralNetwork.h"
-#include "olcConsoleGameEngine.h"
+#include "Matrix.hpp"
+#include "NeuralNetwork.hpp"
 #include <vector>
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
