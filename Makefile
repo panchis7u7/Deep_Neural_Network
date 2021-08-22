@@ -1,8 +1,8 @@
 cmake:
-	cmake -S . -B out/build/
+	cmake -S . -B out/build/Linux
 
 build:
-	make -C out/build/
+	make -C out/build/Linux
 
 run:
-	out/build/DeepNeuralNetwork
+	out/build/Linux/DeepNeuralNetwork
