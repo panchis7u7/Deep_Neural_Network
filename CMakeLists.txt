@@ -11,7 +11,21 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 	set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -pedantic-errors")
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
-include_directories (include)
+file(GLOB SOURCES "src/*.cpp")
+message(STATUS "Files: ${SOURCES}")
+
+include_directories(include)
+
+add_subdirectory(libs/Matrix)
+
+target_include_directories(Matrix PUBLIC libs/Matrix)
+target_link_directories(Matrix PUBLIC libs/Matrix)
+
+#add_dependencies(Matrix)
+
+add_executable(${PROJECT_NAME} ${SOURCES})
+
+target_link_libraries(${PROJECT_NAME} Matrix)
 
 #MACRO(HEADER_DIRECTORIES return_list)
 #    FILE(GLOB_RECURSE new_list include/*.h)
@@ -25,8 +39,3 @@ include_directories (include)
 #ENDMACRO()
     
 #add_definitions("-std=c++2a")
-
-file(GLOB SOURCES "src/*.cpp")
-message(STATUS "Files: ${SOURCES}")
-
-add_executable(${PROJECT_NAME} ${SOURCES})
