@@ -1,6 +1,6 @@
 #pragma once
-#include "../../Matrix/include/Matrix.hpp"
-
+//#include "../../Matrix/src/Matrix.hpp"
+#include <src/Matrix.hpp>
 using namespace voxel;
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
