@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.18.4)
 
-project(Deep_Neural_Network)
+project(DeepNeuralNetwork)
 
 #C++ Version to use in build.
 set(CMAKE_CXX_STANDARD 20)

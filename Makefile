@@ -5,4 +5,4 @@ build:
 	make -C out/build/Linux
 
 run:
-	out/build/Linux/DeepNeuralNetwork
+	out/build/Linux/src/DeepNeuralNetwork

@@ -13,6 +13,5 @@ add_library(
     NeuralNetwork/src/NeuralNetwork.hpp
 )
 
-target_link_libraries(DNN PRIVATE Matrix)
 target_include_directories(Matrix PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Matrix")
 target_include_directories(DNN PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/NeuralNetwork")
