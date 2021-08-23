@@ -29,4 +29,4 @@ include_directories (include)
 file(GLOB SOURCES "src/*.cpp")
 message(STATUS "Files: ${SOURCES}")
 
-add_executable(${PROJECT_NAME} "src/main.cpp" ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES})

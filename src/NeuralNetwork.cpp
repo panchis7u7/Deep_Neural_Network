@@ -1,8 +1,6 @@
 #include "NeuralNetwork.hpp"
 #include <memory>
 
-using namespace voxel;
-
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
 
 NeuralNetwork::NeuralNetwork(int i, int h, int o) {
