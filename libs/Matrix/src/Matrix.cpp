@@ -131,5 +131,5 @@ T** Matrix<T>::alloc(uint_fast64_t rows, uint_fast64_t columns) {
 	return data;
 }
 
-template class Matrix<float>;
-template class Matrix<double>;
+template class voxel::Matrix<float>;
+template class voxel::Matrix<double>;
