@@ -1,6 +1,8 @@
 #pragma once
 #include "Matrix.hpp"
 
+using namespace voxel;
+
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
 
 class NeuralNetwork {
@@ -20,16 +22,16 @@ private:
 	int hiddenLayerSize;
 	int hiddenLayerNodes;
 	int outputLayerNodes;
-	Matrix* pesos_ih;
-	std::vector<Matrix*> pesos_hn;
-	std::vector<Matrix*> bias;
-	std::vector<Matrix*> salidas_capas_ocultas;
-	std::vector<Matrix*> errores;
-	std::vector<Matrix*> gradientes;
-	std::vector<Matrix*> deltas;
-	Matrix* pesos_ho;
-	Matrix* bias_h;
-	Matrix* bias_o;
-	Matrix* salidas_capa_oculta;
+	voxel::Matrix<float>* pesos_ih;
+	std::vector<Matrix<float>*> pesos_hn;
+	std::vector<Matrix<float>*> bias;
+	std::vector<Matrix<float>*> salidas_capas_ocultas;
+	std::vector<Matrix<float>*> errores;
+	std::vector<Matrix<float>*> gradientes;
+	std::vector<Matrix<float>*> deltas;
+	Matrix<float>* pesos_ho;
+	Matrix<float>* bias_h;
+	Matrix<float>* bias_o;
+	Matrix<float>* salidas_capa_oculta;
 protected:
 };

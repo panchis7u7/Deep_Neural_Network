@@ -1,5 +1,4 @@
 #include <iostream>
-#include "Matrix.hpp"
 #include "NeuralNetwork.hpp"
 #include <vector>
 
