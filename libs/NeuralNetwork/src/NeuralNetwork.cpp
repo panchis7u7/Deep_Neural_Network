@@ -1,4 +1,4 @@
-#include "NeuralNetwork.hpp"
+#include <include/NeuralNetwork.hpp>
 #include <memory>
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal

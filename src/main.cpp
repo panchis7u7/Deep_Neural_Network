@@ -1,5 +1,5 @@
 #include <iostream>
-#include <src/NeuralNetwork.hpp>
+#include <include/NeuralNetwork.hpp>
 #include <vector>
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal

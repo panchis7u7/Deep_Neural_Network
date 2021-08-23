@@ -4,13 +4,13 @@
 add_library(
     Matrix SHARED
     Matrix/src/Matrix.cpp
-    Matrix/src/Matrix.hpp
+    Matrix/include/Matrix.hpp
 )
 
 add_library(
     DNN SHARED
     NeuralNetwork/src/NeuralNetwork.cpp
-    NeuralNetwork/src/NeuralNetwork.hpp
+    NeuralNetwork/include/NeuralNetwork.hpp
 )
 
 target_include_directories(Matrix PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Matrix")
