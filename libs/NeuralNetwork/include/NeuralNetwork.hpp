@@ -16,7 +16,7 @@ public:
 	void printWeights();
 	static float sigmoid(float);
 	static float dsigmoid(float);
-private:
+protected:
 	float learning_rate = 0.25f;
 	int inputLayerNodes;
 	//Hidden Layers Count.
@@ -34,5 +34,16 @@ private:
 	Matrix<float>* bias_h;
 	Matrix<float>* bias_o;
 	Matrix<float>* salidas_capa_oculta;
-protected:
+private:
+};
+
+template <class T>
+class DeepNeuralNetwork : NeuralNetwork{
+public:
+	DeepNeuralNetwork(uint_fast64_t input, std::vector<uint_fast64_t> hidden, uint_fast64_t output);
+	~DeepNeuralNetwork();
+
+
+private:
+	std::vector<Matrix<T>*> nth_hidden_weights;
 };

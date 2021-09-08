@@ -253,3 +253,52 @@ float NeuralNetwork::dsigmoid(float y) {
 	//return sigmoid(n) * (1 - sigmoid(n));
 	return (y * (1 - y));
 }
+
+template<typename T>
+DeepNeuralNetwork<T>::DeepNeuralNetwork(uint_fast64_t input, std::vector<uint_fast64_t> hidden, uint_fast64_t output){
+	this->inputLayerNodes = input;
+	this->hiddenLayerSize = hidden.size();
+	this->outputLayerNodes = output;
+	//Input-Hidden[0] layer weights with random values.
+	this->pesos_ih = new Matrix<T>(hidden[0], this->inputLayerNodes);
+	this->pesos_ih->randomize();
+	//Reserve vector space to avoid reallocating for the nth hidden layers.
+	this->pesos_hn.reserve(this->hiddenLayerSize - 1);
+	this->gradientes.reserve(this->hiddenLayerSize - 1);
+	this->deltas.reserve(this->hiddenLayerSize - 1);
+	this->salidas_capas_ocultas.reserve(this->hiddenLayerSize);
+	this->errores.reserve(this->hiddenLayerSize);
+	this->bias.reserve(this->hiddenLayerSize+1);
+
+	for (size_t i = 0; i < this->hiddenLayerSize; i++)
+	{
+		this->errores.push_back(nullptr);
+		this->salidas_capas_ocultas.push_back(nullptr);
+		this->bias.push_back(new Matrix<T>(hidden[i], 1));
+		this->bias.at(i)->randomize();
+	}
+	//reserva espacio en memoria para los sesgos de las n capas ocultas y de salida de la red (Optimizacion, evita la redimiension del vector cada vez que se inserta).
+	
+	for (size_t i = 0; i < this->hiddenLayerSize-1; i++)
+	{
+		this->gradientes.push_back(nullptr);
+		this->deltas.push_back(nullptr);
+		this->pesos_hn.push_back(new Matrix<T>(hidden[i+1], hidden[i]));
+		this->pesos_hn.at(i)->randomize();
+	}
+	//Matriz que representa los pesos entre las capa enesima(oculta)-Salida y se aleatoriza
+	this->pesos_ho = new Matrix<T>(this->outputLayerNodes, hidden[this->hiddenLayerSize - 1]);
+	this->pesos_ho->randomize();
+	//Se asigna un sesgo o predisposicion a la enesima capa oculta y se aleatoriza
+	//this->bias.push_back(new Matrix<float>(h[h.size() - 1], 1));
+	//this->bias.at(bias.size() - 1)->randomize();
+	//Matriz que representa el sesgo de la capa oculta y se aleatoriza
+	this->bias.push_back(new Matrix<T>(outputLayerNodes, 1));
+	this->bias.at(bias.size()- 1)->randomize();
+
+	//Variables por eliminar
+	this->hiddenLayerNodes = 0;
+	this->salidas_capa_oculta = nullptr;
+	this->bias_h = nullptr;
+	this->bias_o = nullptr;
+}
