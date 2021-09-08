@@ -4,46 +4,47 @@ using namespace voxel;
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
 
+template <class T>
 class NeuralNetwork {
 public:
-	NeuralNetwork(int, int, int);
-	NeuralNetwork(int, std::vector<int>&, int);
-	~NeuralNetwork();
-	std::vector<float>* feedForward(std::vector<float>*);
-	std::vector<float>* feedForwardDNN(std::vector<float>*); //DNN -> Deep Neural Network
-	void train(std::vector<float>*, std::vector<float>*);
-	void trainDNN(std::vector<float>*, std::vector<float>*);
-	void printWeights();
-	static float sigmoid(float);
-	static float dsigmoid(float);
+	NeuralNetwork(int inputNodes, int hiddenNodes, int outputNodes);
+	virtual ~NeuralNetwork();
+	virtual std::vector<T>* feedForward(std::vector<T>* inputData);
+	virtual void train(std::vector<T>* guesses, std::vector<T>* answers);
+	virtual void printWeights();
+	static T sigmoid(T);
+	static T dsigmoid(T);
+
 protected:
 	float learning_rate = 0.25f;
 	int inputLayerNodes;
-	//Hidden Layers Count.
-	int hiddenLayerSize;
-	int hiddenLayerNodes;
 	int outputLayerNodes;
-	voxel::Matrix<float>* pesos_ih;
-	std::vector<Matrix<float>*> pesos_hn;
-	std::vector<Matrix<float>*> bias;
-	std::vector<Matrix<float>*> salidas_capas_ocultas;
-	std::vector<Matrix<float>*> errores;
-	std::vector<Matrix<float>*> gradientes;
-	std::vector<Matrix<float>*> deltas;
-	Matrix<float>* pesos_ho;
-	Matrix<float>* bias_h;
-	Matrix<float>* bias_o;
-	Matrix<float>* salidas_capa_oculta;
+	Matrix<T>* pesos_ih;
+	Matrix<T>* pesos_ho;
+	Matrix<T>* bias_h;
+	Matrix<T>* bias_o;
 private:
+	int hiddenLayerNodes;
+	Matrix<T>* hidden_weights_output;
 };
 
 template <class T>
-class DeepNeuralNetwork : NeuralNetwork{
+class DeepNeuralNetwork : public NeuralNetwork{
 public:
-	DeepNeuralNetwork(uint_fast64_t input, std::vector<uint_fast64_t> hidden, uint_fast64_t output);
+	DeepNeuralNetwork(uint_fast64_t input, std::vector<uint_fast64_t>& hidden, uint_fast64_t output);
 	~DeepNeuralNetwork();
-
+	std::vector<T>* feedForward(std::vector<T>* inputData);
+	void train(std::vector<T>* guesses, std::vector<T>* answers);
+	void printWeights();
 
 private:
+	//Number of Hidden Layers.
+	unsigned int hiddenLayerSize;	
 	std::vector<Matrix<T>*> nth_hidden_weights;
+	std::vector<Matrix<T>*> pesos_hn;
+	std::vector<Matrix<T>*> bias;
+	std::vector<Matrix<T>*> salidas_capas_ocultas;
+	std::vector<Matrix<T>*> errores;
+	std::vector<Matrix<T>*> gradientes;
+	std::vector<Matrix<T>*> deltas;
 };
