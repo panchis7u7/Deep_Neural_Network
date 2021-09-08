@@ -1,6 +1,7 @@
 #include <iostream>
 #include <include/NeuralNetwork.hpp>
 #include <vector>
+#include <include/rapidxml.hpp>
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
 
@@ -35,5 +36,7 @@ int main()
 	std::cout << "0,1: " << nn2->feedForwardDNN(&entradas[1])->at(0) << std::endl;
 	std::cout << "1,0: " << nn2->feedForwardDNN(&entradas[2])->at(0) << std::endl;
 	std::cout << "1,1: " << nn2->feedForwardDNN(&entradas[3])->at(0) << std::endl;
+
+	nn2->printWeights();
 	return 0;
 }   

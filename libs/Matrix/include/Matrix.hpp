@@ -24,6 +24,9 @@ namespace voxel {
 		void hadamardProduct(Matrix<T>* factor);
 		void map(T (*func)(T));
 
+		//Overloads.
+		//friend std::ostream& operator<< <>(std::ostream& out, const Matrix<T>* mat);
+
 		//Static methods.
 		//static Matrix* fromVector(std::vector<T>* entradas);
 		//static std::vector<T>* toVector(Matrix<T>* entradas);
@@ -130,6 +133,25 @@ namespace voxel {
 				}
 			}
 			return result;
+		}
+
+		///////////////////////////////////////////////////////////////////////////////////////////
+		// Operator Overloading.
+		///////////////////////////////////////////////////////////////////////////////////////////
+
+		friend std::ostream& operator<<(std::ostream& out, const Matrix<T>* mat){
+			for (uint_fast64_t i = 0; i < mat->rows; i++)
+			{
+				out << "|";
+				for (uint_fast64_t j = 0; j < mat->columns; j++)
+				{
+					out << "  " << mat->data[i][j] << "  ";
+				}
+				out << "|";
+				out << std::endl;
+			}
+			out << std::endl;
+			return out;
 		}
 
 	private:

@@ -234,6 +234,17 @@ void NeuralNetwork::trainDNN(std::vector<float>* vec_entradas, std::vector<float
 	this->pesos_ih->add(deltas_pesos_ih);
 }
 
+void NeuralNetwork::printWeights() {
+	std::cout << "---- [Input - Hidden[0] Layer Weights] ----" << "\n\n" << this->pesos_ih << std::endl;
+	std::cout << "---- [Hidden (n - n+1) Layer Weights] ----" << "\n\n";
+	int layer = 0;
+	for(auto nth_hidden_weights : this->pesos_hn){
+		std::cout <<  "#### Layer " << layer << " ####" << "\n\n" << nth_hidden_weights;
+		layer++;
+	}
+	std::cout << "---- [Hidden[n-1] - Output Layer Weights] ----" << "\n\n" << this->pesos_ho << std::endl;
+}
+
 float NeuralNetwork::sigmoid(float n) {
 	return (1 / (1 + pow(2.718281828, (-n))));
 }

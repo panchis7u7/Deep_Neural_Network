@@ -13,11 +13,13 @@ public:
 	std::vector<float>* feedForwardDNN(std::vector<float>*); //DNN -> Deep Neural Network
 	void train(std::vector<float>*, std::vector<float>*);
 	void trainDNN(std::vector<float>*, std::vector<float>*);
+	void printWeights();
 	static float sigmoid(float);
 	static float dsigmoid(float);
 private:
 	float learning_rate = 0.25f;
 	int inputLayerNodes;
+	//Hidden Layers Count.
 	int hiddenLayerSize;
 	int hiddenLayerNodes;
 	int outputLayerNodes;
