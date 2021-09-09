@@ -8,17 +8,16 @@ NeuralNetwork<T>::NeuralNetwork(int inputNodes, int hiddenNodes, int outputNodes
 	this->inputLayerNodes = inputNodes;
 	this->hiddenLayerNodes = hiddenNodes;
 	this->outputLayerNodes = outputNodes;
-	//Matriz que representa los pesos entre las capa de Entrada-Oculta
+	// Create matrices based upon the number of nodes supplied..
 	this->pesos_ih = new Matrix<T>(this->hiddenLayerNodes, this->inputLayerNodes);
-	//Matriz que representa los pesos entre las capa Oculta-Salida
 	this->pesos_ho = new Matrix<T>(this->outputLayerNodes, this->hiddenLayerNodes);
-	//Se asigna valores aleatorios a las matrices
+	// Initialize random values into the weights matrices.
 	this->pesos_ih->randomize();
 	this->pesos_ho->randomize();
-	//Se asigna un sesgo o predisposicion a las neuronas
+	// Create bias matrices based upon the number of nodes supplied.
 	this->bias_h = new Matrix<T>(this->hiddenLayerNodes, 1);
 	this->bias_o = new Matrix<T>(this->outputLayerNodes, 1);
-	//Se asigna valores aleatorios a las matrices
+	// Initialize random values into the bias matrices.
 	this->bias_h->randomize();
 	this->bias_o->randomize();
 	this->hidden_weights_output = nullptr;
@@ -34,42 +33,55 @@ NeuralNetwork<T>::~NeuralNetwork() {
 
 template <typename T>
 std::vector<T>* NeuralNetwork<T>::feedForward(std::vector<T>* vec_entrada) {
-	/*
-		Generating the outputs from the hidden layers forwarding.
-	*/
+
 	//Convert vector to a matrix type. 		TODO: Implement native vector support.
 	Matrix<T>* entradas = Matrix<T>::fromVector(vec_entrada);
-	//Se multiplica la matriz de pesos entre la capa oculta y la matriz de entradas
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	// sig((W * i) + b) process for input - hidden.
+	// W -> Weights.
+	// i -> Inputs.
+	// b -> Bias.
+	// sig -> Sigmoid function.
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	Matrix<T>* entradas_capa_oculta = Matrix<T>::dot(this->pesos_ih, entradas);
-	//Al resultado de la multiplicacion se le agrega el sesgo
 	entradas_capa_oculta->add(this->bias_h);
-	//sig((W * i) + b) se aplica la funcion sigmoide
 	this->hidden_weights_output = Matrix<T>::map(entradas_capa_oculta, sigmoid);
-	/*
-		Generando la salida
-	*/
-	//Se multiplica la matriz de pesos entre la capa de salida y la matriz de salidas de la capa oculta
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	// sig((W * i) + b) process for hidden - output.
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	Matrix<T>* entradas_capa_salida = Matrix<T>::dot(this->pesos_ho, this->hidden_weights_output);
-	//Al resultado de la multiplicacion se le agrega el sesgo
 	entradas_capa_salida->add(this->bias_o);
-	//sig((W * i) * b) se aplica la funcion sigmoide
 	Matrix<T>* salidas = Matrix<T>::map(entradas_capa_salida, sigmoid);
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	return Matrix<T>::toVector(salidas);
 }
 
 template <typename T>
 void NeuralNetwork<T>::train(std::vector<T>* vec_entradas, std::vector<T>* vec_respuestas) {
+
+	// Convert vector to a matrix type. 		TODO: Implement native vector support.
 	std::vector<T>* vec_salidas = this->feedForward(vec_entradas);
-	//Convertir vectores a matrices
 	Matrix<T>* entradas = Matrix<T>::fromVector(vec_entradas);
 	Matrix<T>* respuestas = Matrix<T>::fromVector(vec_respuestas);
 	Matrix<T>* salidas = Matrix<T>::fromVector(vec_salidas);
 
-	//Calcular el error => respuestas - salidas
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Error calculation.
+	// 1) Output Errors -> (respuestas -  salidas).
 	Matrix<T>* errores_salida = Matrix<T>::elementWiseSubstraction(respuestas, salidas);
 
-	//Calcular los errores de la capa oculta->salida 
+	// 2) Hidden Layer Errors -> (Wh^T * (Output Erros)).
 	Matrix<T>* errores_capa_oculta_salida = Matrix<T>::dot(Matrix<T>::transpose(pesos_ho), errores_salida);
+	//
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//Calcular el gradiente de la capa de salida = learning_rate * errores_salida * dsigmoid(salidas)
 	Matrix<T>* gradiente_salida = Matrix<T>::map(salidas, dsigmoid);
@@ -95,14 +107,8 @@ void NeuralNetwork<T>::train(std::vector<T>* vec_entradas, std::vector<T>* vec_r
 
 template <typename T>
 void NeuralNetwork<T>::printWeights() {
-	std::cout << "---- [Input - Hidden[0] Layer Weights] ----" << "\n\n" << this->pesos_ih << std::endl;
-	std::cout << "---- [Hidden (n - n+1) Layer Weights] ----" << "\n\n";
-	int layer = 0;
-	for(auto nth_hidden_weights : this->pesos_hn){
-		std::cout <<  "#### Layer " << layer << " ####" << "\n\n" << nth_hidden_weights;
-		layer++;
-	}
-	std::cout << "---- [Hidden[n-1] - Output Layer Weights] ----" << "\n\n" << this->pesos_ho << std::endl;
+	std::cout << "---- [Input - Hidden Layer Weights] ----" << "\n\n" << this->pesos_ih << std::endl;
+	std::cout << "---- [Hidden - Output Layer Weights] ----" << "\n\n" << this->pesos_ho << std::endl;
 }
 
 template <typename T>
@@ -161,6 +167,22 @@ DeepNeuralNetwork<T>::DeepNeuralNetwork(uint_fast64_t input, std::vector<uint_fa
 	//Variables por eliminar
 	this->bias_h = nullptr;
 	this->bias_o = nullptr;
+}
+
+template <typename T>
+DeepNeuralNetwork<T>::~DeepNeuralNetwork(){
+	for (auto& matrix : this->errores) {
+		delete matrix;
+	}
+	for (auto& matrix : this->gradientes) {
+		delete matrix;
+	}
+	for (auto& matrix : this->deltas) {
+		delete matrix;
+	}
+	for (auto& matrix : this->salidas_capas_ocultas) {
+		delete matrix;
+	}
 }
 
 template <typename T>
@@ -247,4 +269,16 @@ void DeepNeuralNetwork<T>::train(std::vector<T>* guess, std::vector<T>* answers)
 	//Calcular deltas de la capa de entrada-oculta
 	Matrix<T>* deltas_pesos_ih = Matrix<T>::dot(gradiente_entrada_oculta, Matrix<T>::transpose(entradas));
 	this->pesos_ih->add(deltas_pesos_ih);
+}
+
+template <typename T>
+void DeepNeuralNetwork<T>::printWeights(){
+	std::cout << "---- [Input - Hidden[0] Layer Weights] ----" << "\n\n" << this->pesos_ih << std::endl;
+	std::cout << "---- [Hidden (n - n+1) Layer Weights] ----" << "\n\n";
+	int layer = 0;
+	for(auto nth_hidden_weights : this->pesos_hn){
+		std::cout <<  "#### Layer " << layer << " ####" << "\n\n" << nth_hidden_weights;
+		layer++;
+	}
+	std::cout << "---- [Hidden[n-1] - Output Layer Weights] ----" << "\n\n" << this->pesos_ho << std::endl;
 }
