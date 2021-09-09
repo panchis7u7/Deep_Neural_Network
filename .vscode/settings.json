@@ -54,5 +54,6 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "fstream": "cpp"
-    }
+    },
+    "cmake.configureOnOpen": true
 }
