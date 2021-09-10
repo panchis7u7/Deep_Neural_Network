@@ -29,7 +29,7 @@ private:
 };
 
 template <class T>
-class DeepNeuralNetwork : public NeuralNetwork{
+class DeepNeuralNetwork : public NeuralNetwork<T> {
 public:
 	DeepNeuralNetwork(uint_fast64_t input, std::vector<uint_fast64_t>& hidden, uint_fast64_t output);
 	~DeepNeuralNetwork();

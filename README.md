@@ -49,3 +49,29 @@ The so-called activation function usually serves to turn the total value calcula
     <img src="./Resources/NeuralNetworkWeights.png" width="400px" alt="NeuralNetworkWeights">
     <p><i>Figure. 4. Neuron Operations.</i></p>
 </center>
+
+The product of the input neurons and the weights can be represented by a matrix. To calculate the c[i,j] entry of the matrix C:=AB, one takes the dot product of the i'th row of the matrix A with the j'th column of the matrix B. For the dot product to be succesfuly performed, the rows of matrix A and columns of matrix B must have the same length.
+ 
+            | (W11 * I1) + (W21 * i2) + ... + (Wi1 * Ii) | 
+            | (W12 * I1) + (W22 * i2) + ... + (Wi2 * Ii) |    
+        C = | (W13 * I1) + (W23 * i2) + ... + (Wi3 * Ii) |
+            |            ·            + ... +            |
+            | (W1j + I1) + (W2j * I2) + ... + (Wij + Ii) |
+
+Being the code equivalent in this library as:
+```c++
+// Being T a generic Type. (Float, Double, Int ...) 
+Matrix<T>* hidden_input_weights = Matrix<T>::dot(this->inputHiddenWeights, inputs);
+```
+
+Now, to add the bias:
+```c++
+hidden_input_weights->add(this->bias_hidden);
+```
+
+And finally pass it throug the activation function.
+```c++
+this->hidden_weights_output = Matrix<T>::map(hidden_input_weights, sigmoid);
+```
+References:
+[1]: https://towardsdatascience.com/first-neural-network-for-beginners-explained-with-code-4cfd37e06eaf

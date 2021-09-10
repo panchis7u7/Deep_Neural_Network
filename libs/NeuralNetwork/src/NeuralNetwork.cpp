@@ -28,7 +28,7 @@ NeuralNetwork<T>::~NeuralNetwork() {
 	delete(this->pesos_ih);
 	delete(this->pesos_ho);
 	delete(this->bias_h);
-	delete(this->bias_o)
+	delete(this->bias_o);
 }
 
 template <typename T>
@@ -111,17 +111,6 @@ void NeuralNetwork<T>::printWeights() {
 	std::cout << "---- [Hidden - Output Layer Weights] ----" << "\n\n" << this->pesos_ho << std::endl;
 }
 
-template <typename T>
-T NeuralNetwork<T>::sigmoid(T n) {
-	return (1 / (1 + pow(2.718281828, (-n))));
-}
-
-template <typename T>
-T NeuralNetwork<T>::dsigmoid(T y) {
-	//return sigmoid(n) * (1 - sigmoid(n));
-	return (y * (1 - y));
-}
-
 template<typename T>
 DeepNeuralNetwork<T>::DeepNeuralNetwork(uint_fast64_t input, std::vector<uint_fast64_t>& hidden, uint_fast64_t output){
 	this->inputLayerNodes = input;
@@ -161,7 +150,7 @@ DeepNeuralNetwork<T>::DeepNeuralNetwork(uint_fast64_t input, std::vector<uint_fa
 	//this->bias.push_back(new Matrix<float>(h[h.size() - 1], 1));
 	//this->bias.at(bias.size() - 1)->randomize();
 	//Matriz que representa el sesgo de la capa oculta y se aleatoriza
-	this->bias.push_back(new Matrix<T>(outputLayerNodes, 1));
+	this->bias.push_back(new Matrix<T>(this->outputLayerNodes, 1));
 	this->bias.at(bias.size()- 1)->randomize();
 
 	//Variables por eliminar
@@ -189,7 +178,7 @@ template <typename T>
 std::vector<T>* DeepNeuralNetwork<T>::feedForward(std::vector<T>* inputData) {
 //----Generando las salidas de la capas ocultas----
 	//Convierte el vector de entrada a una matriz
-	Matrix<T>* entradas = Matrix<T>::fromVector(vec_entrada);
+	Matrix<T>* entradas = Matrix<T>::fromVector(inputData);
 	//Se multiplica la matriz de pesos entre la capa oculta y la matriz de entradas
 	Matrix<T>* entradas_capa_oculta = Matrix<T>::dot(this->pesos_ih, entradas);
 	//Al resultado de la multiplicacion se le agrega el sesgo
@@ -197,7 +186,7 @@ std::vector<T>* DeepNeuralNetwork<T>::feedForward(std::vector<T>* inputData) {
 	//sig((W * i) + b) se aplica la funcion sigmoide
 	////this->salidas_capas_ocultas.push_back(Matrix<float>::map(entradas_capa_oculta, sigmoid));
 
-	this->salidas_capas_ocultas.at(0) = Matrix<T>::map(entradas_capa_oculta, sigmoid);
+	this->salidas_capas_ocultas.at(0) = Matrix<T>::map(entradas_capa_oculta, this->sigmoid);
 	//Se multiplica la matriz de pesos entre la capas ocultas y la matriz de entradas previas
 	for (int i = 0; i < (hiddenLayerSize-1); i++)
 	{
@@ -222,11 +211,11 @@ std::vector<T>* DeepNeuralNetwork<T>::feedForward(std::vector<T>* inputData) {
 
 template <typename T>
 void DeepNeuralNetwork<T>::train(std::vector<T>* guess, std::vector<T>* answers){
-	std::vector<T>* vec_salidas = this->feedForwardDNN(vec_entradas);
+	std::vector<T>* vec_salidas = this->feedForwardDNN(guess);
 	//Convertir vectores a matrices
-	Matrix<T>* entradas = Matrix<T>::fromVector(vec_entradas);
-	Matrix<T>* respuestas = Matrix<T>::fromVector(vec_respuestas);
-	Matrix<T>* salidas = Matrix<T>::fromVector(vec_salidT
+	Matrix<T>* entradas = Matrix<T>::fromVector(guess);
+	Matrix<T>* respuestas = Matrix<T>::fromVector(answers);
+	Matrix<T>* salidas = Matrix<T>::fromVector(vec_salidas);
 	//Calcular el error => respuestas - salidas
 	Matrix<T>* errores_salida = Matrix<T>::elementWiseSubstraction(respuestas, salidas);
 
@@ -239,9 +228,9 @@ void DeepNeuralNetwork<T>::train(std::vector<T>* guess, std::vector<T>* answers)
 	}
 
 	//Calcular el gradiente de la capa de salida = learning_rate * errores_salida * dsigmoid(salidas)
-	Matrix<T>* gradiente_salida = Matrix<T>::map(salidas, dsigmoid);
+	Matrix<T>* gradiente_salida = Matrix<T>::map(salidas, this->dsigmoid);
 	gradiente_salida->hadamardProduct(errores_salida);
-	gradiente_salida->scalarProduct(learning_rate);
+	gradiente_salida->scalarProduct(this->learning_rate);
 	this->bias.at(bias.size() - 1)->add(gradiente_salida);
 	//Calcular el gradiente de las capas ocultas y oculta-salida = learning_rate * errores_salida * dsigmoid(salidas)
 	for (int i = hiddenLayerSize-1; i > 0; i--)
@@ -281,4 +270,15 @@ void DeepNeuralNetwork<T>::printWeights(){
 		layer++;
 	}
 	std::cout << "---- [Hidden[n-1] - Output Layer Weights] ----" << "\n\n" << this->pesos_ho << std::endl;
+}
+
+template <typename T>
+T NeuralNetwork<T>::sigmoid(T n) {
+	return (1 / (1 + pow(2.718281828, (-n))));
+}
+
+template <typename T>
+T NeuralNetwork<T>::dsigmoid(T y) {
+	//return sigmoid(n) * (1 - sigmoid(n));
+	return (y * (1 - y));
 }
