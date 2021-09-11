@@ -113,6 +113,24 @@ namespace voxel {
 			return result;
 		}
 
+		static Matrix<T>* dot(Matrix<T>* A, std::vector<T>* B) {
+			//n Column Matrix requires n elements vector in order to perform product.
+			Matrix<T>* result = new Matrix<T>(A->rows, B->size());
+			for (uint_fast64_t i = 0; i < result->rows; i++)
+			{
+				for (uint_fast64_t j = 0; j < result->columns; j++)
+				{
+					T sum = 0;
+					for (uint_fast64_t k = 0; k < A->columns; k++)
+					{
+						sum += A->data[i][k] * B->at(i);
+					}
+					result->data[i][j] = sum;
+				}
+			}
+			return result;
+		}
+
 		static Matrix<T>* transpose(Matrix<T>* A) {
 			Matrix<T>* result = new Matrix<T>(A->columns, A->rows);
 			for (uint_fast64_t i = 0; i < A->rows; i++)
