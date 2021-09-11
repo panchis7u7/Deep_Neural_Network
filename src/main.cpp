@@ -8,6 +8,7 @@
 int main()
 {
 	srand(static_cast<unsigned>(time(0)));
+
 	NeuralNetwork<float>* nn = new NeuralNetwork<float>(2, 4, 1);
 	std::vector<float> entradas[] = { { 0 , 0},
 									  { 1 , 0},
@@ -27,7 +28,7 @@ int main()
 	std::cout << std::endl;
 	std::vector<uint_fast64_t> f1 = { 4, 4 };
 	DeepNeuralNetwork<float>* nn2 = new DeepNeuralNetwork<float>(2, f1, 1);
-	for (size_t i = 0; i < 20000; i++)
+	for (size_t i = 0; i < 80000; i++)
 	{
 		int index = rand() % 4;
 		nn2->train(&entradas[index], &esperado[index]);

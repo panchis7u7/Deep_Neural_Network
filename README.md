@@ -69,7 +69,7 @@ Now, to add the bias:
 hidden_input_weights->add(this->bias_hidden);
 ```
 
-And finally pass it throug the activation function.
+And finally pass it through the activation function.
 ```c++
 this->hidden_weights_output = Matrix<T>::map(hidden_input_weights, sigmoid);
 ```

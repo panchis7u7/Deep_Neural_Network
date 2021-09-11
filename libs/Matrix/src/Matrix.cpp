@@ -89,6 +89,22 @@ void Matrix<T>::randomize() {
 }
 
 template <typename T>
+void Matrix<T>::transpose(){
+	T** temp = this->alloc(this->columns, this->rows);
+	for (uint_fast64_t i = 0; i < this->rows; i++)
+	{
+		for (uint_fast64_t j = 0; j < this->columns; j++)
+		{
+			temp[j][i] = this->data[i][j];
+		}
+	}
+	
+	std::swap(this->rows, this->columns);
+	delete this->data;
+	this->data = temp;
+}
+
+template <typename T>
 void Matrix<T>::scalarProduct(T factor) {
 	for (uint_fast64_t i = 0; i < this->rows; i++)
 	{

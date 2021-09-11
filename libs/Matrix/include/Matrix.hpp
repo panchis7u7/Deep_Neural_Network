@@ -20,6 +20,7 @@ namespace voxel {
 		void add(T addend);
 		void add(Matrix<T>* addend);
 		void randomize();
+		void transpose();
 		void scalarProduct(T factor);
 		void hadamardProduct(Matrix<T>* factor);
 		void map(T (*func)(T));
@@ -40,6 +41,7 @@ namespace voxel {
 		// Public static typename Methods.
 		///////////////////////////////////////////////////////////////////////////////////////////
 
+	
 		static Matrix<T>* fromVector(std::vector<T>* entradas) {
 			Matrix<T>* result = new Matrix(entradas->size(), 1);
 			for (uint_fast64_t i = 0; i < entradas->size(); i++)

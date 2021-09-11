@@ -11,12 +11,19 @@ public:
 	virtual ~NeuralNetwork();
 	virtual std::vector<T>* feedForward(std::vector<T>* inputData);
 	virtual void train(std::vector<T>* guesses, std::vector<T>* answers);
-	virtual void printWeights();
-	static T sigmoid(T);
-	static T dsigmoid(T);
+	virtual inline void printWeights();
+	
+	static T sigmoid(T n) {
+		return (1 / (1 + pow(2.718281828, (-n))));
+	}
+
+	static T dsigmoid(T y) {
+		//return sigmoid(n) * (1 - sigmoid(n));
+		return (y * (1 - y));
+	}
 
 protected:
-	float learning_rate = 0.25f;
+	float learning_rate = 0.025f;
 	int inputLayerNodes;
 	int outputLayerNodes;
 	Matrix<T>* pesos_ih;

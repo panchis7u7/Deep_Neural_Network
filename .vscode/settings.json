@@ -55,5 +55,6 @@
         "typeinfo": "cpp",
         "fstream": "cpp"
     },
-    "cmake.configureOnOpen": true
+    "cmake.configureOnOpen": true,
+    "C_Cpp.default.configurationProvider": "go2sh.cmake-integration"
 }
