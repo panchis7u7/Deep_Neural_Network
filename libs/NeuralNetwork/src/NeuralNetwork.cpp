@@ -113,27 +113,27 @@ void NeuralNetwork<T>::train(std::vector<T>* vec_entradas, std::vector<T>* vec_r
 	//Calcular deltas de la capa oculta-salida
 	//pesos_delta = learning_rate * errores * dsigmoid(salidas) * pesos(T)
 	Matrix<T>* hidden_weights_output_T = Matrix<T>::transpose(this->hidden_weights_output);
-	Matrix<T>* deltas_pesos_ho = Matrix<T>::dot(gradiente_salida, hidden_weights_output_T);
-	this->pesos_ho->add(deltas_pesos_ho);
-	this->bias_o->add(gradiente_salida);
+	Matrix<T>* ho_deltas = Matrix<T>::dot(output_gradients, hidden_weights_output_T);
+	this->pesos_ho->add(ho_deltas);
+	this->bias_o->add(output_gradients);
 
 	//Calcular deltas de la capa de entrada-oculta
 	Matrix<T>* inputs_T = Matrix<T>::transpose(inputs);
-	Matrix<T>* deltas_pesos_ih = Matrix<T>::dot(gradientes_capa_oculta, inputs_T);
-	this->pesos_ih->add(deltas_pesos_ih);
-	this->bias_h->add(gradientes_capa_oculta);
+	Matrix<T>* ih_deltas = Matrix<T>::dot(hidden_gradients, inputs_T);
+	this->pesos_ih->add(ih_deltas);
+	this->bias_h->add(hidden_gradients);
 
 	delete inputs;
 	delete answers;
 	delete outputs;
 	delete outputsVec;
 	delete outputErrors;
-	delete gradiente_salida;
-	delete gradientes_capa_oculta;
+	delete output_gradients;
+	delete hidden_gradients;
 	delete hidden_weights_output_T;
 	delete inputs_T;
-	delete deltas_pesos_ih;
-	delete deltas_pesos_ho;
+	delete ho_deltas;
+	delete ih_deltas;
 
 }
 
