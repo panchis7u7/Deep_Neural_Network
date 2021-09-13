@@ -61,6 +61,10 @@ std::vector<T>* NeuralNetwork<T>::feedForward(std::vector<T>* vec_entrada) {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	delete entradas;
+	delete entradas_capa_oculta;
+	delete entradas_capa_salida;
+
 	return Matrix<T>::toVector(salidas);
 }
 
@@ -103,6 +107,18 @@ void NeuralNetwork<T>::train(std::vector<T>* vec_entradas, std::vector<T>* vec_r
 	Matrix<T>* deltas_pesos_ih = Matrix<T>::dot(gradientes_capa_oculta, Matrix<T>::transpose(entradas));
 	this->pesos_ih->add(deltas_pesos_ih);
 	this->bias_h->add(gradientes_capa_oculta);
+
+	delete vec_salidas;
+	delete entradas;
+	delete respuestas;
+	delete salidas;
+	delete errores_salida;
+	delete errores_capa_oculta_salida;
+	delete gradiente_salida;
+	delete gradientes_capa_oculta;
+	delete deltas_pesos_ih;
+	delete deltas_pesos_ho;
+
 }
 
 template <typename T>

@@ -8,19 +8,6 @@
 int main()
 {
 	srand(static_cast<unsigned>(time(0)));
-	/*
-	Matrix<float>* A = new Matrix<float>(3, 1);
-	A->randomize();
-	A->print();
-
-	Matrix<float>* B = new Matrix<float>(2, 3);
-	B->randomize();
-	B->print();
-
-	std::vector<float>* vec = new std::vector<float>{1.0, 1.0, 1.0};
-
-	std::cout << voxel::Matrix<float>::dot(A, vec) << std::endl;
-	*/
 	NeuralNetwork<float>* nn = new NeuralNetwork<float>(2, 4, 1);
 	std::vector<float> entradas[] = { { 0 , 0},
 									  { 1 , 0},

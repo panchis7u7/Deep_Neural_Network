@@ -23,7 +23,7 @@ public:
 	}
 
 protected:
-	float learning_rate = 0.025f;
+	float learning_rate = 0.25f;
 	int inputLayerNodes;
 	int outputLayerNodes;
 	Matrix<T>* pesos_ih;
