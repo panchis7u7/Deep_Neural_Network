@@ -8,7 +8,7 @@ add_library(
 )
 
 add_library(
-    DNN SHARED
+    NeuralNets SHARED
     NeuralNetwork/src/NeuralNetwork.cpp
     NeuralNetwork/include/NeuralNetwork.hpp
 )
@@ -16,5 +16,5 @@ add_library(
 add_library( RapidXML INTERFACE )
 
 target_include_directories(Matrix PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Matrix")
-target_include_directories(DNN PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/NeuralNetwork")
+target_include_directories(NeuralNets PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/NeuralNetwork")
 target_include_directories(RapidXML INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/RapidXML")
