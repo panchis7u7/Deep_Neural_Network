@@ -9,8 +9,8 @@ class NeuralNetwork {
 public:
 	NeuralNetwork(int inputNodes, int hiddenNodes, int outputNodes);
 	virtual ~NeuralNetwork();
-	virtual std::vector<T>* feedForward(std::vector<T>* inputData);
-	virtual void train(std::vector<T>* guesses, std::vector<T>* answers);
+	virtual std::vector<T>* feedForward(std::vector<T>* inputVec);
+	virtual void train(std::vector<T>* guessesVec, std::vector<T>* answersVec);
 	virtual inline void printWeights();
 	
 	static T sigmoid(T n) {

@@ -9,10 +9,10 @@ int main()
 {
 	srand(static_cast<unsigned>(time(0)));
 	NeuralNetwork<float>* nn = new NeuralNetwork<float>(2, 4, 1);
-	std::vector<float> entradas[] = { { 0 , 0},
-									  { 1 , 0},
-									  { 0 , 1},
-									  { 1 , 1} };
+	std::vector<float> entradas[] = { { 0.0 , 0.0},
+									  { 1.0 , 0.0},
+									  { 0.0 , 1.0},
+									  { 1.0 , 1.0} };
 	std::vector<float> esperado[] = { {0},{1},{1},{0} };
 	for (size_t i = 0; i < 30000; i++)
 	{

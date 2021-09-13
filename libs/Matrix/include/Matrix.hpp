@@ -19,6 +19,9 @@ namespace voxel {
 		void print();
 		void add(T addend);
 		void add(Matrix<T>* addend);
+		void subtract(Matrix<T>* minuend);
+		void subtract(std::vector<T>* minuend);
+		void dot(Matrix<T>& multiplicand);
 		void randomize();
 		void transpose();
 		void scalarProduct(T factor);
@@ -115,7 +118,7 @@ namespace voxel {
 
 		static Matrix<T>* dot(Matrix<T>* A, std::vector<T>* B) {
 			//n Column Matrix requires n elements vector in order to perform product.
-			Matrix<T>* result = new Matrix<T>(A->rows, B->size());
+			Matrix<T>* result = new Matrix<T>(A->rows, 1);
 			for (uint_fast64_t i = 0; i < result->rows; i++)
 			{
 				for (uint_fast64_t j = 0; j < result->columns; j++)
@@ -123,7 +126,7 @@ namespace voxel {
 					T sum = 0;
 					for (uint_fast64_t k = 0; k < A->columns; k++)
 					{
-						sum += A->data[i][k] * B->at(i);
+						sum += A->data[i][k] * B->at(k);
 					}
 					result->data[i][j] = sum;
 				}

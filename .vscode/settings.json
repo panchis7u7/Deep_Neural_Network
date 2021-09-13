@@ -55,6 +55,7 @@
         "typeinfo": "cpp",
         "fstream": "cpp"
     },
-    "cmake.configureOnOpen": false,
+    "cmake.configureOnOpen": true,
+    "cmake.default.buildDirectory": "${workspaceFolder}/out/build/Linux/",
     "C_Cpp.default.configurationProvider": "go2sh.cmake-integration"
 }

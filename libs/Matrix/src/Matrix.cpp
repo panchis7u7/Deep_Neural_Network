@@ -66,6 +66,22 @@ void Matrix<T>::add(T addend) {
 }
 
 template <typename T>
+void Matrix<T>::subtract(Matrix<T>* minuend){
+	for (uint_fast64_t i = 0; i < this->rows; i++) 
+	{
+		for (uint_fast64_t j = 0; j < minuend->columns; j++) 
+		{
+			this->data[i][j] -= minuend->data[i][j]; 
+		}
+	}	
+}
+
+template <typename T>
+void subtract(std::vector<T>* minuend){
+
+}
+
+template <typename T>
 void Matrix<T>::add(Matrix<T>* addend) {
 	for (uint_fast64_t i = 0; i < this->rows; i++)
 	{
@@ -74,6 +90,28 @@ void Matrix<T>::add(Matrix<T>* addend) {
 			this->data[i][j] += addend->data[i][j];
 		}
 	}
+}
+
+template <class T>
+void Matrix<T>::dot(Matrix<T>& multiplicand){
+	T** data = alloc(this->rows, multiplicand.columns);
+
+	for (uint_fast64_t i = 0; i < this->rows; i++)
+	{
+		for (uint_fast64_t j = 0; j < multiplicand.columns; j++)
+		{
+			T sum = 0;
+			for (uint_fast64_t k = 0; k < this->columns; k++)
+			{
+				sum += this->data[i][k] * multiplicand.data[k][j];
+			}
+			data[i][j] = sum;
+		}
+	}
+
+	this->columns = multiplicand.columns;
+	delete  this->data;
+	this->data = data;
 }
 
 template <typename T>
