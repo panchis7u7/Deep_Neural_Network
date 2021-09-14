@@ -77,8 +77,8 @@ void Matrix<T>::subtract(Matrix<T>* minuend){
 }
 
 template <typename T>
-void subtract(std::vector<T>* minuend){
-
+void Matrix<T>::subtract(std::vector<T>* minuend){
+	std::cout << minuend->size() << std::endl;
 }
 
 template <typename T>

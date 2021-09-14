@@ -38,5 +38,7 @@ int main()
 	std::cout << "1,1: " << nn2->feedForward(&entradas[3])->at(0) << std::endl;
 
 	nn2->printWeights();
+	std::cin.get();
+
 	return 0;
 }   

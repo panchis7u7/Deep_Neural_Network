@@ -15,6 +15,11 @@ add_library(
 
 add_library( RapidXML INTERFACE )
 
+#install(TARGETS NeuralNets Matrix
+#    RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/out/build/Win64"
+#    LIBRARY DESTINATION "${PROJECT_SOURCE_DIR}/out/build/Win64"
+#)
+
 target_include_directories(Matrix PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Matrix")
 target_include_directories(NeuralNets PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/NeuralNetwork")
 target_include_directories(RapidXML INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/RapidXML")

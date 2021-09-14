@@ -258,12 +258,12 @@ std::vector<T>* DeepNeuralNetwork<T>::feedForward(std::vector<T>* inputVec) {
 	// sig -> Sigmoid function.
 	////////////////////////////////////////////////
 	/********************************************************************************/
-	Matrix<T>* entradas_capa_oculta = Matrix<T>::dot(this->pesos_ih, inputVec);
-	entradas_capa_oculta->add(this->bias.at(0));
+	this->salidas_capas_ocultas[0] = Matrix<T>::dot(this->pesos_ih, inputVec);
+	this->salidas_capas_ocultas[0]->add(this->bias[0]);
+	this->salidas_capas_ocultas[0]->map(NeuralNetwork<T>::sigmoid);
 
 	// sig((W * i) + b) process for nth-hidden layers.
 	/********************************************************************************/
-	this->salidas_capas_ocultas.at(0) = Matrix<T>::map(entradas_capa_oculta, NeuralNetwork<T>::sigmoid);
 	for (size_t i = 0; i < (hiddenLayerSize-1); i++)
 	{
 		this->salidas_capas_ocultas.at(i+1) = Matrix<T>::dot(this->pesos_hn.at(i), this->salidas_capas_ocultas.at(i));
@@ -283,7 +283,6 @@ std::vector<T>* DeepNeuralNetwork<T>::feedForward(std::vector<T>* inputVec) {
 
 	// Memory deallocation.
 	/********************************************************************************/
-	delete entradas_capa_oculta;
 	delete entradas_capa_salida;
 
 	return outputVec;
