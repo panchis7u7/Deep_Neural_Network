@@ -1,5 +1,4 @@
 #include <include/NeuralNetwork.hpp>
-#include <memory>
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
 
@@ -152,6 +151,7 @@ void NeuralNetwork<T>::train(std::vector<T>* vec_entradas, std::vector<T>* vec_r
 	delete inputs_T;
 	delete ho_deltas;
 	delete ih_deltas;
+	delete ho_errors;
 
 }
 
@@ -257,15 +257,19 @@ std::vector<T>* DeepNeuralNetwork<T>::feedForward(std::vector<T>* inputVec) {
 	// b -> Bias.
 	// sig -> Sigmoid function.
 	////////////////////////////////////////////////
-	/********************************************************************************/
+	/********************************************************************************/\
+	if (this->salidas_capas_ocultas[0] != nullptr) 
+		delete this->salidas_capas_ocultas[0];
 	this->salidas_capas_ocultas[0] = Matrix<T>::dot(this->pesos_ih, inputVec);
 	this->salidas_capas_ocultas[0]->add(this->bias[0]);
 	this->salidas_capas_ocultas[0]->map(NeuralNetwork<T>::sigmoid);
 
 	// sig((W * i) + b) process for nth-hidden layers.
 	/********************************************************************************/
-	for (size_t i = 0; i < (hiddenLayerSize-1); i++)
+	for (size_t i = 0; i < (this->hiddenLayerSize-1); i++)
 	{
+		if (salidas_capas_ocultas[i+1] != nullptr) 
+			delete salidas_capas_ocultas[i+1];
 		this->salidas_capas_ocultas.at(i+1) = Matrix<T>::dot(this->pesos_hn.at(i), this->salidas_capas_ocultas.at(i));
 		this->salidas_capas_ocultas.at(i+1)->add(this->bias.at(i+1));
 		this->salidas_capas_ocultas.at(i+1)->map(NeuralNetwork<T>::sigmoid);
@@ -312,10 +316,14 @@ void DeepNeuralNetwork<T>::train(std::vector<T>* guessVec, std::vector<T>* answe
 	// Hidden-Output error calculation. (Backpropagation)
 	/********************************************************************************/
 	Matrix<T>* ho_weights = Matrix<T>::transpose(this->pesos_ho);
-	this->errores.at(hiddenLayerSize-1) = Matrix<T>::dot(ho_weights, outputErrors);
+	if (this->errores[this->hiddenLayerSize-1] != nullptr) 
+		delete this->errores[this->hiddenLayerSize-1];
+	this->errores.at(this->hiddenLayerSize-1) = Matrix<T>::dot(ho_weights, outputErrors);
 
 	for (size_t i = hiddenLayerSize-1; i > 0; i--)
 	{
+		if (this->errores[i - 1] != nullptr) 
+			delete this->errores[i - 1];
 		this->errores.at(i-1) = Matrix<T>::dot(Matrix<T>::transpose(this->pesos_hn.at(i - 1)), errores.at(i));
 	}
 
@@ -331,6 +339,8 @@ void DeepNeuralNetwork<T>::train(std::vector<T>* guessVec, std::vector<T>* answe
 	/********************************************************************************/
 	for (size_t i = hiddenLayerSize-1; i > 0; i--)
 	{
+		if (this->gradientes[i - 1] != nullptr) 
+			delete this->gradientes[i - 1];
 		this->gradientes.at(i-1) = Matrix<T>::map(this->salidas_capas_ocultas.at(hiddenLayerSize-i), NeuralNetwork<T>::dsigmoid);
 		this->gradientes.at(i-1)->hadamardProduct(errores.at(hiddenLayerSize-i));
 		this->gradientes.at(i-1)->scalarProduct(this->learning_rate);
@@ -355,6 +365,8 @@ void DeepNeuralNetwork<T>::train(std::vector<T>* guessVec, std::vector<T>* answe
 	for (size_t i = hiddenLayerSize - 1; i > 0; i--)
 	{
 		Matrix<T>* gradientes_T = Matrix<T>::transpose(this->gradientes.at(i - 1));
+		if (this->deltas[i - 1] != nullptr) 
+			delete this->deltas[i - 1];
 		this->deltas.at(i-1) = Matrix<T>::dot(this->salidas_capas_ocultas.at(i), gradientes_T);
 		this->pesos_hn.at(i-1)->add(deltas.at(i-1));
 		delete gradientes_T;
@@ -370,9 +382,10 @@ void DeepNeuralNetwork<T>::train(std::vector<T>* guessVec, std::vector<T>* answe
 	/********************************************************************************/
 	delete outputsVec;
 	delete inputs;
-	delete answers;
-	delete salidas_capas_ocultas_T;
 	delete outputErrors;
+	delete answers;
+	delete ho_weights;
+	delete salidas_capas_ocultas_T;
 	delete gradiente_entrada_oculta;
 	delete outputGradient;
 	delete deltas_pesos_ih;

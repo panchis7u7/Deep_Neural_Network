@@ -34,9 +34,9 @@ template <typename T>
 Matrix<T>::~Matrix() {
 	for (uint_fast64_t i = 0; i < this->rows; i++)
 	{
-		delete[] data[i];
+		delete[] this->data[i];
 	}
-	delete[] data;
+	delete[] this->data;
 }
 
 template <typename T>

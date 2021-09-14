@@ -27,7 +27,7 @@ int main()
 	std::cout << std::endl;
 	std::vector<uint_fast64_t> f1 = { 4, 4 };
 	DeepNeuralNetwork<float>* nn2 = new DeepNeuralNetwork<float>(2, f1, 1);
-	for (size_t i = 0; i < 80000; i++)
+	for (size_t i = 0; i < 15000; i++)
 	{
 		int index = rand() % 4;
 		nn2->train(&entradas[index], &esperado[index]);
@@ -36,6 +36,9 @@ int main()
 	std::cout << "0,1: " << nn2->feedForward(&entradas[1])->at(0) << std::endl;
 	std::cout << "1,0: " << nn2->feedForward(&entradas[2])->at(0) << std::endl;
 	std::cout << "1,1: " << nn2->feedForward(&entradas[3])->at(0) << std::endl;
+
+	std::vector<float> guess{ 1.0, 1.0 };
+	std::cout << nn2->feedForward(&guess)->at(0) << std::endl;
 
 	nn2->printWeights();
 	std::cin.get();
