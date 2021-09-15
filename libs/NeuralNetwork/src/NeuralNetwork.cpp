@@ -152,7 +152,6 @@ void NeuralNetwork<T>::train(std::vector<T>* vec_entradas, std::vector<T>* vec_r
 	delete ho_deltas;
 	delete ih_deltas;
 	delete ho_errors;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
