@@ -2,6 +2,8 @@
 #include <include/NeuralNetwork.hpp>
 #include <vector>
 #include <include/rapidxml.hpp>
+#include <include/RS232Comm.hpp>
+#include <list>
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
 
@@ -39,8 +41,13 @@ int main()
 
 	std::vector<float> guess{ 1.0, 1.0 };
 	std::cout << nn2->feedForward(&guess)->at(0) << std::endl;
-
 	nn2->printWeights();
+
+	std::list<int>* ports = getAvailablePorts();
+	for (std::list<int>::iterator it = ports->begin(); it != ports->end(); ++it) {
+		std::cout << "COM" << *it << std::endl;
+	}
+
 	std::cin.get();
 
 	return 0;

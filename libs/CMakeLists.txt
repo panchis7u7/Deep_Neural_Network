@@ -13,7 +13,14 @@ add_library(
     NeuralNetwork/include/NeuralNetwork.hpp
 )
 
+add_library(
+    RS232Comm SHARED
+    RS232Comm/src/RS232Comm.cpp
+    RS232Comm/include/RS232Comm.hpp
+)
+
 add_library( RapidXML INTERFACE )
+
 
 #install(TARGETS NeuralNets Matrix
 #    RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/out/build/Win64"
@@ -22,4 +29,5 @@ add_library( RapidXML INTERFACE )
 
 target_include_directories(Matrix PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Matrix")
 target_include_directories(NeuralNets PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/NeuralNetwork")
+target_include_directories(RS232Comm PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/RS232Comm")
 target_include_directories(RapidXML INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/RapidXML")
