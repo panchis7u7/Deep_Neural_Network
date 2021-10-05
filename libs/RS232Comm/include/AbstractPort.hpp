@@ -19,9 +19,9 @@ typedef enum tagSERIAL_STATE {
 
 constexpr auto DEFAULT_COM_RATE = 9600;
 
-class AbstractSerialPort {
+class AbstractPort {
 public:
-	AbstractSerialPort(const AbstractSerialPort&) = delete;
+	AbstractPort(const AbstractPort&) = delete;
 	//virtual ~AbstractSerialPort();
 	
 	static std::string* utf16ToUTF8(const std::wstring& s) {
@@ -31,7 +31,7 @@ public:
 		return new std::string(&buf[0]);
 	}
 
-	friend const char* operator<<(AbstractSerialPort& serialPort, const char* text) {
+	friend const char* operator<<(AbstractPort& serialPort, const char* text) {
 		serialPort.sendData((void*)text, strlen(text));
 		return text;
 	}
@@ -43,8 +43,8 @@ public:
 private:
 
 protected:
-	AbstractSerialPort() {};
-	~AbstractSerialPort() {};
+	AbstractPort() {};
+	~AbstractPort() {};
 	virtual std::vector<std::wstring> getAvailablePorts() = 0;
 	virtual std::size_t sendData(void* buf, std::size_t szBuf) = 0;
 	virtual std::size_t rcvData(void* buf, std::size_t buf_len) = 0;

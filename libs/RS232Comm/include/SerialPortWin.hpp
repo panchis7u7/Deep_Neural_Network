@@ -1,12 +1,12 @@
 #pragma once
-#include <include/AbstractSerialPort.hpp>
+#include <include/AbstractPort.hpp>
 // Windows corresponding code.
 
 typedef struct WinSerialPortConfig: SerialPortConf {
 	COMMTIMEOUTS timeout;
 } WinSerialPortConf;
 
-class SerialPortWin: public AbstractSerialPort {
+class SerialPortWin: public AbstractPort {
 public:
 	SerialPortWin(const wchar_t* comPort);
 	SerialPortWin(const wchar_t* comPort, WinSerialPortConf& serialConf);

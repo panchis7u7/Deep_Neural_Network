@@ -16,7 +16,9 @@ add_library(
 add_library(
     RS232Comm SHARED
     RS232Comm/include/SerialPort.hpp
-    RS232Comm/include/AbstractSerialPort.hpp
+    RS232Comm/include/AbstractPort.hpp
+    RS232Comm/include/SerialBuffer.hpp
+    RS232Comm/src/SerialBuffer.cpp
     RS232Comm/include/SerialPortWin.hpp
     RS232Comm/src/SerialPortWin.cpp
 )

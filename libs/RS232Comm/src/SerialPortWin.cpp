@@ -68,7 +68,7 @@ HRESULT SerialPortWin::createPortFile() {
 		return E_FAIL;
 	}
 	else {
-		std::cout << AbstractSerialPort::utf16ToUTF8(this->m_wComPort)->c_str() << " is now open." << std::endl;
+		std::cout << AbstractPort::utf16ToUTF8(this->m_wComPort)->c_str() << " is now open." << std::endl;
 	}
 	return hr;
 }
@@ -165,7 +165,7 @@ unsigned int __stdcall SerialPortWin::eventThreadFn(void* pvParam) {
 	SetEvent(apThis->m_hThreadStarted);
 
 	while (abContinue) {
-		BOOL abRet = ::WaitCommEvent(apThis->m_hCom, &dwEventMask, &o);
+		BOOL abRet = WaitCommEvent(apThis->m_hCom, &dwEventMask, &o);
 		if (!abRet) {
 			assert(GetLastError() == ERROR_IO_PENDING);
 		}
