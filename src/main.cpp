@@ -2,7 +2,7 @@
 #include <include/NeuralNetwork.hpp>
 #include <vector>
 #include <include/rapidxml.hpp>
-#include <include/SerialPortWin.hpp>
+#include <include/SerialPort.hpp>
 #include <list>
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
@@ -48,9 +48,8 @@ int main()
 		std::cout << "COM" << *it << std::endl;
 	}*/
 
-	SerialPortWin arduino(L"COM4");
-	char msgOut[] = "Hola desde Windows 11";
-	arduino.outputToPort(msgOut, strlen(msgOut) + 1);
+	SerialPort arduino(L"COM4");
+	arduino << "Hola desde Windows!";
 	
 	std::cin.get();
 
