@@ -4,18 +4,22 @@
 #include <string.h>
 #include <string>
 #include <vector>
+#include <assert.h>
+#include <thread>
 #include <include/SerialPortWin.hpp>
 
 constexpr auto EX_FATAL = 1; 
 
 SerialPortWin::SerialPortWin(const wchar_t* comPort) {
 	this->comPort = comPort;
-	initPort(DEFAULT_COM_RATE, 8, COMMTIMEOUTS());
+	this->serialConf = {DEFAULT_COM_RATE, 8, COMMTIMEOUTS()};
+	initPort();
 }
 
-SerialPortWin::SerialPortWin(const wchar_t* comPort, SerialPortConf& serialConf) {
+SerialPortWin::SerialPortWin(const wchar_t* comPort, WinSerialPortConf& serialConf) {
 	this->comPort = comPort;
-	initPort(serialConf.nComBits, serialConf.nComRate, serialConf.timeout);
+	this->serialConf = serialConf;
+	initPort();
 }
 
 SerialPortWin::~SerialPortWin() {
@@ -28,15 +32,68 @@ SerialPortWin::~SerialPortWin() {
 // Initializes the port and sets the communication parameters.
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void SerialPortWin::initPort(int nComRate, int nComBits, COMMTIMEOUTS timeout) {
+void SerialPortWin::initPort() {
 	createPortFile();								// Initializes hCom to point to PORT#
 	purgePort();									// Purges the COM port
-	SetComParms(nComRate, nComBits, timeout);		// Uses the DCB structure to set up the COM port
+	SetComParms();									// Uses the DCB structure to set up the COM port
 	purgePort();
+	std::thread* eventThread = new std::thread(&SerialPortWin::setupEvent, this);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+void SerialPortWin::setupEvent() {
+	BOOL fSuccess = SetCommMask(this->hCom, EV_CTS | EV_DSR);
+	if (!fSuccess) {
+		printf("SetCommMask failed with error %d.\n", GetLastError());
+		return;
+	}
+
+	OVERLAPPED o;
+	o.hEvent = CreateEvent(
+		NULL,   // default security attributes 
+		TRUE,   // manual-reset event 
+		FALSE,  // not signaled 
+		NULL    // no name
+	);
+
+	// Initialize the rest of the OVERLAPPED structure to zero.
+	o.Internal = 0;
+	o.InternalHigh = 0;
+	o.Offset = 0;
+	o.OffsetHigh = 0;
+
+	assert(o.hEvent);
+	DWORD dwEvtMask = 0;
+
+	if (WaitCommEvent(hCom, &dwEvtMask, &o))
+	{
+		//Data set ready.
+		if (dwEvtMask & EV_DSR)
+		{
+			std::cout << "Hola" << std::endl;
+		}
+
+		//Clear to send.
+		if (dwEvtMask & EV_CTS)
+		{
+			std::cout << "Hola" << std::endl;
+		}
+	}
+	else
+	{
+		DWORD dwRet = GetLastError();
+		if (ERROR_IO_PENDING == dwRet)
+		{
+			printf("I/O is pending...\n");
+
+			// To do.
+		}
+		else
+			printf("Wait failed with error %d.\n", GetLastError());
+	}
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 // Purge any outstanding requests on the serial port (initialize)
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -47,53 +104,32 @@ void SerialPortWin::purgePort() {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-unsigned long SerialPortWin::sendData(void* buf, unsigned long szBuf) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+// Output/Input messages to/from ports 
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// LPCVOID buf, DWORD szBuf
+std::size_t SerialPortWin::sendData(void* buf, std::size_t buf_len) {
 	int i = 0;
-	DWORD NumberofBytesTransmitted;
+	DWORD nBytesTransmited;
 	LPDWORD lpErrors = 0;
 	LPCOMSTAT lpStat = 0;
 
 	i = WriteFile(
 		this->hCom,									// Write handle pointing to COM port
 		buf,										// Buffer size
-		szBuf,										// Size of buffer
-		&NumberofBytesTransmitted,					// Written number of bytes
+		buf_len,									// Size of buffer
+		&nBytesTransmited,							// Written number of bytes
 		NULL
 	);
 	// Handle the timeout error
 	if (i == 0) {
 		printf("\nWrite Error: 0x%x\n", GetLastError());
-		ClearCommError(hCom, lpErrors, lpStat);		// Clears the device error flag to enable additional input and output operations. Retrieves information ofthe communications error.	
+		ClearCommError(this->hCom, lpErrors, lpStat);		// Clears the device error flag to enable additional input and output operations. Retrieves information ofthe communications error.	
 	}
 	else
-		std::cout << "Successful transmission, there were " << NumberofBytesTransmitted << " bytes transmitted." << std::endl;
-	return NumberofBytesTransmitted;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-// Output/Input messages to/from ports 
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void SerialPortWin::outputToPort(LPCVOID buf, DWORD szBuf) {
-	int i=0;
-	DWORD NumberofBytesTransmitted;
-	LPDWORD lpErrors=0;
-	LPCOMSTAT lpStat=0; 
-
-	i = WriteFile(
-		this->hCom,									// Write handle pointing to COM port
-		buf,										// Buffer size
-		szBuf,										// Size of buffer
-		&NumberofBytesTransmitted,					// Written number of bytes
-		NULL
-	);
-	// Handle the timeout error
-	if (i == 0) {
-		printf("\nWrite Error: 0x%x\n", GetLastError());
-		ClearCommError(hCom, lpErrors, lpStat);		// Clears the device error flag to enable additional input and output operations. Retrieves information ofthe communications error.	
-	}
-	else
-		std::cout << "Successful transmission, there were " << NumberofBytesTransmitted << " bytes transmitted." << std::endl;
+		std::cout << "Successful transmission, there were " << nBytesTransmited << " bytes transmitted." << std::endl;
+	return nBytesTransmited;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -102,17 +138,18 @@ void SerialPortWin::outputToPort(LPCVOID buf, DWORD szBuf) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-DWORD SerialPortWin::inputFromPort(LPVOID buf, DWORD szBuf) {
+// LPVOID buf, DWORD szBuf
+std::size_t SerialPortWin::rcvData(void* buf, std::size_t buf_len) {
 	int i = 0;
-	DWORD NumberofBytesRead;
+	DWORD nBytesRead;
 	LPDWORD lpErrors = 0;
 	LPCOMSTAT lpStat = 0;
 
 	i = ReadFile(
 		this->hCom,									// Read handle pointing to COM port
 		buf,										// Buffer size
-		szBuf,  									// Size of buffer - Maximum number of bytes to read
-		&NumberofBytesRead,
+		buf_len,  									// Size of buffer - Maximum number of bytes to read
+		&nBytesRead,
 		NULL
 	);
 	// Handle the timeout error
@@ -121,9 +158,9 @@ DWORD SerialPortWin::inputFromPort(LPVOID buf, DWORD szBuf) {
 		ClearCommError(this->hCom, lpErrors, lpStat);		// Clears the device error flag to enable additional input and output operations. Retrieves information ofthe communications error.
 	}
 	else
-		std::cout << "Successful reception!, There were " << NumberofBytesRead << " bytes read" << std::endl;
+		std::cout << "Successful reception!, There were " << nBytesRead << " bytes read" << std::endl;
 
-	return(NumberofBytesRead);
+	return(nBytesRead);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -190,7 +227,7 @@ void SerialPortWin::createPortFile() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-int SerialPortWin::SetComParms(int nComRate, int nComBits, COMMTIMEOUTS timeout) {
+int SerialPortWin::SetComParms() {
 	DCB dcb;										// Windows device control block
 	// Clear DCB to start out clean, then get current settings
 	memset(&dcb, 0, sizeof(dcb));
@@ -199,26 +236,22 @@ int SerialPortWin::SetComParms(int nComRate, int nComBits, COMMTIMEOUTS timeout)
 		return(0);
 
 	// Set our own parameters from Globals
-	dcb.BaudRate = nComRate;						// Baud (bit) rate
-	dcb.ByteSize = (BYTE)nComBits;					// Number of bits(8)
+	dcb.BaudRate = this->serialConf.nComRate;		// Baud (bit) rate
+	dcb.ByteSize = (BYTE)this->serialConf.nComBits;	// Number of bits(8)
 	dcb.Parity = 0;									// No parity	
 	dcb.StopBits = ONESTOPBIT;						// One stop bit
 	if (!SetCommState(this->hCom, &dcb))
 		return(0);
 
 	// Set communication timeouts (SEE COMMTIMEOUTS structure in MSDN) - want a fairly long timeout
-	memset((void *)&timeout, 0, sizeof(timeout));
-	timeout.ReadIntervalTimeout = 500;				// Maximum time allowed to elapse before arival of next byte in milliseconds. If the interval between the arrival of any two bytes exceeds this amount, the ReadFile operation is completed and buffered data is returned
-	timeout.ReadTotalTimeoutMultiplier = 1;			// The multiplier used to calculate the total time-out period for read operations in milliseconds. For each read operation this value is multiplied by the requested number of bytes to be read
-	timeout.ReadTotalTimeoutConstant = 5000;		// A constant added to the calculation of the total time-out period. This constant is added to the resulting product of the ReadTotalTimeoutMultiplier and the number of bytes (above).
-	SetCommTimeouts(this->hCom, &timeout);
+	COMMTIMEOUTS* timeout = &this->serialConf.timeout;
+	memset((void *)timeout, 0, sizeof(*timeout));
+	timeout->ReadIntervalTimeout = 500;				// Maximum time allowed to elapse before arival of next byte in milliseconds. If the interval between the arrival of any two bytes exceeds this amount, the ReadFile operation is completed and buffered data is returned
+	timeout->ReadTotalTimeoutMultiplier = 1;			// The multiplier used to calculate the total time-out period for read operations in milliseconds. For each read operation this value is multiplied by the requested number of bytes to be read
+	timeout->ReadTotalTimeoutConstant = 5000;		// A constant added to the calculation of the total time-out period. This constant is added to the resulting product of the ReadTotalTimeoutMultiplier and the number of bytes (above).
+	SetCommTimeouts(this->hCom, timeout);
 	return(1);
 }
 
 //#endif //Win32 implementation.
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-
-const char* operator<<(SerialPortWin& serialPort, const char* text) {
-	serialPort.sendData((void*)text, strlen(text));
-	return text;
-};

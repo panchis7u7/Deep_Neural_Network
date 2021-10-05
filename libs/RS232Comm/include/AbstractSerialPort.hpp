@@ -5,7 +5,6 @@
 typedef struct SerialPortConfig {
 	unsigned nComRate;
 	unsigned nComBits;
-	COMMTIMEOUTS timeout;
 } SerialPortConf;
 
 constexpr auto DEFAULT_COM_RATE = 9600;
@@ -22,11 +21,23 @@ public:
 		return new std::string(&buf[0]);
 	}
 
+	friend const char* operator<<(AbstractSerialPort& serialPort, const char* text) {
+		serialPort.sendData((void*)text, strlen(text));
+		return text;
+	}
+
+	/*friend void operator>>(AbstractSerialPort& serialPort, std::string& str) {
+		return str;
+	}*/
+
 private:
 
 protected:
 	AbstractSerialPort() {};
 	~AbstractSerialPort() {};
 	virtual std::vector<std::wstring> getAvailablePorts() = 0;
-	virtual unsigned long sendData(void* buf, unsigned long szBuf) = 0;
+	virtual std::size_t sendData(void* buf, std::size_t szBuf) = 0;
+	virtual std::size_t rcvData(void* buf, std::size_t buf_len) = 0;
+	virtual void initPort() = 0;
+	virtual void purgePort() = 0;
 };

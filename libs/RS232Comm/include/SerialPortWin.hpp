@@ -2,25 +2,29 @@
 #include <include/AbstractSerialPort.hpp>
 // Windows corresponding code.
 
-class SerialPortWin: AbstractSerialPort {
+typedef struct WinSerialPortConfig: SerialPortConf {
+	COMMTIMEOUTS timeout;
+} WinSerialPortConf;
+
+class SerialPortWin: public AbstractSerialPort {
 public:
 	SerialPortWin(const wchar_t* comPort);
-	SerialPortWin(const wchar_t* comPort, SerialPortConf& serialConf);
+	SerialPortWin(const wchar_t* comPort, WinSerialPortConf& serialConf);
 	~SerialPortWin();
-	void initPort(int nComRate, int nComBits, COMMTIMEOUTS timeout);
-	void purgePort();
-	void outputToPort(LPCVOID buf, DWORD szBuf);
-	unsigned long sendData(void* buf, unsigned long szBuf) override;
-	DWORD inputFromPort(LPVOID buf, DWORD szBuf);
-	std::vector<std::wstring> getAvailablePorts();
 
-	friend const char* operator<<(SerialPortWin& serialPort, const char* text);
+	void setupEvent();
 
-	//Sub-Functions
+	//Polymorphic functions.
+	std::vector<std::wstring> getAvailablePorts() override;
+	std::size_t sendData(void* buf, std::size_t buf_len) override;
+	std::size_t rcvData(void* buf, std::size_t buf_len) override;
+	void initPort() override;
+	void purgePort() override;
 	void createPortFile();
-	int SetComParms(int nComRate, int nComBits, COMMTIMEOUTS timeout);
+	int SetComParms();
 
 private:
 	HANDLE hCom;
+	WinSerialPortConf serialConf;
 	const wchar_t* comPort;
 };
