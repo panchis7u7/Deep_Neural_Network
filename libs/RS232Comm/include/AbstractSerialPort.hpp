@@ -5,7 +5,17 @@
 typedef struct SerialPortConfig {
 	unsigned nComRate;
 	unsigned nComBits;
+	unsigned byStopBits;
+	unsigned parity;
 } SerialPortConf;
+
+typedef enum tagSERIAL_STATE {
+	SS_Unknown,
+	SS_UnInit,
+	SS_Init,
+	SS_Started,
+	SS_Stopped,
+} SERIAL_STATE;
 
 constexpr auto DEFAULT_COM_RATE = 9600;
 
@@ -38,6 +48,6 @@ protected:
 	virtual std::vector<std::wstring> getAvailablePorts() = 0;
 	virtual std::size_t sendData(void* buf, std::size_t szBuf) = 0;
 	virtual std::size_t rcvData(void* buf, std::size_t buf_len) = 0;
-	virtual void initPort() = 0;
-	virtual void purgePort() = 0;
+	virtual long initPort() = 0;
+	virtual long purgePort() = 0;
 };

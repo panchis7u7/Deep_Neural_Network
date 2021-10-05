@@ -11,20 +11,20 @@
 constexpr auto EX_FATAL = 1; 
 
 SerialPortWin::SerialPortWin(const wchar_t* comPort) {
-	this->comPort = comPort;
-	this->serialConf = {DEFAULT_COM_RATE, 8, COMMTIMEOUTS()};
+	this->m_wComPort = comPort;
+	this->m_wSerialConf = {DEFAULT_COM_RATE, 8, ONESTOPBIT, 0, COMMTIMEOUTS() };
 	initPort();
 }
 
 SerialPortWin::SerialPortWin(const wchar_t* comPort, WinSerialPortConf& serialConf) {
-	this->comPort = comPort;
-	this->serialConf = serialConf;
+	this->m_wComPort = comPort;
+	this->m_wSerialConf = serialConf;
 	initPort();
 }
 
 SerialPortWin::~SerialPortWin() {
 	purgePort();
-	CloseHandle(this->hCom);
+	CloseHandle(this->m_hCom);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -32,25 +32,128 @@ SerialPortWin::~SerialPortWin() {
 // Initializes the port and sets the communication parameters.
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void SerialPortWin::initPort() {
+HRESULT SerialPortWin::initPort() {
 	createPortFile();								// Initializes hCom to point to PORT#
 	purgePort();									// Purges the COM port
-	SetComParms();									// Uses the DCB structure to set up the COM port
+	setComParms();									// Uses the DCB structure to set up the COM port
+	setupEvent();
 	purgePort();
-	std::thread* eventThread = new std::thread(&SerialPortWin::setupEvent, this);
+	//std::thread* eventThread = new std::thread(&SerialPortWin::eventThreadFn, this);
+	return S_OK;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+// Sub functions called by above functions
+/**************************************************************************************/
+// Set the hCom HANDLE to point to a COM port, initialize for reading and writing, open the port and set securities
+HRESULT SerialPortWin::createPortFile() {
+	// Call the CreateFile() function 
+	HRESULT hr = S_OK;
 
-void SerialPortWin::setupEvent() {
-	BOOL fSuccess = SetCommMask(this->hCom, EV_CTS | EV_DSR);
-	if (!fSuccess) {
-		printf("SetCommMask failed with error %d.\n", GetLastError());
-		return;
+	this->m_hDataRx = CreateEvent(0, 0, 0, 0);
+	this->m_hCom = CreateFile(
+		SerialPortWin::utf16ToUTF8(this->m_wComPort)->c_str(),	// COM port number  --> If COM# is larger than 9 then use the following syntax--> "\\\\.\\COM10"
+		GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE,			// Open for read and write
+		NULL,													// No sharing allowed
+		NULL,													// No security
+		OPEN_EXISTING,											// Opens the existing com port
+		FILE_ATTRIBUTE_NORMAL,									// Do not set any file attributes --> Use synchronous operation
+		NULL													// No template
+	);
+
+	if (this->m_hCom == INVALID_HANDLE_VALUE) {
+		std::cout << "Fatal Error" << GetLastError() << ": Unable to open." << std::endl;
+		return E_FAIL;
+	}
+	else {
+		std::cout << AbstractSerialPort::utf16ToUTF8(this->m_wComPort)->c_str() << " is now open." << std::endl;
+	}
+	return hr;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+// Purge any outstanding requests on the serial port (initialize)
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+HRESULT SerialPortWin::purgePort() {
+	PurgeComm(this->m_hCom, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
+	return S_OK;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+HRESULT SerialPortWin::setComParms() {
+	if (!SetCommMask(this->m_hCom, EV_RXCHAR | EV_TXEMPTY)) {
+		std::cout << "RS232Win: Failed to Get Comm Mask. Reason: " << GetLastError() << std::endl;
+		return E_FAIL;
 	}
 
-	OVERLAPPED o;
+	// Windows device control block.
+	DCB dcb = {0};
+	// Clear DCB to start out clean, then get current settings
+	dcb.DCBlength = sizeof(dcb);
+	//memset(&dcb, 0, sizeof(dcb));
+
+	if (!GetCommState(this->m_hCom, &dcb)) {
+		std::cout << "RS232Win: Failed to Get Comm State Reason: " << GetLastError() << std::endl;
+		return E_FAIL;
+	}
+
+	// Set our own parameters from Globals
+	dcb.BaudRate = this->m_wSerialConf.nComRate;		// Baud (bit) rate
+	dcb.ByteSize = (BYTE)this->m_wSerialConf.nComBits;	// Number of bits(8)
+	dcb.Parity = this->m_wSerialConf.parity;			// No parity (0)
+
+	/*if (this->m_wSerialConf.byStopBits == 1)
+		dcb.StopBits = ONESTOPBIT;
+	else if (this->m_wSerialConf.byStopBits == 2)
+		dcb.StopBits = TWOSTOPBITS;
+	else
+		dcb.StopBits = ONE5STOPBITS;*/
+
+	if (!SetCommState(this->m_hCom, &dcb)) {
+		assert(0);
+		std::cout << "RS232Win: : Failed to Set Comm State Reason: " << GetLastError() << std::endl;
+		return E_FAIL;
+	}
+
+	// Set communication timeouts (SEE COMMTIMEOUTS structure in MSDN) - want a fairly long timeout
+	COMMTIMEOUTS* timeout = &this->m_wSerialConf.timeout;
+	memset((void*)timeout, 0, sizeof(*timeout));
+	timeout->ReadIntervalTimeout = 500;				// Maximum time allowed to elapse before arival of next byte in milliseconds. If the interval between the arrival of any two bytes exceeds this amount, the ReadFile operation is completed and buffered data is returned
+	timeout->ReadTotalTimeoutMultiplier = 1;		// The multiplier used to calculate the total time-out period for read operations in milliseconds. For each read operation this value is multiplied by the requested number of bytes to be read
+	timeout->ReadTotalTimeoutConstant = 5000;		// A constant added to the calculation of the total time-out period. This constant is added to the resulting product of the ReadTotalTimeoutMultiplier and the number of bytes (above).
+	SetCommTimeouts(this->m_hCom, timeout);
+
+	std::cout << "RS232Win: Current Settings, (Baud Rate= " << dcb.BaudRate << "; Parity= " << dcb.Parity <<
+		"Byte Size= " << dcb.ByteSize << "; Stop Bits= " << dcb.StopBits << "." << std::endl;
+	return(S_OK);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+HRESULT SerialPortWin::setupEvent() {
+	this->m_hThreadTerm = CreateEvent(0,0,0,0);
+	this->m_hThreadStarted = CreateEvent(0,0,0,0);
+	this->m_hThread = (HANDLE)_beginthreadex(0, 0, SerialPortWin::eventThreadFn, (void*)this, 0, 0);
+	return 0;
+}
+
+unsigned int __stdcall SerialPortWin::eventThreadFn(void* pvParam) {
+	SerialPortWin* apThis = (SerialPortWin*)pvParam;
+	bool abContinue = true;
+	DWORD dwEventMask = 0;
+	HANDLE arHandles[2];
+	DWORD dwWait;
+
+	OVERLAPPED o = {0};
 	o.hEvent = CreateEvent(
 		NULL,   // default security attributes 
 		TRUE,   // manual-reset event 
@@ -58,16 +161,55 @@ void SerialPortWin::setupEvent() {
 		NULL    // no name
 	);
 
-	// Initialize the rest of the OVERLAPPED structure to zero.
-	o.Internal = 0;
-	o.InternalHigh = 0;
-	o.Offset = 0;
-	o.OffsetHigh = 0;
+	arHandles[0] = apThis->m_hThreadTerm;
+	SetEvent(apThis->m_hThreadStarted);
+
+	while (abContinue) {
+		BOOL abRet = ::WaitCommEvent(apThis->m_hCom, &dwEventMask, &o);
+		if (!abRet) {
+			assert(GetLastError() == ERROR_IO_PENDING);
+		}
+
+		arHandles[1] = o.hEvent;
+
+		dwWait = WaitForMultipleObjects(2, arHandles, FALSE, INFINITE);
+		switch (dwWait) {
+			case WAIT_OBJECT_0:
+				{
+					_endthreadex(1);
+				}
+				break;
+			case WAIT_OBJECT_0 + 1:
+				{
+					DWORD dwMask;
+					if (GetCommMask(apThis->m_hCom, &dwMask)) {
+						if (dwMask == EV_TXEMPTY) {
+							std::cout << "Data sent." << std::endl;
+							ResetEvent(o.hEvent);
+							continue;
+						}
+					}
+
+					//Data Read.
+					int iAccum = 0;
+					//apThis->m_
+				}
+				break;
+		}
+	}
+
+	return 0;
+
+	/*BOOL fSuccess = SetCommMask(this->m_hCom, EV_CTS | EV_DSR);
+	if (!fSuccess) {
+		printf("SetCommMask failed with error %d.\n", GetLastError());
+		return;
+	}
 
 	assert(o.hEvent);
 	DWORD dwEvtMask = 0;
 
-	if (WaitCommEvent(hCom, &dwEvtMask, &o))
+	if (WaitCommEvent(m_hCom, &dwEvtMask, &o))
 	{
 		//Data set ready.
 		if (dwEvtMask & EV_DSR)
@@ -92,17 +234,8 @@ void SerialPortWin::setupEvent() {
 		}
 		else
 			printf("Wait failed with error %d.\n", GetLastError());
-	}
+	}*/
 }
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-// Purge any outstanding requests on the serial port (initialize)
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void SerialPortWin::purgePort() {
-	PurgeComm(this->hCom, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 // Output/Input messages to/from ports 
@@ -116,7 +249,7 @@ std::size_t SerialPortWin::sendData(void* buf, std::size_t buf_len) {
 	LPCOMSTAT lpStat = 0;
 
 	i = WriteFile(
-		this->hCom,									// Write handle pointing to COM port
+		this->m_hCom,								// Write handle pointing to COM port
 		buf,										// Buffer size
 		buf_len,									// Size of buffer
 		&nBytesTransmited,							// Written number of bytes
@@ -125,7 +258,7 @@ std::size_t SerialPortWin::sendData(void* buf, std::size_t buf_len) {
 	// Handle the timeout error
 	if (i == 0) {
 		printf("\nWrite Error: 0x%x\n", GetLastError());
-		ClearCommError(this->hCom, lpErrors, lpStat);		// Clears the device error flag to enable additional input and output operations. Retrieves information ofthe communications error.	
+		ClearCommError(this->m_hCom, lpErrors, lpStat);		// Clears the device error flag to enable additional input and output operations. Retrieves information ofthe communications error.	
 	}
 	else
 		std::cout << "Successful transmission, there were " << nBytesTransmited << " bytes transmitted." << std::endl;
@@ -146,7 +279,7 @@ std::size_t SerialPortWin::rcvData(void* buf, std::size_t buf_len) {
 	LPCOMSTAT lpStat = 0;
 
 	i = ReadFile(
-		this->hCom,									// Read handle pointing to COM port
+		this->m_hCom,								// Read handle pointing to COM port
 		buf,										// Buffer size
 		buf_len,  									// Size of buffer - Maximum number of bytes to read
 		&nBytesRead,
@@ -155,7 +288,7 @@ std::size_t SerialPortWin::rcvData(void* buf, std::size_t buf_len) {
 	// Handle the timeout error
 	if (i == 0) {
 		printf("\nRead Error: 0x%x\n", GetLastError());
-		ClearCommError(this->hCom, lpErrors, lpStat);		// Clears the device error flag to enable additional input and output operations. Retrieves information ofthe communications error.
+		ClearCommError(this->m_hCom, lpErrors, lpStat);		// Clears the device error flag to enable additional input and output operations. Retrieves information ofthe communications error.
 	}
 	else
 		std::cout << "Successful reception!, There were " << nBytesRead << " bytes read" << std::endl;
@@ -196,62 +329,4 @@ std::vector<std::wstring> SerialPortWin::getAvailablePorts() {
 	return portList;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-// Sub functions called by above functions
-/**************************************************************************************/
-// Set the hCom HANDLE to point to a COM port, initialize for reading and writing, open the port and set securities
-void SerialPortWin::createPortFile() {
-	// Call the CreateFile() function 
-	this->hCom = CreateFile(
-	 	SerialPortWin::utf16ToUTF8(this->comPort)->c_str(),		// COM port number  --> If COM# is larger than 9 then use the following syntax--> "\\\\.\\COM10"
-		GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE,			// Open for read and write
-		NULL,													// No sharing allowed
-		NULL,													// No security
-		OPEN_EXISTING,											// Opens the existing com port
-		FILE_ATTRIBUTE_NORMAL,									// Do not set any file attributes --> Use synchronous operation
-		NULL													// No template
-	);
-	
-	if (this->hCom == INVALID_HANDLE_VALUE) {
-		std::cout << "Fatal Error" << GetLastError() << ": Unable to open." << std::endl;
-	}
-	else {
-		std::cout << AbstractSerialPort::utf16ToUTF8(this->comPort)->c_str() << " is now open." << std::endl;
-	}
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-int SerialPortWin::SetComParms() {
-	DCB dcb;										// Windows device control block
-	// Clear DCB to start out clean, then get current settings
-	memset(&dcb, 0, sizeof(dcb));
-	dcb.DCBlength = sizeof(dcb);
-	if (!GetCommState(this->hCom, &dcb))
-		return(0);
-
-	// Set our own parameters from Globals
-	dcb.BaudRate = this->serialConf.nComRate;		// Baud (bit) rate
-	dcb.ByteSize = (BYTE)this->serialConf.nComBits;	// Number of bits(8)
-	dcb.Parity = 0;									// No parity	
-	dcb.StopBits = ONESTOPBIT;						// One stop bit
-	if (!SetCommState(this->hCom, &dcb))
-		return(0);
-
-	// Set communication timeouts (SEE COMMTIMEOUTS structure in MSDN) - want a fairly long timeout
-	COMMTIMEOUTS* timeout = &this->serialConf.timeout;
-	memset((void *)timeout, 0, sizeof(*timeout));
-	timeout->ReadIntervalTimeout = 500;				// Maximum time allowed to elapse before arival of next byte in milliseconds. If the interval between the arrival of any two bytes exceeds this amount, the ReadFile operation is completed and buffered data is returned
-	timeout->ReadTotalTimeoutMultiplier = 1;			// The multiplier used to calculate the total time-out period for read operations in milliseconds. For each read operation this value is multiplied by the requested number of bytes to be read
-	timeout->ReadTotalTimeoutConstant = 5000;		// A constant added to the calculation of the total time-out period. This constant is added to the resulting product of the ReadTotalTimeoutMultiplier and the number of bytes (above).
-	SetCommTimeouts(this->hCom, timeout);
-	return(1);
-}
-
-//#endif //Win32 implementation.
 /////////////////////////////////////////////////////////////////////////////////////////////////////
