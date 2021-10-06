@@ -6,7 +6,7 @@
 
 class SerialBuffer::SerialBufferImpl {
 public:
-	SerialBufferImpl() {
+	SerialBufferImpl(SerialBuffer* sb): m_sb(sb) {
 		InitializeCriticalSection(&this->m_csLock); 
 	};
 
@@ -26,17 +26,26 @@ public:
 	bool Read_Upto(std::string& szData, char chTerm, long& alBytesRead, HANDLE& hEventToReset);
 	bool Read_Available(std::string& szData, HANDLE& hEventToReset);
 	bool Read_Upto_FIX(std::string& szData, char chTerm, long& alBytesRead, HANDLE& hEventToReset);
+
 private:
 	CRITICAL_SECTION m_csLock;
 	void ClearAndReset(HANDLE& hEventToReset);
+	SerialBuffer* m_sb;
 };
 
-SerialBuffer::SerialBuffer(): m_pimpl(new SerialBuffer::SerialBufferImpl) {
+SerialBuffer::SerialBuffer(): m_pimpl(new SerialBuffer::SerialBufferImpl(this)) {
 	this->m_abLockAlways = true;
 	this->m_iCurPos = 0;
 	this->m_alBytesUnRead = 0;
 	this->m_szInternalBuffer.erase();
 }
+
+/*SerialBuffer::SerialBuffer(const SerialBuffer& sb) :
+	m_szInternalBuffer(sb.m_szInternalBuffer),
+	m_abLockAlways(sb.m_abLockAlways),
+	m_iCurPos(sb.m_iCurPos),
+	m_alBytesUnRead(sb.m_alBytesUnRead)
+{}*/
 
 SerialBuffer::~SerialBuffer() {}
 

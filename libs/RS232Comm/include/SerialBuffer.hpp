@@ -5,6 +5,7 @@
 class SerialBuffer {
 public:
 	SerialBuffer();
+	//SerialBuffer(const SerialBuffer& sb);
 	virtual ~SerialBuffer();
 	void AddData(char ch);
 	void AddData(std::string& szData);
