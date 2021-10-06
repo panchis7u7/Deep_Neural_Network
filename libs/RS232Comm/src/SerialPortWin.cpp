@@ -192,7 +192,7 @@ unsigned int __stdcall SerialPortWin::eventThreadFn(void* pvParam) {
 
 					//Data Read.
 					int iAccum = 0;
-					//apThis->m_
+					apThis->m_serialBuffer.
 				}
 				break;
 		}

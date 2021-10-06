@@ -1,6 +1,6 @@
 #pragma once
 #include <include/AbstractPort.hpp>
-// Windows corresponding code.
+#include <include/SerialBuffer.hpp>
 
 typedef struct WinSerialPortConfig: SerialPortConf {
 	COMMTIMEOUTS timeout;
@@ -14,24 +14,26 @@ public:
 
 	static unsigned int __stdcall eventThreadFn(void* pvParam);
 
-	//Polymorphic functions.
-	std::vector<std::wstring> getAvailablePorts() override;
-	std::size_t sendData(void* buf, std::size_t buf_len) override;
-	std::size_t rcvData(void* buf, std::size_t buf_len) override;
-	HRESULT initPort() override;
-	HRESULT purgePort() override;
 	HRESULT createPortFile();
 	HRESULT setComParms();
 	HRESULT setupEvent();
 
+	//Polymorphic functions.
+	HRESULT initPort() override;
+	HRESULT purgePort() override;
+	std::vector<std::wstring> getAvailablePorts() override;
+	std::size_t sendData(void* buf, std::size_t buf_len) override;
+	std::size_t rcvData(void* buf, std::size_t buf_len) override;
+
 private:
-	SERIAL_STATE m_eState;
 	HANDLE m_hCom;
 	HANDLE m_hThreadTerm;
 	HANDLE m_hThread;
-	HANDLE	m_hThreadStarted;
-	HANDLE	m_hDataRx;
-	bool m_abIsConnected;
+	HANDLE m_hThreadStarted;
+	HANDLE m_hDataRx;
+	SERIAL_STATE m_eState;
+	SerialBuffer m_serialBuffer;
 	WinSerialPortConf m_wSerialConf;
+	bool m_abIsConnected;
 	const wchar_t* m_wComPort;
 };

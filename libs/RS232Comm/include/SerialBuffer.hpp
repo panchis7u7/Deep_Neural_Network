@@ -24,6 +24,6 @@ private:
 	bool m_abLockAlways;
 	long m_iCurPos;
 	long m_alBytesUnRead;
-	void Init();
+	//void Init();
 protected:
 };
