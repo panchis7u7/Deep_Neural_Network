@@ -32,7 +32,7 @@ public:
 	}
 
 	friend const char* operator<<(AbstractPort& serialPort, const char* text) {
-		serialPort.sendData((void*)text, strlen(text));
+		serialPort.write(text, strlen(text));
 		return text;
 	}
 
@@ -46,7 +46,7 @@ protected:
 	AbstractPort() {};
 	~AbstractPort() {};
 	virtual std::vector<std::wstring> getAvailablePorts() = 0;
-	virtual std::size_t sendData(void* buf, std::size_t szBuf) = 0;
+	virtual std::size_t write(const char* data, std::size_t data_len) = 0;
 	virtual std::size_t rcvData(void* buf, std::size_t buf_len) = 0;
 	virtual long initPort() = 0;
 	virtual long purgePort() = 0;
