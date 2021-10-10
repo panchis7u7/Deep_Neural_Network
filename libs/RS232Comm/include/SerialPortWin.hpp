@@ -25,8 +25,8 @@ public:
 	HRESULT initPort() override;
 	HRESULT purgePort() override;
 	std::vector<std::wstring> getAvailablePorts() override;
-	std::size_t write(const char* data, std::size_t data_len) override;
-	std::size_t rcvData(void* buf, std::size_t buf_len) override;
+	std::size_t write(void* data, std::size_t data_len) override;
+	std::size_t read(void* buf, std::size_t buf_len) override;
 
 private:
 	HANDLE m_hCom;

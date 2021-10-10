@@ -49,6 +49,7 @@ int main()
 	}*/
 
 	SerialPort arduino(L"COM4");
+	Sleep(500);
 	//std::wcout << arduino.getAvailablePorts()[0] << std::endl;
 	//arduino << "Hola desde Windows!";
 

@@ -56,10 +56,10 @@ SerialPortWin::~SerialPortWin() {
 
 HRESULT SerialPortWin::initPort() {
 	createPortFile();								// Initializes hCom to point to PORT#
-	purgePort();									// Purges the COM port
+	//purgePort();									// Purges the COM port
 	setComParms();									// Uses the DCB structure to set up the COM port
 	setupEvent();
-	purgePort();
+	//purgePort();
 	//std::thread* eventThread = new std::thread(&SerialPortWin::eventThreadFn, this);
 	return S_OK;
 }
@@ -128,7 +128,7 @@ HRESULT SerialPortWin::purgePort() {
 //###################################################################################################
 
 HRESULT SerialPortWin::setComParms() {
-	if (!SetCommMask(this->m_hCom, EV_RXCHAR | EV_TXEMPTY)) {
+	if (!SetCommMask(m_hCom, EV_RXCHAR | EV_TXEMPTY)) {
 		std::cout << "RS232Win: Failed to Get Comm Mask. Reason: " << GetLastError() << std::endl;
 		return E_FAIL;
 	}
@@ -139,39 +139,55 @@ HRESULT SerialPortWin::setComParms() {
 	dcb.DCBlength = sizeof(dcb);
 	//memset(&dcb, 0, sizeof(dcb));
 
-	if (!GetCommState(this->m_hCom, &dcb)) {
+	if (!GetCommState(m_hCom, &dcb)) {
 		std::cout << "RS232Win: Failed to Get Comm State Reason: " << GetLastError() << std::endl;
 		return E_FAIL;
 	}
 
 	// Set our own parameters from Globals
-	dcb.BaudRate = this->m_wSerialConf.nComRate;		// Baud (bit) rate
-	dcb.ByteSize = (BYTE)this->m_wSerialConf.nComBits;	// Number of bits(8)
-	dcb.Parity = this->m_wSerialConf.parity;			// No parity (0)
+	dcb.BaudRate = m_wSerialConf.nComRate;			// Baud (bit) rate
+	dcb.ByteSize = (BYTE)m_wSerialConf.nComBits;	// Number of bits(8)
+	dcb.Parity = m_wSerialConf.parity;				// No parity (0)
+	dcb.fDsrSensitivity = 0;
+	dcb.fDtrControl = DTR_CONTROL_ENABLE;
+	dcb.fOutxDsrFlow = 0;
 
-	if (this->m_wSerialConf.byStopBits == 1)
+	if (m_wSerialConf.byStopBits == 1)
 		dcb.StopBits = ONESTOPBIT;
-	else if (this->m_wSerialConf.byStopBits == 2)
+	else if (m_wSerialConf.byStopBits == 2)
 		dcb.StopBits = TWOSTOPBITS;
 	else
 		dcb.StopBits = ONE5STOPBITS;
 
-	if (!SetCommState(this->m_hCom, &dcb)) {
+	if (!SetCommState(m_hCom, &dcb)) {
 		assert(0);
 		std::cout << "RS232Win: : Failed to Set Comm State Reason: " << GetLastError() << std::endl;
 		return E_FAIL;
 	}
 
 	// Set communication timeouts (SEE COMMTIMEOUTS structure in MSDN) - want a fairly long timeout
-	COMMTIMEOUTS* timeout = &this->m_wSerialConf.timeout;
-	memset((void*)timeout, 0, sizeof(*timeout));
-	timeout->ReadIntervalTimeout = 500;				// Maximum time allowed to elapse before arival of next byte in milliseconds. If the interval between the arrival of any two bytes exceeds this amount, the ReadFile operation is completed and buffered data is returned
-	timeout->ReadTotalTimeoutMultiplier = 1;		// The multiplier used to calculate the total time-out period for read operations in milliseconds. For each read operation this value is multiplied by the requested number of bytes to be read
-	timeout->ReadTotalTimeoutConstant = 5000;		// A constant added to the calculation of the total time-out period. This constant is added to the resulting product of the ReadTotalTimeoutMultiplier and the number of bytes (above).
-	SetCommTimeouts(this->m_hCom, timeout);
+	//COMMTIMEOUTS* timeout = &this->m_wSerialConf.timeout;
+	//memset((void*)timeout, 0, sizeof(*timeout));
+	//timeout->ReadIntervalTimeout = 500;				// Maximum time allowed to elapse before arival of next byte in milliseconds. If the interval between the arrival of any two bytes exceeds this amount, the ReadFile operation is completed and buffered data is returned
+	//timeout->ReadTotalTimeoutMultiplier = 1;		// The multiplier used to calculate the total time-out period for read operations in milliseconds. For each read operation this value is multiplied by the requested number of bytes to be read
+	//timeout->ReadTotalTimeoutConstant = 5000;		// A constant added to the calculation of the total time-out period. This constant is added to the resulting product of the ReadTotalTimeoutMultiplier and the number of bytes (above).
+	//SetCommTimeouts(this->m_hCom, timeout);
 
-	std::cout << "RS232Win: Current Settings, (Baud Rate= " << dcb.BaudRate << "; Parity= " << dcb.Parity <<
-		"Byte Size= " << dcb.ByteSize << "; Stop Bits= " << dcb.StopBits << "." << std::endl;
+	COMMTIMEOUTS* timeout = &this->m_wSerialConf.timeout;
+	timeout->ReadIntervalTimeout = MAXDWORD;
+	timeout->ReadTotalTimeoutMultiplier = 0;
+	timeout->ReadTotalTimeoutConstant = 0;
+	timeout->WriteTotalTimeoutMultiplier = 0;
+	timeout->WriteTotalTimeoutConstant = 0;
+	
+	if (!SetCommTimeouts(m_hCom, timeout)) {
+		assert(0);
+		std::cout << "RS232Win: : Error setting timeouts, Reason: " << GetLastError() << std::endl;
+		return E_FAIL;
+	}
+
+	std::cout << "RS232Win: Current Settings, (Baud Rate= " << dcb.BaudRate << "; Parity= " << (int)dcb.Parity <<
+		"; Byte Size= " << (int)dcb.ByteSize << "; Stop Bits= " << (int)dcb.StopBits << ";)" << std::endl;
 	return(S_OK);
 }
 
@@ -183,11 +199,13 @@ HRESULT SerialPortWin::setupEvent() {
 	this->m_hThreadTerm = CreateEvent(0,0,0,0);
 	this->m_hThreadStarted = CreateEvent(0,0,0,0);
 	this->m_hThread = (HANDLE)_beginthreadex(0, 0, SerialPortWin::eventThreadFn, (void*)this, 0, 0);
+	
 	DWORD dwWait = WaitForSingleObject(m_hThreadStarted, INFINITE);
 	assert(dwWait == WAIT_OBJECT_0);
 	CloseHandle(m_hThreadStarted);
 	invalidateHandle(m_hThreadStarted);
 	m_abIsConnected = true;
+
 	return 0;
 }
 
@@ -288,64 +306,74 @@ unsigned int __stdcall SerialPortWin::eventThreadFn(void* pvParam) {
 // Write data to COM port.
 //###################################################################################################
 
-std::size_t SerialPortWin::write(const char* data, std::size_t data_len) {
-	int iRet = 0;
-	OVERLAPPED ov = {0};
-	memset(&ov, 0, sizeof(ov));
-	ov.hEvent = CreateEvent(0, true, 0, 0);
-	DWORD nBytesTransmited = 0;
+std::size_t SerialPortWin::write(void* data, std::size_t data_len) {
+	OVERLAPPED osWrite = { 0 };
+	DWORD dwRes = 0;
+	DWORD dwBytesTransmitted;
+	BOOL fRes;
 
-	LPDWORD lpErrors = 0;
-	LPCOMSTAT lpStat = 0;
+	Sleep(500);
+	// Create this write operation's OVERLAPPED structure's hEvent.
+	osWrite.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	if (osWrite.hEvent == NULL) 
+		// error creating overlapped event handle
+		return FALSE;
 
-	iRet = WriteFile(
-		m_hCom,							// Write handle pointing to COM port
-		data,							// Buffer size
-		data_len,						// Size of buffer
-		&nBytesTransmited,				// Written number of bytes
-		&ov								// FILE_FLAG_OVERLAPPED structure.
-	);
-
-	// Handle the timeout error.
-	if (iRet == 0) { 
-		WaitForSingleObject(ov.hEvent, INFINITE); 
-		printf("\nWrite Error: 0x%x\n", GetLastError());
-		// Clears the device error flag to enable additional input and output operations. Retrieves information ofthe communications error.
-		ClearCommError(m_hCom, lpErrors, lpStat);
+	//Issue write operation.
+	if (!WriteFile(m_hCom, (LPCVOID)data, (DWORD)data_len, &dwBytesTransmitted, &osWrite)) {
+		if (GetLastError() != ERROR_IO_PENDING) {
+			// WriteFile failed, but isn't delayed. Report error and abort.
+			std::cout << "\nWrite Error: " << GetLastError() << std::endl;
+			fRes = FALSE;
+		} else {
+			// Write is pending.
+			if (!GetOverlappedResult(m_hCom, &osWrite, &dwBytesTransmitted, TRUE))
+				fRes = FALSE;
+			else {
+				// Write operation completed successfully.
+				fRes = TRUE;
+				std::cout << "Successful transmission, there were " << dwBytesTransmitted << " bytes transmitted." << std::endl;
+			}
+		}
 	} else {
-		std::cout << "Successful transmission, there were " << nBytesTransmited << " bytes transmitted." << std::endl;
+		// WriteFile completed immediately.
+		fRes = TRUE;
 	}
 
-	CloseHandle(ov.hEvent);
-	return nBytesTransmited;
+	CloseHandle(osWrite.hEvent);
+	return dwBytesTransmitted;
 }
 
 //###################################################################################################
 // Read data from COM port.
 //###################################################################################################
 
-std::size_t SerialPortWin::rcvData(void* buf, std::size_t buf_len) {
-	int i = 0;
-	DWORD nBytesRead;
-	LPDWORD lpErrors = 0;
-	LPCOMSTAT lpStat = 0;
+std::size_t SerialPortWin::read(void* buf, std::size_t buf_len) {
+	DWORD dwRead;
+	BOOL fWaitingOnRead = FALSE;
+	OVERLAPPED osReader = { 0 };
 
-	i = ReadFile(
-		this->m_hCom,								// Read handle pointing to COM port
-		buf,										// Buffer size
-		buf_len,  									// Size of buffer - Maximum number of bytes to read
-		&nBytesRead,
-		NULL
-	);
-	// Handle the timeout error
-	if (i == 0) {
-		printf("\nRead Error: 0x%x\n", GetLastError());
-		ClearCommError(this->m_hCom, lpErrors, lpStat);		// Clears the device error flag to enable additional input and output operations. Retrieves information ofthe communications error.
+	// Create the overlapped event. Must be closed before exiting
+	// to avoid a handle leak.
+	osReader.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	if (osReader.hEvent == NULL)
+		// Error creating overlapped event; abort.
+		return E_FAIL;
+
+	if (!fWaitingOnRead) {
+		// Issue read operation.
+		if (!ReadFile(m_hCom, (LPVOID)buf, (DWORD)buf_len, &dwRead, &osReader)) {
+			if (GetLastError() != ERROR_IO_PENDING)     // read not delayed?
+				// Error in communications; report it.
+				std::cout << "\nRead Error: " << GetLastError() << std::endl;
+			else
+				fWaitingOnRead = TRUE;
+		} else {
+			// read completed immediately
+			std::cout << "Successful reception!, There were " << dwRead << " bytes read" << std::endl;
+			//HandleASuccessfulRead(lpBuf, dwRead);
+		}
 	}
-	else
-		std::cout << "Successful reception!, There were " << nBytesRead << " bytes read" << std::endl;
-
-	return(nBytesRead);
 }
 
 //###################################################################################################
