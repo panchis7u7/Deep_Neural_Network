@@ -37,9 +37,9 @@ public:
 		return text;
 	}
 
-	/*friend void operator>>(AbstractSerialPort& serialPort, std::string& str) {
-		return str;
-	}*/
+	friend void operator>>(AbstractPort& serialPort, std::string& str) {
+		serialPort.read(str);
+	}
 
 private:
 
@@ -48,7 +48,7 @@ protected:
 	~AbstractPort() {};
 	virtual std::vector<std::wstring> getAvailablePorts() = 0;
 	virtual std::size_t write(void* data, std::size_t data_len) = 0;
-	virtual std::size_t read(void* buf, std::size_t buf_len) = 0;
+	virtual void read(std::string& buf) = 0;
 	virtual long initPort() = 0;
 	virtual long purgePort() = 0;
 };

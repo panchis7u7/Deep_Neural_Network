@@ -17,16 +17,20 @@ public:
 	HRESULT createPortFile();
 	HRESULT setComParms();
 	HRESULT setupEvent();
+	HRESULT CanProcess();
+	HRESULT	ReadAvailable(std::string& data);
 	void invalidateHandle(HANDLE& hHandle);
 	void closeAndCleanHandle(HANDLE& hHandle);
 	SERIAL_STATE GetCurrentState() { return m_eState; }
+	inline void setDataReadEvent() { SetEvent(m_hDataRx); }
+	std::size_t read(void* buf, std::size_t buf_len);
 
 	//Polymorphic functions.
 	HRESULT initPort() override;
 	HRESULT purgePort() override;
 	std::vector<std::wstring> getAvailablePorts() override;
 	std::size_t write(void* data, std::size_t data_len) override;
-	std::size_t read(void* buf, std::size_t buf_len) override;
+	void read(std::string& buf) override;
 
 private:
 	HANDLE m_hCom;

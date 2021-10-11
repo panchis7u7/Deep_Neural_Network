@@ -105,6 +105,8 @@ HRESULT SerialPortWin::createPortFile() {
 		NULL													// No template
 	);
 
+	SetupComm(m_hCom, 512, 512);
+	
 	if (m_hCom == INVALID_HANDLE_VALUE) {
 		std::cout << "Fatal Error" << GetLastError() << ": Unable to open." << std::endl;
 		return E_FAIL;
@@ -220,8 +222,8 @@ unsigned int __stdcall SerialPortWin::eventThreadFn(void* pvParam) {
 	HANDLE arHandles[2];
 	DWORD dwWait;
 
-	OVERLAPPED o = {0};
-	o.hEvent = CreateEvent(
+	OVERLAPPED ov = {0};
+	ov.hEvent = CreateEvent(
 		NULL,   // default security attributes 
 		TRUE,   // manual-reset event 
 		FALSE,  // not signaled 
@@ -232,12 +234,12 @@ unsigned int __stdcall SerialPortWin::eventThreadFn(void* pvParam) {
 	SetEvent(apThis->m_hThreadStarted);
 
 	while (abContinue) {
-		BOOL abRet = WaitCommEvent(apThis->m_hCom, &dwEventMask, &o);
+		BOOL abRet = WaitCommEvent(apThis->m_hCom, &dwEventMask, &ov);
 		if (!abRet) {
 			assert(GetLastError() == ERROR_IO_PENDING);
 		}
 
-		arHandles[1] = o.hEvent;
+		arHandles[1] = ov.hEvent;
 
 		dwWait = WaitForMultipleObjects(2, arHandles, FALSE, INFINITE);
 		switch (dwWait) {
@@ -250,7 +252,7 @@ unsigned int __stdcall SerialPortWin::eventThreadFn(void* pvParam) {
 				if (GetCommMask(apThis->m_hCom, &dwMask)) {
 					if (dwMask == EV_TXEMPTY) {
 						std::cout << "Data sent." << std::endl;
-						ResetEvent(o.hEvent);
+						ResetEvent(ov.hEvent);
 						continue;
 					}
 				}
@@ -264,13 +266,14 @@ unsigned int __stdcall SerialPortWin::eventThreadFn(void* pvParam) {
 					OVERLAPPED ovRead;
 					memset(&ovRead, 0, sizeof(ovRead));
 					ovRead.hEvent = CreateEvent(0, true, 0, 0);
+
 					do {
 						ResetEvent(ovRead.hEvent);
 						char szTemp[1];
 						int iSize = sizeof(szTemp);
 						memset(&szTemp, 0, sizeof(szTemp));
-						abRet = ReadFile(apThis->m_hCom, szTemp, sizeof(szTemp), &dwBytesRead, &ovRead);
-						std::cout << szTemp;
+						abRet = ReadFile(apThis->m_hCom, (LPVOID)szTemp, sizeof(szTemp), &dwBytesRead, &ovRead);
+						//std::cout << szTemp[0];
 						if (!abRet) {
 							abContinue = FALSE;
 							break;
@@ -279,7 +282,7 @@ unsigned int __stdcall SerialPortWin::eventThreadFn(void* pvParam) {
 							apThis->m_serialBuffer.addData(szTemp, dwBytesRead);
 							iAccum += dwBytesRead;
 						}
-					} while (0);
+					} while (dwBytesRead > 0);
 					CloseHandle(ovRead.hEvent);
 				}
 				catch (...) {
@@ -293,7 +296,11 @@ unsigned int __stdcall SerialPortWin::eventThreadFn(void* pvParam) {
 				}
 
 				apThis->m_serialBuffer.unLockBuffer();
-				ResetEvent(o.hEvent);
+
+				if (iAccum > 0)
+					apThis->setDataReadEvent();
+
+				ResetEvent(ov.hEvent);
 			}
 			break;
 		}
@@ -376,6 +383,10 @@ std::size_t SerialPortWin::read(void* buf, std::size_t buf_len) {
 	}
 }
 
+void SerialPortWin::read(std::string& buf) {
+	m_serialBuffer.readAvailable(buf);
+}
+
 //###################################################################################################
 // List com ports available on the device.
 //###################################################################################################
@@ -405,4 +416,38 @@ std::vector<std::wstring> SerialPortWin::getAvailablePorts() {
 
 	free(lpTargetPath);
 	return portList;
+}
+
+HRESULT SerialPortWin::CanProcess() {
+	switch (m_eState) {
+	case SS_Unknown:	assert(0); return E_FAIL;
+	case SS_UnInit:		return E_FAIL;
+	case SS_Started:	return S_OK;
+	case SS_Init:
+	case SS_Stopped:
+		return E_FAIL;
+	default: assert(0);
+
+	}
+	return E_FAIL;
+}
+
+//###################################################################################################
+// -- Reads all the data that is available in the local buffer.. 
+// does NOT make any blocking calls in case the local buffer is empty
+//###################################################################################################
+
+HRESULT SerialPortWin::ReadAvailable(std::string& data) {
+	HRESULT hr = CanProcess();
+	if (FAILED(hr)) return hr;
+	try {
+		std::string szTemp;
+		bool abRet = m_serialBuffer.readAvailable(szTemp);
+		data = szTemp;
+		ResetEvent(m_hDataRx);
+	}
+	catch (...) {
+		hr = E_FAIL;
+	}
+	return hr;
 }

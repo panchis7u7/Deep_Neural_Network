@@ -13,6 +13,7 @@ public:
 	std::string getData();
 	inline long getSize();
 	inline bool isEmpty();
+	bool readAvailable(std::string& szData);
 	void lockBuffer();
 	void unLockBuffer();
 	void flush();
