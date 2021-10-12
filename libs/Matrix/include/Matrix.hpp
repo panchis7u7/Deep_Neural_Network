@@ -19,7 +19,11 @@ namespace voxel {
 		void print();
 		void add(T addend);
 		void add(Matrix<T>* addend);
+		void subtract(Matrix<T>* minuend);
+		void subtract(std::vector<T>* minuend);
+		void dot(Matrix<T>& multiplicand);
 		void randomize();
+		void transpose();
 		void scalarProduct(T factor);
 		void hadamardProduct(Matrix<T>* factor);
 		void map(T (*func)(T));
@@ -40,6 +44,7 @@ namespace voxel {
 		// Public static typename Methods.
 		///////////////////////////////////////////////////////////////////////////////////////////
 
+	
 		static Matrix<T>* fromVector(std::vector<T>* entradas) {
 			Matrix<T>* result = new Matrix(entradas->size(), 1);
 			for (uint_fast64_t i = 0; i < entradas->size(); i++)
@@ -104,6 +109,24 @@ namespace voxel {
 					for (uint_fast64_t k = 0; k < A->columns; k++)
 					{
 						sum += A->data[i][k] * B->data[k][j];
+					}
+					result->data[i][j] = sum;
+				}
+			}
+			return result;
+		}
+
+		static Matrix<T>* dot(Matrix<T>* A, std::vector<T>* B) {
+			//n Column Matrix requires n elements vector in order to perform product.
+			Matrix<T>* result = new Matrix<T>(A->rows, 1);
+			for (uint_fast64_t i = 0; i < result->rows; i++)
+			{
+				for (uint_fast64_t j = 0; j < result->columns; j++)
+				{
+					T sum = 0;
+					for (uint_fast64_t k = 0; k < A->columns; k++)
+					{
+						sum += A->data[i][k] * B->at(k);
 					}
 					result->data[i][j] = sum;
 				}

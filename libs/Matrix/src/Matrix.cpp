@@ -34,9 +34,9 @@ template <typename T>
 Matrix<T>::~Matrix() {
 	for (uint_fast64_t i = 0; i < this->rows; i++)
 	{
-		delete[] data[i];
+		delete[] this->data[i];
 	}
-	delete[] data;
+	delete[] this->data;
 }
 
 template <typename T>
@@ -66,6 +66,22 @@ void Matrix<T>::add(T addend) {
 }
 
 template <typename T>
+void Matrix<T>::subtract(Matrix<T>* minuend){
+	for (uint_fast64_t i = 0; i < this->rows; i++) 
+	{
+		for (uint_fast64_t j = 0; j < minuend->columns; j++) 
+		{
+			this->data[i][j] -= minuend->data[i][j]; 
+		}
+	}	
+}
+
+template <typename T>
+void Matrix<T>::subtract(std::vector<T>* minuend){
+	std::cout << minuend->size() << std::endl;
+}
+
+template <typename T>
 void Matrix<T>::add(Matrix<T>* addend) {
 	for (uint_fast64_t i = 0; i < this->rows; i++)
 	{
@@ -74,6 +90,28 @@ void Matrix<T>::add(Matrix<T>* addend) {
 			this->data[i][j] += addend->data[i][j];
 		}
 	}
+}
+
+template <class T>
+void Matrix<T>::dot(Matrix<T>& multiplicand){
+	T** data = alloc(this->rows, multiplicand.columns);
+
+	for (uint_fast64_t i = 0; i < this->rows; i++)
+	{
+		for (uint_fast64_t j = 0; j < multiplicand.columns; j++)
+		{
+			T sum = 0;
+			for (uint_fast64_t k = 0; k < this->columns; k++)
+			{
+				sum += this->data[i][k] * multiplicand.data[k][j];
+			}
+			data[i][j] = sum;
+		}
+	}
+
+	this->columns = multiplicand.columns;
+	delete  this->data;
+	this->data = data;
 }
 
 template <typename T>
@@ -86,6 +124,22 @@ void Matrix<T>::randomize() {
 			this->data[i][j] = (-1) + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1 - (-1)))); 
 		}
 	}
+}
+
+template <typename T>
+void Matrix<T>::transpose(){
+	T** temp = this->alloc(this->columns, this->rows);
+	for (uint_fast64_t i = 0; i < this->rows; i++)
+	{
+		for (uint_fast64_t j = 0; j < this->columns; j++)
+		{
+			temp[j][i] = this->data[i][j];
+		}
+	}
+	
+	std::swap(this->rows, this->columns);
+	delete this->data;
+	this->data = temp;
 }
 
 template <typename T>
