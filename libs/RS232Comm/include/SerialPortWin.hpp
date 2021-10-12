@@ -1,8 +1,11 @@
 #pragma once
 #include <include/AbstractPort.hpp>
 #include <include/SerialBuffer.hpp>
+#include <include/PortUtils.hpp>
 
-typedef struct WinSerialPortConfig: SerialPortConf {
+using namespace PortUtils::Serial;
+
+typedef struct WinSerialPortConfig: SerialPortConfig {
 	COMMTIMEOUTS timeout;
 } WinSerialPortConf;
 
@@ -14,23 +17,23 @@ public:
 
 	static unsigned int __stdcall eventThreadFn(void* pvParam);
 
-	HRESULT createPortFile();
-	HRESULT setComParms();
-	HRESULT setupEvent();
+	HRESULT CreatePortFile();
+	HRESULT SetComParms();
+	HRESULT SetupEvent();
 	HRESULT CanProcess();
-	HRESULT	ReadAvailable(std::string& data);
-	void invalidateHandle(HANDLE& hHandle);
-	void closeAndCleanHandle(HANDLE& hHandle);
-	SERIAL_STATE GetCurrentState() { return m_eState; }
-	inline void setDataReadEvent() { SetEvent(m_hDataRx); }
-	std::size_t read(void* buf, std::size_t buf_len);
+	//HRESULT	ReadAvailable(std::string& data);
+	void InvalidateHandle(HANDLE& hHandle);
+	void CloseAndCleanHandle(HANDLE& hHandle);
+	PortUtils::Serial::SerialState GetCurrentState() { return m_eState; }
+	inline void SetDataReadEvent() { SetEvent(m_hDataRx); }
+	std::size_t Read(void* buf, std::size_t buf_len);
 
 	//Polymorphic functions.
-	HRESULT initPort() override;
-	HRESULT purgePort() override;
-	std::vector<std::wstring> getAvailablePorts() override;
-	std::size_t write(void* data, std::size_t data_len) override;
-	void read(std::string& buf) override;
+	HRESULT InitPort() override;
+	HRESULT PurgePort() override;
+	std::size_t Write(void* data, std::size_t data_len) override;
+	void Read(std::string& buf) override;
+	std::vector<std::wstring> GetAvailablePorts() override;
 
 private:
 	HANDLE m_hCom;
@@ -38,7 +41,7 @@ private:
 	HANDLE m_hThread;
 	HANDLE m_hThreadStarted;
 	HANDLE m_hDataRx;
-	SERIAL_STATE m_eState;
+	SerialState m_eState;
 	SerialBuffer m_serialBuffer;
 	WinSerialPortConf m_wSerialConf;
 	bool m_abIsConnected;

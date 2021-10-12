@@ -10,13 +10,13 @@ public:
 	void addData(std::string& szData);
 	void addData(std::string& szData, int iLen);
 	void addData(char* strData, int iLen);
-	std::string getData();
+	std::string GetDataIfAvailable();
+	void flush();
+	void LockBuffer();
+	void UnLockBuffer();
+
 	inline long getSize();
 	inline bool isEmpty();
-	bool readAvailable(std::string& szData);
-	void lockBuffer();
-	void unLockBuffer();
-	void flush();
 
 private:
 	class SerialBufferImpl;

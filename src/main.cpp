@@ -53,14 +53,10 @@ int main()
 	//std::wcout << arduino.getAvailablePorts()[0] << std::endl;
 	//arduino << "Hola desde Windows!";
 
-	Sleep(1000);
+	//Sleep(1000);
 	arduino << "event";
 
-	std::string hola;
-	arduino >> hola;
-	std::cout << hola << std::endl;
-	Sleep(500);
-	Sleep(500);
+
 	std::cin.get();
 
 	return 0;

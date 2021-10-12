@@ -1,14 +1,16 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include <iostream>
-#include <string.h>
 #include <string>
 #include <vector>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include <assert.h>
-#include <thread>
+#include <process.h>
 #include <include/SerialPortWin.hpp>
+#include <include/PortUtils.hpp>
 
 constexpr auto EX_FATAL = 1; 
+using namespace PortUtils::Serial;
 
 //###################################################################################################
 // 1st Constructor.
@@ -16,13 +18,13 @@ constexpr auto EX_FATAL = 1;
 
 SerialPortWin::SerialPortWin(const wchar_t* comPort) {
 	this->m_wComPort = comPort;
-	this->m_wSerialConf = {DEFAULT_COM_RATE, 8, ONESTOPBIT, 0, COMMTIMEOUTS() };
-	invalidateHandle(m_hThread);
-	invalidateHandle(m_hThreadStarted);
-	invalidateHandle(m_hThreadTerm);
-	invalidateHandle(m_hCom);
-	invalidateHandle(m_hDataRx);
-	initPort();
+	this->m_wSerialConf = {PortUtils::Serial::DEFAULT_COM_RATE, PortUtils::Serial::DEFAULT_COM_BITS, ONESTOPBIT, 0, COMMTIMEOUTS() };
+	InvalidateHandle(m_hThread);
+	InvalidateHandle(m_hThreadStarted);
+	InvalidateHandle(m_hThreadTerm);
+	InvalidateHandle(m_hCom);
+	InvalidateHandle(m_hDataRx);
+	InitPort();
 }
 
 //###################################################################################################
@@ -32,12 +34,12 @@ SerialPortWin::SerialPortWin(const wchar_t* comPort) {
 SerialPortWin::SerialPortWin(const wchar_t* comPort, WinSerialPortConf& serialConf) {
 	this->m_wComPort = comPort;
 	this->m_wSerialConf = serialConf;
-	invalidateHandle(m_hThread);
-	invalidateHandle(m_hThreadStarted);
-	invalidateHandle(m_hThreadTerm);
-	invalidateHandle(m_hCom);
-	invalidateHandle(m_hDataRx);
-	initPort();
+	InvalidateHandle(m_hThread);
+	InvalidateHandle(m_hThreadStarted);
+	InvalidateHandle(m_hThreadTerm);
+	InvalidateHandle(m_hCom);
+	InvalidateHandle(m_hDataRx);
+	InitPort();
 }
 
 //###################################################################################################
@@ -45,7 +47,7 @@ SerialPortWin::SerialPortWin(const wchar_t* comPort, WinSerialPortConf& serialCo
 //###################################################################################################
 
 SerialPortWin::~SerialPortWin() {
-	purgePort();
+	PurgePort();
 	CloseHandle(this->m_hCom);
 }
 
@@ -54,11 +56,11 @@ SerialPortWin::~SerialPortWin() {
 // Initializes the port and sets the communication parameters.
 //###################################################################################################
 
-HRESULT SerialPortWin::initPort() {
-	createPortFile();								// Initializes hCom to point to PORT#
+HRESULT SerialPortWin::InitPort() {
+	CreatePortFile();								// Initializes hCom to point to PORT#
 	//purgePort();									// Purges the COM port
-	setComParms();									// Uses the DCB structure to set up the COM port
-	setupEvent();
+	SetComParms();									// Uses the DCB structure to set up the COM port
+	SetupEvent();
 	//purgePort();
 	//std::thread* eventThread = new std::thread(&SerialPortWin::eventThreadFn, this);
 	return S_OK;
@@ -68,7 +70,7 @@ HRESULT SerialPortWin::initPort() {
 // Handle uninitializer.
 //###################################################################################################
 
-void SerialPortWin::invalidateHandle(HANDLE& hHandle) {
+void SerialPortWin::InvalidateHandle(HANDLE& hHandle) {
 	hHandle = INVALID_HANDLE_VALUE;
 }
 
@@ -76,12 +78,12 @@ void SerialPortWin::invalidateHandle(HANDLE& hHandle) {
 // Close and Clean Handle.
 //###################################################################################################
 
-void SerialPortWin::closeAndCleanHandle(HANDLE& hHandle) {
+void SerialPortWin::CloseAndCleanHandle(HANDLE& hHandle) {
 	BOOL abRet = CloseHandle(hHandle);
 	if (!abRet) {
 		assert(0);
 	}
-	invalidateHandle(hHandle);
+	InvalidateHandle(hHandle);
 }
 
 //###################################################################################################
@@ -91,12 +93,12 @@ void SerialPortWin::closeAndCleanHandle(HANDLE& hHandle) {
 // open the port and set securities.
 //###################################################################################################
 
-HRESULT SerialPortWin::createPortFile() {
+HRESULT SerialPortWin::CreatePortFile() {
 	HRESULT hr = S_OK;
 
 	m_hDataRx = CreateEvent(0, 0, 0, 0);
 	m_hCom = CreateFile(
-		SerialPortWin::utf16ToUTF8(this->m_wComPort)->c_str(),	// COM port number  --> If COM# is larger than 9 then use the following syntax--> "\\\\.\\COM10"
+		PortUtils::Utils::UTF16ToUTF8(this->m_wComPort)->c_str(),	// COM port number  --> If COM# is larger than 9 then use the following syntax--> "\\\\.\\COM10"
 		GENERIC_READ | GENERIC_WRITE,							// Open for read and write
 		NULL,													// No sharing allowed
 		NULL,													// No security
@@ -111,7 +113,7 @@ HRESULT SerialPortWin::createPortFile() {
 		std::cout << "Fatal Error" << GetLastError() << ": Unable to open." << std::endl;
 		return E_FAIL;
 	} else {
-		std::cout << AbstractPort::utf16ToUTF8(this->m_wComPort)->c_str() << " is now open." << std::endl;
+		std::cout << PortUtils::Utils::UTF16ToUTF8(this->m_wComPort)->c_str() << " is now open." << std::endl;
 	}
 	return hr;
 }
@@ -120,8 +122,8 @@ HRESULT SerialPortWin::createPortFile() {
 // Purge any outstanding requests on the serial port (initialize)
 //###################################################################################################
 
-HRESULT SerialPortWin::purgePort() {
-	PurgeComm(this->m_hCom, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
+HRESULT SerialPortWin::PurgePort() {
+	PurgeComm(m_hCom, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
 	return S_OK;
 }
 
@@ -129,7 +131,7 @@ HRESULT SerialPortWin::purgePort() {
 // Set Serial COM port configuration parameters.
 //###################################################################################################
 
-HRESULT SerialPortWin::setComParms() {
+HRESULT SerialPortWin::SetComParms() {
 	if (!SetCommMask(m_hCom, EV_RXCHAR | EV_TXEMPTY)) {
 		std::cout << "RS232Win: Failed to Get Comm Mask. Reason: " << GetLastError() << std::endl;
 		return E_FAIL;
@@ -197,15 +199,15 @@ HRESULT SerialPortWin::setComParms() {
 // Setup event for reading cycle.
 //###################################################################################################
 
-HRESULT SerialPortWin::setupEvent() {
-	this->m_hThreadTerm = CreateEvent(0,0,0,0);
-	this->m_hThreadStarted = CreateEvent(0,0,0,0);
-	this->m_hThread = (HANDLE)_beginthreadex(0, 0, SerialPortWin::eventThreadFn, (void*)this, 0, 0);
+HRESULT SerialPortWin::SetupEvent() {
+	m_hThreadTerm = CreateEvent(0,0,0,0);
+	m_hThreadStarted = CreateEvent(0,0,0,0);
+	m_hThread = (HANDLE)_beginthreadex(0, 0, SerialPortWin::eventThreadFn, (void*)this, 0, 0);
 	
 	DWORD dwWait = WaitForSingleObject(m_hThreadStarted, INFINITE);
 	assert(dwWait == WAIT_OBJECT_0);
 	CloseHandle(m_hThreadStarted);
-	invalidateHandle(m_hThreadStarted);
+	InvalidateHandle(m_hThreadStarted);
 	m_abIsConnected = true;
 
 	return 0;
@@ -219,7 +221,7 @@ unsigned int __stdcall SerialPortWin::eventThreadFn(void* pvParam) {
 	SerialPortWin* apThis = (SerialPortWin*)pvParam;
 	bool abContinue = true;
 	DWORD dwEventMask = 0;
-	HANDLE arHandles[2];
+	HANDLE arHandles[2] = {nullptr};
 	DWORD dwWait;
 
 	OVERLAPPED ov = {0};
@@ -259,7 +261,7 @@ unsigned int __stdcall SerialPortWin::eventThreadFn(void* pvParam) {
 
 				//Data Read.
 				int iAccum = 0;
-				apThis->m_serialBuffer.lockBuffer();
+				apThis->m_serialBuffer.LockBuffer();
 				try {
 					BOOL abRet = false;
 					DWORD dwBytesRead = 0;
@@ -295,10 +297,10 @@ unsigned int __stdcall SerialPortWin::eventThreadFn(void* pvParam) {
 					apThis->m_serialBuffer.flush();
 				}
 
-				apThis->m_serialBuffer.unLockBuffer();
+				apThis->m_serialBuffer.UnLockBuffer();
 
 				if (iAccum > 0)
-					apThis->setDataReadEvent();
+					apThis->SetDataReadEvent();
 
 				ResetEvent(ov.hEvent);
 			}
@@ -313,7 +315,7 @@ unsigned int __stdcall SerialPortWin::eventThreadFn(void* pvParam) {
 // Write data to COM port.
 //###################################################################################################
 
-std::size_t SerialPortWin::write(void* data, std::size_t data_len) {
+std::size_t SerialPortWin::Write(void* data, std::size_t data_len) {
 	OVERLAPPED osWrite = { 0 };
 	DWORD dwRes = 0;
 	DWORD dwBytesTransmitted;
@@ -355,7 +357,7 @@ std::size_t SerialPortWin::write(void* data, std::size_t data_len) {
 // Read data from COM port.
 //###################################################################################################
 
-std::size_t SerialPortWin::read(void* buf, std::size_t buf_len) {
+std::size_t SerialPortWin::Read(void* buf, std::size_t buf_len) {
 	DWORD dwRead;
 	BOOL fWaitingOnRead = FALSE;
 	OVERLAPPED osReader = { 0 };
@@ -381,17 +383,20 @@ std::size_t SerialPortWin::read(void* buf, std::size_t buf_len) {
 			//HandleASuccessfulRead(lpBuf, dwRead);
 		}
 	}
+
+	CloseHandle(osReader.hEvent);
+	return dwRead;
 }
 
-void SerialPortWin::read(std::string& buf) {
-	m_serialBuffer.readAvailable(buf);
+void SerialPortWin::Read(std::string& buf) {
+	m_serialBuffer.GetDataIfAvailable();
 }
 
 //###################################################################################################
 // List com ports available on the device.
 //###################################################################################################
 
-std::vector<std::wstring> SerialPortWin::getAvailablePorts() {
+std::vector<std::wstring> SerialPortWin::GetAvailablePorts() {
 	//Buffer to store the path of the COM PORTS
 	LPWSTR lpTargetPath = (LPWSTR)calloc(5000, sizeof(wchar_t));
 	std::vector<std::wstring> portList;
@@ -420,14 +425,24 @@ std::vector<std::wstring> SerialPortWin::getAvailablePorts() {
 
 HRESULT SerialPortWin::CanProcess() {
 	switch (m_eState) {
-	case SS_Unknown:	assert(0); return E_FAIL;
-	case SS_UnInit:		return E_FAIL;
-	case SS_Started:	return S_OK;
-	case SS_Init:
-	case SS_Stopped:
-		return E_FAIL;
-	default: assert(0);
-
+		case SS_Unknown:	
+			assert(0); 
+			return E_FAIL;
+			break;
+		case SS_UnInit:		
+			return E_FAIL;
+			break;
+		case SS_Started:	
+			return S_OK;
+			break;
+		case SS_Init: 
+			break;
+		case SS_Stopped:
+			return E_FAIL;
+			break;
+		default: 
+			assert(0);
+			break;
 	}
 	return E_FAIL;
 }
@@ -437,17 +452,15 @@ HRESULT SerialPortWin::CanProcess() {
 // does NOT make any blocking calls in case the local buffer is empty
 //###################################################################################################
 
-HRESULT SerialPortWin::ReadAvailable(std::string& data) {
+/*HRESULT SerialPortWin::ReadAvailable(std::string& data) {
 	HRESULT hr = CanProcess();
 	if (FAILED(hr)) return hr;
 	try {
-		std::string szTemp;
-		bool abRet = m_serialBuffer.readAvailable(szTemp);
-		data = szTemp;
+		bool abRet = m_serialBuffer.GetDataIfAvailable().size() > 0;
 		ResetEvent(m_hDataRx);
 	}
 	catch (...) {
 		hr = E_FAIL;
 	}
 	return hr;
-}
+}*/
