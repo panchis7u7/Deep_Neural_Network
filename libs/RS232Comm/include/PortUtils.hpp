@@ -27,7 +27,7 @@ namespace PortUtils {
 			SS_UnInit,
 			SS_Init,
 			SS_Started,
-			SS_Stopped,
+			SS_Stopped
 		}SerialState;
 
 		constexpr int DEFAULT_COM_RATE = 9600;

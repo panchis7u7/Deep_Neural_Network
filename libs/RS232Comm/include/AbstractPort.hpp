@@ -13,7 +13,7 @@ public:
 
 	virtual long InitPort() = 0;
 	virtual long PurgePort() = 0;
-	virtual void Read(std::string& buf) = 0;
+	virtual std::string ReadIfAvailable() = 0;
 	virtual std::size_t Write(void* data, std::size_t data_len) = 0;
 	virtual std::vector<std::wstring> GetAvailablePorts() = 0;
 
@@ -35,5 +35,5 @@ const char* operator<<(AbstractPort& serialPort, const char* text) {
 }
 
 void operator>>(AbstractPort& serialPort, std::string& str) {
-	serialPort.Read(str);
+	str += serialPort.ReadIfAvailable();
 }

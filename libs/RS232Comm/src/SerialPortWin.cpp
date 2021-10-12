@@ -265,7 +265,7 @@ unsigned int __stdcall SerialPortWin::eventThreadFn(void* pvParam) {
 				try {
 					BOOL abRet = false;
 					DWORD dwBytesRead = 0;
-					OVERLAPPED ovRead;
+					OVERLAPPED ovRead = {0};
 					memset(&ovRead, 0, sizeof(ovRead));
 					ovRead.hEvent = CreateEvent(0, true, 0, 0);
 
@@ -274,8 +274,8 @@ unsigned int __stdcall SerialPortWin::eventThreadFn(void* pvParam) {
 						char szTemp[1];
 						int iSize = sizeof(szTemp);
 						memset(&szTemp, 0, sizeof(szTemp));
+						Sleep(1);
 						abRet = ReadFile(apThis->m_hCom, (LPVOID)szTemp, sizeof(szTemp), &dwBytesRead, &ovRead);
-						//std::cout << szTemp[0];
 						if (!abRet) {
 							abContinue = FALSE;
 							break;
@@ -294,7 +294,7 @@ unsigned int __stdcall SerialPortWin::eventThreadFn(void* pvParam) {
 				if (apThis->GetCurrentState() != SS_Started)
 				{
 					iAccum = 0;
-					apThis->m_serialBuffer.flush();
+					//apThis->m_serialBuffer.flush();
 				}
 
 				apThis->m_serialBuffer.UnLockBuffer();
@@ -321,7 +321,7 @@ std::size_t SerialPortWin::Write(void* data, std::size_t data_len) {
 	DWORD dwBytesTransmitted;
 	BOOL fRes;
 
-	Sleep(500);
+	Sleep(450);
 	// Create this write operation's OVERLAPPED structure's hEvent.
 	osWrite.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	if (osWrite.hEvent == NULL) 
@@ -388,8 +388,12 @@ std::size_t SerialPortWin::Read(void* buf, std::size_t buf_len) {
 	return dwRead;
 }
 
-void SerialPortWin::Read(std::string& buf) {
-	m_serialBuffer.GetDataIfAvailable();
+//###################################################################################################
+// Read data from COM port if data is in the buffer, else, just wait.
+//###################################################################################################
+
+std::string SerialPortWin::ReadIfAvailable() {
+	return m_serialBuffer.GetDataIfAvailable();
 }
 
 //###################################################################################################
