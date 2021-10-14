@@ -49,19 +49,12 @@ int main()
 	}*/
 
 	SerialPort arduino(L"COM4");
-	Sleep(500);
-	//std::wcout << arduino.getAvailablePorts()[0] << std::endl;
-	//arduino << "Hola desde Windows!";
-
-	//Sleep(1000);
 	arduino << "event";
 
 	std::string mensaje;
 	arduino >> mensaje;
 
 	std::cout << "El mensaje es : " << mensaje << std::endl;
-
-	std::cin.get();
 
 	return 0;
 }   

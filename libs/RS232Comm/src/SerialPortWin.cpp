@@ -9,7 +9,6 @@
 #include <include/SerialPortWin.hpp>
 #include <include/PortUtils.hpp>
 
-constexpr auto EX_FATAL = 1; 
 using namespace PortUtils::Serial;
 
 //###################################################################################################
@@ -18,12 +17,7 @@ using namespace PortUtils::Serial;
 
 SerialPortWin::SerialPortWin(const wchar_t* comPort) {
 	this->m_wComPort = comPort;
-	this->m_wSerialConf = {PortUtils::Serial::DEFAULT_COM_RATE, PortUtils::Serial::DEFAULT_COM_BITS, ONESTOPBIT, 0, COMMTIMEOUTS() };
-	InvalidateHandle(m_hThread);
-	InvalidateHandle(m_hThreadStarted);
-	InvalidateHandle(m_hThreadTerm);
-	InvalidateHandle(m_hCom);
-	InvalidateHandle(m_hDataRx);
+	this->m_wSerialConf = { DEFAULT_COM_RATE, DEFAULT_COM_BITS, ONESTOPBIT, 0, COMMTIMEOUTS() };
 	InitPort();
 }
 
@@ -34,11 +28,6 @@ SerialPortWin::SerialPortWin(const wchar_t* comPort) {
 SerialPortWin::SerialPortWin(const wchar_t* comPort, WinSerialPortConf& serialConf) {
 	this->m_wComPort = comPort;
 	this->m_wSerialConf = serialConf;
-	InvalidateHandle(m_hThread);
-	InvalidateHandle(m_hThreadStarted);
-	InvalidateHandle(m_hThreadTerm);
-	InvalidateHandle(m_hCom);
-	InvalidateHandle(m_hDataRx);
 	InitPort();
 }
 
@@ -57,13 +46,22 @@ SerialPortWin::~SerialPortWin() {
 //###################################################################################################
 
 HRESULT SerialPortWin::InitPort() {
-	CreatePortFile();								// Initializes hCom to point to PORT#
-	//purgePort();									// Purges the COM port
-	SetComParms();									// Uses the DCB structure to set up the COM port
+	// CleanUp.
+	InvalidateHandle(m_hThread);
+	InvalidateHandle(m_hThreadStarted);
+	InvalidateHandle(m_hThreadTerm);
+	InvalidateHandle(m_hCom);
+	InvalidateHandle(m_hDataRx);
+	// Initializes hCom to point to COM PORT#.
+	CreatePortFile();
+	// Purges the COM port
+	//purgePort();
+	// Uses the DCB structure to set up the COM port.
+	SetComParms();
+	// Set event handles for reading / writing.
 	SetupEvent();
 	//purgePort();
-	//std::thread* eventThread = new std::thread(&SerialPortWin::eventThreadFn, this);
-	return S_OK;
+	return SS_Init;
 }
 
 //###################################################################################################
@@ -99,14 +97,15 @@ HRESULT SerialPortWin::CreatePortFile() {
 	m_hDataRx = CreateEvent(0, 0, 0, 0);
 	m_hCom = CreateFile(
 		PortUtils::Utils::UTF16ToUTF8(this->m_wComPort)->c_str(),	// COM port number  --> If COM# is larger than 9 then use the following syntax--> "\\\\.\\COM10"
-		GENERIC_READ | GENERIC_WRITE,							// Open for read and write
-		NULL,													// No sharing allowed
-		NULL,													// No security
-		OPEN_EXISTING,											// Opens the existing com port
-		FILE_FLAG_OVERLAPPED,									// Do not set any file attributes --> Use synchronous operation
-		NULL													// No template
+		GENERIC_READ | GENERIC_WRITE,								// Open for read and write
+		NULL,														// No sharing allowed
+		NULL,														// No security
+		OPEN_EXISTING,												// Opens the existing com port
+		FILE_FLAG_OVERLAPPED,										// Do not set any file attributes --> Use synchronous operation
+		NULL														// No template
 	);
 
+	// Set buffer size.
 	SetupComm(m_hCom, 512, 512);
 	
 	if (m_hCom == INVALID_HANDLE_VALUE) {
@@ -234,6 +233,7 @@ unsigned int __stdcall SerialPortWin::eventThreadFn(void* pvParam) {
 
 	arHandles[0] = apThis->m_hThreadTerm;
 	SetEvent(apThis->m_hThreadStarted);
+	apThis->m_eState = SS_Started;
 
 	while (abContinue) {
 		BOOL abRet = WaitCommEvent(apThis->m_hCom, &dwEventMask, &ov);
@@ -294,7 +294,7 @@ unsigned int __stdcall SerialPortWin::eventThreadFn(void* pvParam) {
 				if (apThis->GetCurrentState() != SS_Started)
 				{
 					iAccum = 0;
-					//apThis->m_serialBuffer.flush();
+					apThis->m_serialBuffer.flush();
 				}
 
 				apThis->m_serialBuffer.UnLockBuffer();
@@ -321,7 +321,7 @@ std::size_t SerialPortWin::Write(void* data, std::size_t data_len) {
 	DWORD dwBytesTransmitted;
 	BOOL fRes;
 
-	Sleep(450);
+	Sleep(1000);
 	// Create this write operation's OVERLAPPED structure's hEvent.
 	osWrite.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	if (osWrite.hEvent == NULL) 
@@ -394,6 +394,7 @@ std::size_t SerialPortWin::Read(void* buf, std::size_t buf_len) {
 
 std::string SerialPortWin::ReadIfAvailable() {
 	return m_serialBuffer.GetDataIfAvailable();
+	ResetEvent(m_hDataRx);
 }
 
 //###################################################################################################
@@ -455,16 +456,3 @@ HRESULT SerialPortWin::CanProcess() {
 // -- Reads all the data that is available in the local buffer.. 
 // does NOT make any blocking calls in case the local buffer is empty
 //###################################################################################################
-
-/*HRESULT SerialPortWin::ReadAvailable(std::string& data) {
-	HRESULT hr = CanProcess();
-	if (FAILED(hr)) return hr;
-	try {
-		bool abRet = m_serialBuffer.GetDataIfAvailable().size() > 0;
-		ResetEvent(m_hDataRx);
-	}
-	catch (...) {
-		hr = E_FAIL;
-	}
-	return hr;
-}*/

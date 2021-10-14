@@ -9,6 +9,10 @@ typedef struct WinSerialPortConfig: SerialPortConfig {
 	COMMTIMEOUTS timeout;
 } WinSerialPortConf;
 
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+// Serial Port Windows class.
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
 class SerialPortWin: public AbstractPort {
 public:
 	SerialPortWin(const wchar_t* comPort);
@@ -21,7 +25,7 @@ public:
 	HRESULT SetComParms();
 	HRESULT SetupEvent();
 	HRESULT CanProcess();
-	//HRESULT	ReadAvailable(std::string& data);
+
 	void InvalidateHandle(HANDLE& hHandle);
 	void CloseAndCleanHandle(HANDLE& hHandle);
 	inline void SetDataReadEvent() { SetEvent(m_hDataRx); }
@@ -48,3 +52,7 @@ private:
 	WinSerialPortConf m_wSerialConf;
 	const wchar_t* m_wComPort;
 };
+
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+// End Serial Port Windows class.
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
