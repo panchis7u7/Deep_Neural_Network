@@ -67,6 +67,7 @@ std::vector<T>* NeuralNetwork<T>::feedForward(std::vector<T>* inputVec) {
 	////////////////////////////////////////////////
 	/********************************************************************************/
 
+	if (this->hidden_weights_output) delete this->hidden_weights_output;
 	this->hidden_weights_output = Matrix<T>::dot(this->pesos_ih, inputVec);
 	this->hidden_weights_output->add(this->bias_h);
 	this->hidden_weights_output->map(NeuralNetwork<T>::sigmoid);
@@ -226,18 +227,10 @@ DeepNeuralNetwork<T>::DeepNeuralNetwork(uint_fast64_t input, std::vector<uint_fa
 
 template <typename T>
 DeepNeuralNetwork<T>::~DeepNeuralNetwork(){
-	for (auto& matrix : this->errores) {
-		delete matrix;
-	}
-	for (auto& matrix : this->gradientes) {
-		delete matrix;
-	}
-	for (auto& matrix : this->deltas) {
-		delete matrix;
-	}
-	for (auto& matrix : this->salidas_capas_ocultas) {
-		delete matrix;
-	}
+	for (auto& matrix : this->errores) delete matrix;
+	for (auto& matrix : this->gradientes) delete matrix;
+	for (auto& matrix : this->deltas) delete matrix;
+	for (auto& matrix : this->salidas_capas_ocultas) delete matrix;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -4,6 +4,8 @@ project(NeuralNetwork CXX)
 
 #C++ Version to use in build.
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+enable_testing()
 
 #Compilador a usar.
 message ("${CMAKE_CXX_COMPILER}")
@@ -24,3 +26,4 @@ set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}")
 
 add_subdirectory(libs)
 add_subdirectory(src)
+add_subdirectory(tests)

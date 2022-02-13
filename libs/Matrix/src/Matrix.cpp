@@ -33,10 +33,8 @@ Matrix<T>::Matrix(Matrix<T>& copy){
 template <typename T>
 Matrix<T>::~Matrix() {
 	for (uint_fast64_t i = 0; i < this->rows; i++)
-	{
-		delete[] this->data[i];
-	}
-	delete[] this->data;
+		delete[] data[i];
+	delete[] data;
 }
 
 template <typename T>
@@ -184,6 +182,12 @@ T** Matrix<T>::alloc(uint_fast64_t rows, uint_fast64_t columns) {
 	}
 	return data;
 }
+
+template <typename T>
+unsigned Matrix<T>::getRows() { return this->rows; }
+
+template <typename T>
+unsigned Matrix<T>::getColumns() { return this->columns; }
 
 template class voxel::Matrix<float>;
 template class voxel::Matrix<double>;

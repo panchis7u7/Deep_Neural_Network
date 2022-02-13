@@ -27,6 +27,8 @@ namespace voxel {
 		void scalarProduct(T factor);
 		void hadamardProduct(Matrix<T>* factor);
 		void map(T (*func)(T));
+		unsigned getRows();
+		unsigned getColumns();
 
 		//Overloads.
 		//friend std::ostream& operator<< <>(std::ostream& out, const Matrix<T>* mat);
