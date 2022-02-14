@@ -1,11 +1,15 @@
 #pragma once
+
+#ifdef _WIN32
 #include <include/AbstractPort.hpp>
 #include <include/SerialBuffer.hpp>
 #include <include/PortUtils.hpp>
+#include <include/SerialPort.hpp>
 
 using namespace PortUtils::Serial;
 
-typedef struct WinSerialPortConfig: SerialPortConfig {
+typedef struct WinSerialPortConfig : SerialPortConfig
+{
 	COMMTIMEOUTS timeout;
 } WinSerialPortConf;
 
@@ -13,29 +17,30 @@ typedef struct WinSerialPortConfig: SerialPortConfig {
 // Serial Port Windows class.
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-class SerialPortWin: public AbstractPort {
+class SerialPortWin : public SerialPort
+{
 public:
-	SerialPortWin(const wchar_t* comPort);
-	SerialPortWin(const wchar_t* comPort, WinSerialPortConf& serialConf);
+	SerialPortWin(const wchar_t *comPort);
+	SerialPortWin(const wchar_t *comPort, WinSerialPortConf &serialConf);
 	~SerialPortWin();
 
-	static unsigned int __stdcall eventThreadFn(void* pvParam);
+	static unsigned int __stdcall eventThreadFn(void *pvParam);
 
 	HRESULT CreatePortFile();
 	HRESULT SetComParms();
 	HRESULT SetupEvent();
 	HRESULT CanProcess();
 
-	void InvalidateHandle(HANDLE& hHandle);
-	void CloseAndCleanHandle(HANDLE& hHandle);
+	void InvalidateHandle(HANDLE &hHandle);
+	void CloseAndCleanHandle(HANDLE &hHandle);
 	inline void SetDataReadEvent() { SetEvent(m_hDataRx); }
 	inline SerialState GetCurrentState() { return m_eState; }
-	std::size_t Read(void* buf, std::size_t buf_len);
+	std::size_t Read(void *buf, std::size_t buf_len);
 
-	//Polymorphic functions.
+	// Polymorphic functions.
 	HRESULT InitPort() override;
 	HRESULT PurgePort() override;
-	std::size_t Write(void* data, std::size_t data_len) override;
+	std::size_t Write(void *data, std::size_t data_len) override;
 	std::string ReadIfAvailable() override;
 	std::vector<std::wstring> GetAvailablePorts() override;
 
@@ -50,9 +55,10 @@ private:
 	SerialState m_eState;
 	SerialBuffer m_serialBuffer;
 	WinSerialPortConf m_wSerialConf;
-	const wchar_t* m_wComPort;
+	const wchar_t *m_wComPort;
 };
 
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 // End Serial Port Windows class.
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#endif // _WIN32
