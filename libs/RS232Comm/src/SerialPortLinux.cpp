@@ -9,7 +9,7 @@
 class SerialPort::SerialPortImpl
 {
 public:
-    SerialPortImpl(const std::string com_port) {}
+    SerialPortImpl(const std::string com_port) {};
     ~SerialPortImpl();
 
     long initPort();
