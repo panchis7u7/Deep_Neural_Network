@@ -18,14 +18,12 @@ add_library(
 add_library(
     RS232Comm SHARED
     RS232Comm/include/PortUtils.hpp
-    RS232Comm/include/SerialPort.hpp
     RS232Comm/include/AbstractPort.hpp
+    RS232Comm/include/SerialPort.hpp
+    RS232Comm/src/SerialPortWin.cpp
+    RS232Comm/src/SerialPortLinux.cpp
     RS232Comm/include/SerialBuffer.hpp
     RS232Comm/src/SerialBuffer.cpp
-    RS232Comm/include/SerialPortWin.hpp
-    RS232Comm/src/SerialPortWin.cpp
-    RS232Comm/include/SerialPortLinux.hpp
-    RS232Comm/src/SerialPortLinux.cpp
 )
 
 add_library( RapidXML INTERFACE )

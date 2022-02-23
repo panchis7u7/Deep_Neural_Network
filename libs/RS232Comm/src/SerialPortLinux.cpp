@@ -2,14 +2,14 @@
 // Serial Port Linux Implementation class.
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 
 #include <include/SerialPort.hpp>
 
 class SerialPort::SerialPortImpl
 {
 public:
-    SerialPortImpl(const std::string com_port) {};
+    SerialPortImpl(const std::string com_port);
     ~SerialPortImpl();
 
     long initPort();
@@ -19,7 +19,13 @@ public:
     std::vector<std::string> getAvailablePorts();
 };
 
-SerialPort::SerialPort(std::string com_port) : m_pimpl(std::make_unique<SerialPortImpl>(com_port)), com_port(com_port) {}
+SerialPort::SerialPort(std::string com_port) : m_pimpl(std::make_unique<SerialPortImpl>(com_port)), com_port(com_port)
+{
+}
+
+SerialPort::~SerialPort()
+{
+}
 
 long SerialPort::initPort()
 {
@@ -44,6 +50,39 @@ std::string SerialPort::readIfAvailable()
 std::vector<std::string> SerialPort::getAvailablePorts()
 {
     return pimpl()->getAvailablePorts();
+}
+
+SerialPort::SerialPortImpl::SerialPortImpl(const std::string com_port){
+
+};
+
+SerialPort::SerialPortImpl::~SerialPortImpl(){
+
+};
+
+long SerialPort::SerialPortImpl::initPort()
+{
+    return 0;
+}
+
+long SerialPort::SerialPortImpl::purgePort()
+{
+    return 0;
+}
+
+std::string SerialPort::SerialPortImpl::readIfAvailable()
+{
+    return "";
+}
+
+std::size_t SerialPort::SerialPortImpl::write(void *data, std::size_t data_len)
+{
+    return 0;
+}
+
+std::vector<std::string> SerialPort::SerialPortImpl::getAvailablePorts()
+{
+    return {};
 }
 
 #endif // __linux__.

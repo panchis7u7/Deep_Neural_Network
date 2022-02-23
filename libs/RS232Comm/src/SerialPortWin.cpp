@@ -2,7 +2,7 @@
 // Serial Port Windows Implementation class.
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-#ifdef _WIN64
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 
 #include <include/AbstractPort.hpp>
 #include <include/SerialBuffer.hpp>
@@ -66,7 +66,7 @@ private:
 
 SerialPort::SerialPort(std::string com_port) : m_pimpl(std::make_unique<SerialPortImpl>(com_port)), com_port(com_port) {}
 
-SerialPort::~SerialPort(){}
+SerialPort::~SerialPort() {}
 
 long SerialPort::initPort()
 {
@@ -97,19 +97,22 @@ std::vector<std::string> SerialPort::getAvailablePorts()
 // Windows platform implementation.
 //###################################################################################################
 
-SerialPort::SerialPortImpl::SerialPortImpl(const std::string com_port) {
+SerialPort::SerialPortImpl::SerialPortImpl(const std::string com_port)
+{
     this->m_sComPort = com_port;
-    this->m_wSerialConf = { DEFAULT_COM_RATE, DEFAULT_COM_BITS, ONESTOPBIT, 0, COMMTIMEOUTS() };
+    this->m_wSerialConf = {DEFAULT_COM_RATE, DEFAULT_COM_BITS, ONESTOPBIT, 0, COMMTIMEOUTS()};
     initPort();
 }
 
-SerialPort::SerialPortImpl::SerialPortImpl(const std::string comPort, WinSerialPortConf& serialConf) {
+SerialPort::SerialPortImpl::SerialPortImpl(const std::string comPort, WinSerialPortConf &serialConf)
+{
     this->m_sComPort = comPort;
     this->m_wSerialConf = serialConf;
     initPort();
 }
 
-SerialPort::SerialPortImpl::~SerialPortImpl() {
+SerialPort::SerialPortImpl::~SerialPortImpl()
+{
     purgePort();
     CloseHandle(this->m_hCom);
 }
@@ -119,7 +122,8 @@ SerialPort::SerialPortImpl::~SerialPortImpl() {
 // Initializes the port and sets the communication parameters.
 //###################################################################################################
 
-HRESULT SerialPort::SerialPortImpl::initPort() {
+HRESULT SerialPort::SerialPortImpl::initPort()
+{
     // CleanUp.
     invalidateHandle(m_hThread);
     invalidateHandle(m_hThreadStarted);
@@ -142,7 +146,8 @@ HRESULT SerialPort::SerialPortImpl::initPort() {
 // Handle uninitializer.
 //###################################################################################################
 
-void SerialPort::SerialPortImpl::invalidateHandle(HANDLE& hHandle) {
+void SerialPort::SerialPortImpl::invalidateHandle(HANDLE &hHandle)
+{
     hHandle = INVALID_HANDLE_VALUE;
 }
 
@@ -150,7 +155,8 @@ void SerialPort::SerialPortImpl::invalidateHandle(HANDLE& hHandle) {
 // Close and Clean Handle.
 //###################################################################################################
 
-void SerialPort::SerialPortImpl::closeAndCleanHandle(HANDLE& hHandle) {
+void SerialPort::SerialPortImpl::closeAndCleanHandle(HANDLE &hHandle)
+{
     BOOL abRet = CloseHandle(hHandle);
     if (!abRet)
     {
@@ -166,19 +172,20 @@ void SerialPort::SerialPortImpl::closeAndCleanHandle(HANDLE& hHandle) {
 // open the port and set securities.
 //###################################################################################################
 
-HRESULT SerialPort::SerialPortImpl::createPortFile() {
+HRESULT SerialPort::SerialPortImpl::createPortFile()
+{
     HRESULT hr = S_OK;
 
     m_hDataRx = CreateEvent(0, 0, 0, 0);
     m_hCom = CreateFile(
-        //PortUtils::Utils::UTF16ToUTF8(this->m_wComPort)->c_str(), // COM port number  --> If COM# is larger than 9 then use the following syntax--> "\\\\.\\COM10"
+        // PortUtils::Utils::UTF16ToUTF8(this->m_wComPort)->c_str(), // COM port number  --> If COM# is larger than 9 then use the following syntax--> "\\\\.\\COM10"
         this->m_sComPort.c_str(),
-        GENERIC_READ | GENERIC_WRITE,							  // Open for read and write
-        NULL,													  // No sharing allowed
-        NULL,													  // No security
-        OPEN_EXISTING,											  // Opens the existing com port
-        FILE_FLAG_OVERLAPPED,									  // Do not set any file attributes --> Use synchronous operation
-        NULL													  // No template
+        GENERIC_READ | GENERIC_WRITE, // Open for read and write
+        NULL,                         // No sharing allowed
+        NULL,                         // No security
+        OPEN_EXISTING,                // Opens the existing com port
+        FILE_FLAG_OVERLAPPED,         // Do not set any file attributes --> Use synchronous operation
+        NULL                          // No template
     );
 
     // Set buffer size.
@@ -191,7 +198,7 @@ HRESULT SerialPort::SerialPortImpl::createPortFile() {
     }
     else
         std::cout << this->m_sComPort << " is now open!" << std::endl;
-        //std::cout << PortUtils::Utils::UTF16ToUTF8(this->m_wComPort)->c_str() << " is now open." << std::endl
+    // std::cout << PortUtils::Utils::UTF16ToUTF8(this->m_wComPort)->c_str() << " is now open." << std::endl
     return hr;
 }
 
@@ -199,7 +206,8 @@ HRESULT SerialPort::SerialPortImpl::createPortFile() {
 // Purge any outstanding requests on the serial port (initialize)
 //###################################################################################################
 
-HRESULT SerialPort::SerialPortImpl::purgePort() {
+HRESULT SerialPort::SerialPortImpl::purgePort()
+{
     PurgeComm(m_hCom, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
     return S_OK;
 }
@@ -208,7 +216,8 @@ HRESULT SerialPort::SerialPortImpl::purgePort() {
 // Set Serial COM port configuration parameters.
 //###################################################################################################
 
-HRESULT SerialPort::SerialPortImpl::setComParms() {
+HRESULT SerialPort::SerialPortImpl::setComParms()
+{
     if (!SetCommMask(m_hCom, EV_RXCHAR | EV_TXEMPTY))
     {
         std::cout << "RS232Win: Failed to Get Comm Mask. Reason: " << GetLastError() << std::endl;
@@ -216,7 +225,7 @@ HRESULT SerialPort::SerialPortImpl::setComParms() {
     }
 
     // Windows device control block.
-    DCB dcb = { 0 };
+    DCB dcb = {0};
     // Clear DCB to start out clean, then get current settings
     dcb.DCBlength = sizeof(dcb);
     // memset(&dcb, 0, sizeof(dcb));
@@ -228,9 +237,9 @@ HRESULT SerialPort::SerialPortImpl::setComParms() {
     }
 
     // Set our own parameters from Globals
-    dcb.BaudRate = m_wSerialConf.nComRate;		 // Baud (bit) rate
+    dcb.BaudRate = m_wSerialConf.nComRate;       // Baud (bit) rate
     dcb.ByteSize = (BYTE)m_wSerialConf.nComBits; // Number of bits(8)
-    dcb.Parity = m_wSerialConf.parity;			 // No parity (0)
+    dcb.Parity = m_wSerialConf.parity;           // No parity (0)
     dcb.fDsrSensitivity = 0;
     dcb.fDtrControl = DTR_CONTROL_ENABLE;
     dcb.fOutxDsrFlow = 0;
@@ -257,7 +266,7 @@ HRESULT SerialPort::SerialPortImpl::setComParms() {
     // timeout->ReadTotalTimeoutConstant = 5000;		// A constant added to the calculation of the total time-out period. This constant is added to the resulting product of the ReadTotalTimeoutMultiplier and the number of bytes (above).
     // SetCommTimeouts(this->m_hCom, timeout);
 
-    COMMTIMEOUTS* timeout = &this->m_wSerialConf.timeout;
+    COMMTIMEOUTS *timeout = &this->m_wSerialConf.timeout;
     timeout->ReadIntervalTimeout = MAXDWORD;
     timeout->ReadTotalTimeoutMultiplier = 0;
     timeout->ReadTotalTimeoutConstant = 0;
@@ -279,10 +288,11 @@ HRESULT SerialPort::SerialPortImpl::setComParms() {
 // Setup event for reading cycle.
 //###################################################################################################
 
-HRESULT SerialPort::SerialPortImpl::setupEvent() {
+HRESULT SerialPort::SerialPortImpl::setupEvent()
+{
     m_hThreadTerm = CreateEvent(0, 0, 0, 0);
     m_hThreadStarted = CreateEvent(0, 0, 0, 0);
-    m_hThread = (HANDLE)_beginthreadex(0, 0, SerialPortImpl::eventThreadFn, (void*)this, 0, 0);
+    m_hThread = (HANDLE)_beginthreadex(0, 0, SerialPortImpl::eventThreadFn, (void *)this, 0, 0);
 
     DWORD dwWait = WaitForSingleObject(m_hThreadStarted, INFINITE);
     assert(dwWait == WAIT_OBJECT_0);
@@ -297,14 +307,15 @@ HRESULT SerialPort::SerialPortImpl::setupEvent() {
 // Thread function for non polling.
 //###################################################################################################
 
-unsigned int __stdcall SerialPort::SerialPortImpl::eventThreadFn(void* pvParam) {
-    SerialPortImpl* apThis = (SerialPortImpl*)pvParam;
+unsigned int __stdcall SerialPort::SerialPortImpl::eventThreadFn(void *pvParam)
+{
+    SerialPortImpl *apThis = (SerialPortImpl *)pvParam;
     bool abContinue = true;
     DWORD dwEventMask = 0;
-    HANDLE arHandles[2] = { nullptr };
+    HANDLE arHandles[2] = {nullptr};
     DWORD dwWait;
 
-    OVERLAPPED ov = { 0 };
+    OVERLAPPED ov = {0};
     ov.hEvent = CreateEvent(
         NULL,  // default security attributes
         TRUE,  // manual-reset event
@@ -354,7 +365,7 @@ unsigned int __stdcall SerialPort::SerialPortImpl::eventThreadFn(void* pvParam) 
             {
                 BOOL abRet = false;
                 DWORD dwBytesRead = 0;
-                OVERLAPPED ovRead = { 0 };
+                OVERLAPPED ovRead = {0};
                 memset(&ovRead, 0, sizeof(ovRead));
                 ovRead.hEvent = CreateEvent(0, true, 0, 0);
 
@@ -408,8 +419,9 @@ unsigned int __stdcall SerialPort::SerialPortImpl::eventThreadFn(void* pvParam) 
 // Write data to COM port.
 //###################################################################################################
 
-std::size_t SerialPort::SerialPortImpl::write(void* data, std::size_t data_len) {
-    OVERLAPPED osWrite = { 0 };
+std::size_t SerialPort::SerialPortImpl::write(void *data, std::size_t data_len)
+{
+    OVERLAPPED osWrite = {0};
     DWORD dwRes = 0;
     DWORD dwBytesTransmitted;
     BOOL fRes;
@@ -457,10 +469,11 @@ std::size_t SerialPort::SerialPortImpl::write(void* data, std::size_t data_len) 
 // Read data from COM port.
 //###################################################################################################
 
-std::size_t SerialPort::SerialPortImpl::read(void* buf, std::size_t buf_len) {
+std::size_t SerialPort::SerialPortImpl::read(void *buf, std::size_t buf_len)
+{
     DWORD dwRead;
     BOOL fWaitingOnRead = FALSE;
-    OVERLAPPED osReader = { 0 };
+    OVERLAPPED osReader = {0};
 
     // Create the overlapped event. Must be closed before exiting
     // to avoid a handle leak.
@@ -496,7 +509,8 @@ std::size_t SerialPort::SerialPortImpl::read(void* buf, std::size_t buf_len) {
 // Read data from COM port if data is in the buffer, else, just wait.
 //###################################################################################################
 
-std::string SerialPort::SerialPortImpl::readIfAvailable() {
+std::string SerialPort::SerialPortImpl::readIfAvailable()
+{
     return m_serialBuffer.GetDataIfAvailable();
     ResetEvent(m_hDataRx);
 }
@@ -505,7 +519,8 @@ std::string SerialPort::SerialPortImpl::readIfAvailable() {
 // List com ports available on the device.
 //###################################################################################################
 
-std::vector<std::string> SerialPort::SerialPortImpl::getAvailablePorts() {
+std::vector<std::string> SerialPort::SerialPortImpl::getAvailablePorts()
+{
     // Buffer to store the path of the COM PORTS
     LPWSTR lpTargetPath = (LPWSTR)calloc(5000, sizeof(wchar_t));
     std::vector<std::string> portList;
@@ -514,7 +529,7 @@ std::vector<std::string> SerialPort::SerialPortImpl::getAvailablePorts() {
     for (int i = 0; i < 255; i++)
     {
         // Converting to COM0, COM1, COM2, ... COMN.
-        //std::wstring str = L"COM" + std::to_wstring(i);
+        // std::wstring str = L"COM" + std::to_wstring(i);
         std::string str = "COM" + i;
         DWORD res = QueryDosDeviceW((LPCWSTR)str.c_str(), lpTargetPath, 5000);
         // Test the return value and error if any

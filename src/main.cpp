@@ -16,7 +16,7 @@ int main()
 									 {0.0, 1.0},
 									 {1.0, 1.0}};
 	std::vector<float> esperado[] = {{0}, {1}, {1}, {0}};
-	for (size_t i = 0; i < 3000000; i++)
+	for (size_t i = 0; i < 30000; i++)
 	{
 		int index = rand() % 4;
 		nn->train(&entradas[index], &esperado[index]);
@@ -29,7 +29,7 @@ int main()
 	std::cout << std::endl;
 	std::vector<uint_fast64_t> f1 = {4, 4};
 	DeepNeuralNetwork<float> *nn2 = new DeepNeuralNetwork<float>(2, f1, 1);
-	for (size_t i = 0; i < 15000000; i++)
+	for (size_t i = 0; i < 150000; i++)
 	{
 		int index = rand() % 4;
 		nn2->train(&entradas[index], &esperado[index]);

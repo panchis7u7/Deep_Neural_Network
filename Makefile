@@ -1,8 +1,12 @@
-build:
+buildLinux:
 	make -C out/build/Linux
-cmake:
+buildMac:
+	make -C out/build/MacOS
+cmakeLinux:
 	cmake -S . -B out/build/Linux
-test:
-	out/build/Linux/NeuralNetwork_test
-run:
+cmakeMac:
+	cmake -S . -B out/build/MacOS -G 'Unix Makefiles'
+runLinux:
 	out/build/Linux/NeuralNetwork
+runMac:
+	out/build/MacOS/NeuralNetwork
