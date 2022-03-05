@@ -9,4 +9,6 @@ cmakeMac:
 runLinux:
 	out/build/Linux/NeuralNetwork
 runMac:
-	out/build/MacOS/NeuralNetwork
+	out/build/Debug/MacOS/NeuralNetworkd
+testMac:
+	out/build/MacOS/NeuralNetwork_test

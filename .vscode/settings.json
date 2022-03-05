@@ -56,6 +56,17 @@
         "fstream": "cpp"
     },
     "cmake.configureOnOpen": true,
-    "cmake.default.buildDirectory": "${workspaceFolder}/out/build/Linux/",
-    "C_Cpp.default.configurationProvider": "go2sh.cmake-integration"
+    "cmake.buildDirectory": "${workspaceFolder}/out/build/${buildType}/${env:OS}/",
+    "cmake.sourceDirectory": "${workspaceFolder}",
+    "C_Cpp.default.configurationProvider": "go2sh.cmake-integration",
+    "cmake.debugConfig": {
+        "stopAtEntry": false,
+        "MIMode": "lldb",
+        "miDebuggerPath": "/Users/semadrig/.vscode/extensions/ms-vscode.cpptools-1.8.4/debugAdapters/lldb/bin/lldb-mi",
+        "logging": {
+            "trace": true,
+            "engineLogging": true,
+            "traceResponse": true
+        }
+    }
 }

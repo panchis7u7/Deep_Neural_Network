@@ -4,11 +4,18 @@ project(NeuralNetwork CXX)
 
 #C++ Version to use in build.
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_DEBUG_POSTFIX d)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 enable_testing()
 
 #Compilador a usar.
 message ("${CMAKE_CXX_COMPILER}")
+
+if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
+    message("Debug mode")
+	set(CMAKE_C_FLAGS_DEBUG "-g -DDEBUG")
+	set(CMAKE_CXX_FLAGS_DEBUG "-g -DDEBUG")
+endif (CMAKE_BUILD_TYPE EQUAL "DEBUG")
 
 #Set default compile flags for G++.
 if(CMAKE_COMPILER_IS_GNUCXX)

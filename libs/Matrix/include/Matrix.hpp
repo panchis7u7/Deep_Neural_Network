@@ -5,50 +5,56 @@
 #include <math.h>
 #include <vector>
 #include <cstdlib>
+#include <functional>
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
-namespace voxel {
-	
+namespace voxel
+{
+
 	template <class T>
-	class Matrix {
+	class Matrix
+	{
 	public:
 		Matrix();
 		Matrix(uint_fast64_t rows, uint_fast64_t columns);
-		Matrix(Matrix<T>& copy);
+		Matrix(Matrix<T> &copy);
+		Matrix(std::vector<T> &vec);
 		~Matrix();
 		void print();
 		void add(T addend);
-		void add(Matrix<T>* addend);
-		void subtract(Matrix<T>* minuend);
-		void subtract(std::vector<T>* minuend);
-		void dot(Matrix<T>& multiplicand);
+		void add(Matrix<T> *addend);
+		void subtract(Matrix<T> *minuend);
+		void subtract(std::vector<T> *minuend);
+		void dot(Matrix<T> &multiplicand);
 		void randomize();
 		void transpose();
 		void scalarProduct(T factor);
-		void hadamardProduct(Matrix<T>* factor);
+		void hadamardProduct(Matrix<T> *factor);
+		void forEach(std::function<void(T data, unsigned row, unsigned column)> callback);
 		void map(T (*func)(T));
 		unsigned getRows();
 		unsigned getColumns();
+		T **getData();
 
-		//Overloads.
-		//friend std::ostream& operator<< <>(std::ostream& out, const Matrix<T>* mat);
+		// Overloads.
+		// friend std::ostream& operator<< <>(std::ostream& out, const Matrix<T>* mat);
 
-		//Static methods.
-		//static Matrix* fromVector(std::vector<T>* entradas);
-		//static std::vector<T>* toVector(Matrix<T>* entradas);
-		//static Matrix<T>* hadamardProduct(Matrix<T>* A, Matrix<T>* B);
-		//static Matrix<T>* elementWiseSubstraction(Matrix<T>* A, Matrix<T>* B);
-		//static Matrix<T>* dot(Matrix<T>* A, Matrix<T>* B);
-		//static Matrix<T>* transpose(Matrix<T>* A);
-		//static Matrix<T>* map(Matrix<T>* A, T (*func)(T));
+		// Static methods.
+		// static Matrix* fromVector(std::vector<T>* entradas);
+		// static std::vector<T>* toVector(Matrix<T>* entradas);
+		// static Matrix<T>* hadamardProduct(Matrix<T>* A, Matrix<T>* B);
+		// static Matrix<T>* elementWiseSubstraction(Matrix<T>* A, Matrix<T>* B);
+		// static Matrix<T>* dot(Matrix<T>* A, Matrix<T>* B);
+		// static Matrix<T>* transpose(Matrix<T>* A);
+		// static Matrix<T>* map(Matrix<T>* A, T (*func)(T));
 
 		///////////////////////////////////////////////////////////////////////////////////////////
 		// Public static typename Methods.
 		///////////////////////////////////////////////////////////////////////////////////////////
 
-	
-		static Matrix<T>* fromVector(std::vector<T>* entradas) {
-			Matrix<T>* result = new Matrix(entradas->size(), 1);
+		static Matrix<T> *fromVector(std::vector<T> *entradas)
+		{
+			Matrix<T> *result = new Matrix(entradas->size(), 1);
 			for (uint_fast64_t i = 0; i < entradas->size(); i++)
 			{
 				result->data[i][0] = entradas->at(i);
@@ -56,8 +62,9 @@ namespace voxel {
 			return result;
 		}
 
-		static std::vector<T>* toVector(Matrix<T>* entradas) {
-			std::vector<T>* result = new std::vector<T>();
+		static std::vector<T> *toVector(Matrix<T> *entradas)
+		{
+			std::vector<T> *result = new std::vector<T>();
 			for (uint_fast64_t i = 0; i < entradas->rows; i++)
 			{
 				for (uint_fast64_t j = 0; j < entradas->columns; j++)
@@ -68,11 +75,15 @@ namespace voxel {
 			return result;
 		}
 
-		static Matrix<T>* hadamardProduct(Matrix<T>* A, Matrix<T>* B) {
-			if ((A->rows != B->rows) || (A->columns != B->columns)){
+		static Matrix<T> *hadamardProduct(Matrix<T> *A, Matrix<T> *B)
+		{
+			if ((A->rows != B->rows) || (A->columns != B->columns))
+			{
 				return NULL;
-			} else {
-				Matrix<T>* result = new Matrix<T>(A->rows, B->columns);
+			}
+			else
+			{
+				Matrix<T> *result = new Matrix<T>(A->rows, B->columns);
 				for (uint_fast64_t i = 0; i < A->rows; i++)
 				{
 					for (uint_fast64_t j = 0; j < B->columns; j++)
@@ -84,12 +95,15 @@ namespace voxel {
 			}
 		}
 
-		static Matrix<T>* elementWiseSubstraction(Matrix<T>* A, Matrix<T>* B) {
-			if ((A->rows != B->rows) || (A->columns != B->columns)) {
+		static Matrix<T> *elementWiseSubstraction(Matrix<T> *A, Matrix<T> *B)
+		{
+			if ((A->rows != B->rows) || (A->columns != B->columns))
+			{
 				return NULL;
 			}
-			else {
-				Matrix<T>* result = new Matrix<T>(A->rows, B->columns);
+			else
+			{
+				Matrix<T> *result = new Matrix<T>(A->rows, B->columns);
 				for (uint_fast64_t i = 0; i < A->rows; i++)
 				{
 					for (uint_fast64_t j = 0; j < B->columns; j++)
@@ -101,8 +115,9 @@ namespace voxel {
 			}
 		}
 
-		static Matrix<T>* dot(Matrix<T>* A, Matrix<T>* B) {
-			Matrix<T>* result = new Matrix<T>(A->rows, B->columns);
+		static Matrix<T> *dot(Matrix<T> *A, Matrix<T> *B)
+		{
+			Matrix<T> *result = new Matrix<T>(A->rows, B->columns);
 			for (uint_fast64_t i = 0; i < result->rows; i++)
 			{
 				for (uint_fast64_t j = 0; j < result->columns; j++)
@@ -118,9 +133,10 @@ namespace voxel {
 			return result;
 		}
 
-		static Matrix<T>* dot(Matrix<T>* A, std::vector<T>* B) {
-			//n Column Matrix requires n elements vector in order to perform product.
-			Matrix<T>* result = new Matrix<T>(A->rows, 1);
+		static Matrix<T> *dot(Matrix<T> *A, std::vector<T> *B)
+		{
+			// n Column Matrix requires n elements vector in order to perform product.
+			Matrix<T> *result = new Matrix<T>(A->rows, 1);
 			for (uint_fast64_t i = 0; i < result->rows; i++)
 			{
 				for (uint_fast64_t j = 0; j < result->columns; j++)
@@ -136,8 +152,23 @@ namespace voxel {
 			return result;
 		}
 
-		static Matrix<T>* transpose(Matrix<T>* A) {
-			Matrix<T>* result = new Matrix<T>(A->columns, A->rows);
+		static void dot(Matrix<T> *to, Matrix *aOperand, Matrix<T> *bOperand)
+		{
+			for (uint_fast64_t i = 0; i < aOperand->rows; ++i)
+			{
+				for (uint_fast64_t j = 0; j < bOperand->columns; ++j)
+				{
+					for (uint_fast64_t k = 0; k < aOperand->columns; ++k)
+					{
+						to->data[i][j] += aOperand->data[i][k] * bOperand->data[k][j];
+					}
+				}
+			}
+		}
+
+		static Matrix<T> *transpose(Matrix<T> *A)
+		{
+			Matrix<T> *result = new Matrix<T>(A->columns, A->rows);
 			for (uint_fast64_t i = 0; i < A->rows; i++)
 			{
 				for (uint_fast64_t j = 0; j < A->columns; j++)
@@ -148,8 +179,9 @@ namespace voxel {
 			return result;
 		}
 
-		static Matrix<T>* map(Matrix<T>* A, T (*func)(T)) {
-			Matrix<T>* result = new Matrix<T>(A->rows, A->columns);
+		static Matrix<T> *map(Matrix<T> *A, T (*func)(T))
+		{
+			Matrix<T> *result = new Matrix<T>(A->rows, A->columns);
 			for (uint_fast64_t i = 0; i < A->rows; i++)
 			{
 				for (uint_fast64_t j = 0; j < A->columns; j++)
@@ -164,7 +196,8 @@ namespace voxel {
 		// Operator Overloading.
 		///////////////////////////////////////////////////////////////////////////////////////////
 
-		friend std::ostream& operator<<(std::ostream& out, const Matrix<T>* mat){
+		friend std::ostream &operator<<(std::ostream &out, const Matrix<T> *mat)
+		{
 			for (uint_fast64_t i = 0; i < mat->rows; i++)
 			{
 				out << "|";
@@ -180,10 +213,11 @@ namespace voxel {
 		}
 
 	private:
-		T** data;
+		T **data;
 		unsigned rows;
 		unsigned columns;
-		T** alloc(uint_fast64_t rows, uint_fast64_t columns);
+		T **alloc(uint_fast64_t rows, uint_fast64_t columns);
+
 	protected:
 	};
 }
