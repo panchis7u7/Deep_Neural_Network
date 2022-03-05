@@ -1,0 +1,73 @@
+/*
+{
+    "version": "2.0.0",
+    "options": {
+        "cwd": "${workspaceFolder}/out/build/${env:OS}/"
+    },
+    "tasks": [
+        {
+            "label": "cmake",
+            "command": "cmake -G 'Unix Makefiles' -DCMAKE_BUILD_TYPE=Debug ../../../",
+            "type": "shell",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "make",
+            "command": "make -j 8",
+            "type": "shell",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "group": "build"
+        }
+    ]
+}
+*/
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "command": "sh",
+    "type": "shell",
+    "args": [
+        "-c"
+    ],
+    "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+    },
+    "options": {
+        "cwd": "${workspaceFolder}/out/build/Debug/${env:OS}/"
+    },
+    "tasks": [
+        {
+            "label": "cmake",
+            "command": "cmake -S ../../../../ -B . -G 'Unix Makefiles' -DCMAKE_BUILD_TYPE=Debug",
+            "type": "shell",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "type": "shell",
+            "label": "make",
+            "command": "make -j 8",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
