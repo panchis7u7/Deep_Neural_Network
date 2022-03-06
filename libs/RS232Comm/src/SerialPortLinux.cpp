@@ -9,7 +9,7 @@
 class SerialPort::SerialPortImpl
 {
 public:
-    SerialPortImpl(const std::string com_port);
+    SerialPortImpl();
     ~SerialPortImpl();
 
     long initPort();
@@ -19,7 +19,7 @@ public:
     std::vector<std::string> getAvailablePorts();
 };
 
-SerialPort::SerialPort(std::string com_port) : m_pimpl(std::make_unique<SerialPortImpl>(com_port)), com_port(com_port)
+SerialPort::SerialPort(std::string com_port) : com_port(com_port), m_pimpl(std::make_unique<SerialPortImpl>())
 {
 }
 
@@ -52,7 +52,7 @@ std::vector<std::string> SerialPort::getAvailablePorts()
     return pimpl()->getAvailablePorts();
 }
 
-SerialPort::SerialPortImpl::SerialPortImpl(const std::string com_port){
+SerialPort::SerialPortImpl::SerialPortImpl(){
 
 };
 
@@ -77,6 +77,8 @@ std::string SerialPort::SerialPortImpl::readIfAvailable()
 
 std::size_t SerialPort::SerialPortImpl::write(void *data, std::size_t data_len)
 {
+    (void)data;
+    (void)data_len;
     return 0;
 }
 

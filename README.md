@@ -75,3 +75,7 @@ this->hidden_weights_output = Matrix<T>::map(hidden_input_weights, sigmoid);
 ```
 References:
 [1]: https://towardsdatascience.com/first-neural-network-for-beginners-explained-with-code-4cfd37e06eaf
+
+Helpful statements:
+//"program": "${workspaceRoot}/out/build/${command:cmake.buildType}/${env:OS}/NeuralNetworkd",
+//"preLaunchTask": "cmake",
