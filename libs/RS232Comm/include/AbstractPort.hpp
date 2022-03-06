@@ -1,39 +1,43 @@
 #pragma once
-#include <Windows.h>
+#include <string>
+#include <string.h>
 #include <vector>
 
-class AbstractPort {
+class AbstractPort
+{
 public:
-	AbstractPort(const AbstractPort&) = delete;
+	AbstractPort(const AbstractPort &) = delete;
 	//~AbstractPort();
 
 	//###################################################################################################
 	// Polymorphic operations.
 	//###################################################################################################
 
-	virtual long InitPort() = 0;
-	virtual long PurgePort() = 0;
-	virtual std::string ReadIfAvailable() = 0;
-	virtual std::size_t Write(void* data, std::size_t data_len) = 0;
-	virtual std::vector<std::wstring> GetAvailablePorts() = 0;
+	virtual long initPort() = 0;
+	virtual long purgePort() = 0;
+	virtual std::string readIfAvailable() = 0;
+	virtual std::size_t write(void *data, std::size_t data_len) = 0;
+	virtual std::vector<std::string> getAvailablePorts() = 0;
 
 	//###################################################################################################
 	// Operator Overloading.
 	//###################################################################################################
 
-	friend const char* operator<<(AbstractPort& serialPort, const char* text);
-	friend void operator>>(AbstractPort& serialPort, std::string& str);
+	friend const char *operator<<(AbstractPort &port, const char *text);
+	friend void operator>>(AbstractPort &port, std::string &str);
 
 protected:
-	AbstractPort() {};
-	~AbstractPort() {};
+	AbstractPort(){};
+	~AbstractPort(){};
 };
 
-const char* operator<<(AbstractPort& serialPort, const char* text) {
-	serialPort.Write((void*)text, strlen(text));
+const char *operator<<(AbstractPort &port, const char *text)
+{
+	port.write((void *)text, strlen(text));
 	return text;
 }
 
-void operator>>(AbstractPort& serialPort, std::string& str) {
-	str += serialPort.ReadIfAvailable();
+void operator>>(AbstractPort &port, std::string &str)
+{
+	str += port.readIfAvailable();
 }
