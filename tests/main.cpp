@@ -15,7 +15,7 @@ TEST(MatrixVectorStackAllocation, Stack)
 	voxel::Matrix<float> mat(vec);
 	EXPECT_TRUE(mat.getRows() == vec.size() && mat.getColumns() == 1);
 	mat.forEach([&](float data, unsigned row, unsigned column) -> void
-				{ EXPECT_TRUE(vec.at(row) == data); });
+				{ (void)column; EXPECT_TRUE(vec.at(row) == data); });
 }
 
 TEST(StaticMatrixDotProduct, Operations)
