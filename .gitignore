@@ -21,6 +21,3 @@ x64/
 *.pidb
 *.svclog
 *.scc
-out/build/Win64
-out/build/Linux
-build/
