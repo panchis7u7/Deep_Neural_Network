@@ -37,7 +37,8 @@
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",
             "environment": [],
-            "externalConsole": true
+            "externalConsole": true,
+            "visualizerFile": "/Users/semadrig/Library/Application Support/Code/User/workspaceStorage/67050ea70345ee98a89fd4d6aab5b5af/tonka3000.qtvsctools/qt.natvis.xml"
         }
     ]
 }

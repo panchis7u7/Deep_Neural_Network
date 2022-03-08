@@ -6,6 +6,8 @@
                 "${workspaceFolder}/**",
                 "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/",
                 "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/usr/include/",
+                "/Users/semadrig/Qt/6.2.3/macos/lib/QtWidgets.framework/Headers",
+                "/Users/semadrig/Qt/6.2.3/macos/include/"
             ],
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,

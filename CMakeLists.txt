@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 3.18.4)
 
-project(NeuralNetwork CXX)
+project(NeuralNetwork VERSION 0.1 LANGUAGES CXX)
 
 #C++ Version to use in build.
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_DEBUG_POSTFIX d)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 enable_testing()
 
 #Compilador a usar.

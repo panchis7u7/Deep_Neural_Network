@@ -31,6 +31,8 @@ brMac:
 	make -C out/build/Release/MacOS
 rdMac:
 	out/build/Debug/MacOS/NeuralNetworkd
+rdGuiMac:
+	out/build/Debug/MacOS/NeuralNetwork.app/Contents/MacOS/NeuralNetwork
 rdtMac:
 	out/build/Debug/MacOS/NeuralNetwork_test
 runMac:

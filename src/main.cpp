@@ -4,11 +4,15 @@
 #include <include/NeuralNetwork.hpp>
 #include <include/rapidxml.hpp>
 #include <include/SerialPort.hpp>
-
+#include <QApplication>
+#include <include/MainWindow.hpp>
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
 
-int main()
+int main(int argc, char* argv[])
 {
+	QApplication app(argc, argv);
+	MainWindow w;
+	w.show();
 	srand(static_cast<unsigned>(time(0)));
 	NeuralNetwork<float> *nn = new NeuralNetwork<float>(2, 4, 1);
 	std::vector<float> entradas[] = {{0.0, 0.0},
@@ -56,5 +60,5 @@ int main()
 
 	std::cout << "El mensaje es : " << mensaje << std::endl;
 
-	return 0;
+	return app.exec();
 }
