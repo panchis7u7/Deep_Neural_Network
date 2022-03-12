@@ -1,10 +1,10 @@
 #include <iostream>
 #include <vector>
 #include <list>
+#include <QApplication>
 #include <include/NeuralNetwork.hpp>
 #include <include/rapidxml.hpp>
 #include <include/SerialPort.hpp>
-#include <QApplication>
 #include <include/MainWindow.hpp>
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
 
@@ -51,9 +51,11 @@ int main(int argc, char* argv[])
 	for (std::list<int>::iterator it = ports.begin(); it != ports.end(); ++it) {
 		std::cout << "COM" << *it << std::endl;
 	}*/
+	
+	SerialPort::getAvailablePorts();
 
-	SerialPort arduino("COM4");
-	arduino << "event";
+	SerialPort arduino("/dev/cu.usbserial-14240");
+	arduino << "encendido";
 
 	std::string mensaje;
 	arduino >> mensaje;

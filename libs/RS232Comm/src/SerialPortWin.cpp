@@ -40,8 +40,7 @@ public:
     std::size_t read(void *buf, std::size_t buf_len);
 
     // Polymorphic functions.
-    HRESULT initPort();
-    HRESULT purgePort();
+    void flush();
     std::size_t write(void *data, std::size_t data_len);
     std::string readIfAvailable();
     std::vector<std::string> getAvailablePorts();
@@ -61,70 +60,15 @@ private:
 };
 
 //###################################################################################################
-// Meta class implementation.
-//###################################################################################################
-
-SerialPort::SerialPort(std::string com_port) : m_pimpl(std::make_unique<SerialPortImpl>(com_port)), com_port(com_port) {}
-
-SerialPort::~SerialPort() {}
-
-long SerialPort::initPort()
-{
-    return pimpl()->initPort();
-}
-
-long SerialPort::purgePort()
-{
-    return pimpl()->purgePort();
-}
-
-std::size_t SerialPort::write(void *data, std::size_t data_len)
-{
-    return pimpl()->write(data, data_len);
-}
-
-std::string SerialPort::readIfAvailable()
-{
-    return pimpl()->readIfAvailable();
-}
-
-std::vector<std::string> SerialPort::getAvailablePorts()
-{
-    return pimpl()->getAvailablePorts();
-}
-
-//###################################################################################################
 // Windows platform implementation.
 //###################################################################################################
-
-SerialPort::SerialPortImpl::SerialPortImpl(const std::string com_port)
-{
-    this->m_sComPort = com_port;
-    this->m_wSerialConf = {DEFAULT_COM_RATE, DEFAULT_COM_BITS, ONESTOPBIT, 0, COMMTIMEOUTS()};
-    initPort();
-}
-
-SerialPort::SerialPortImpl::SerialPortImpl(const std::string comPort, WinSerialPortConf &serialConf)
-{
-    this->m_sComPort = comPort;
-    this->m_wSerialConf = serialConf;
-    initPort();
-}
-
-SerialPort::SerialPortImpl::~SerialPortImpl()
-{
-    purgePort();
-    CloseHandle(this->m_hCom);
-}
 
 //###################################################################################################
 // Includes the functions for serial communication via RS232.
 // Initializes the port and sets the communication parameters.
 //###################################################################################################
 
-HRESULT SerialPort::SerialPortImpl::initPort()
-{
-    // CleanUp.
+HRESULT init(){
     invalidateHandle(m_hThread);
     invalidateHandle(m_hThreadStarted);
     invalidateHandle(m_hThreadTerm);
@@ -140,6 +84,35 @@ HRESULT SerialPort::SerialPortImpl::initPort()
     setupEvent();
     // purgePort();
     return SS_Init;
+}
+
+//###################################################################################################
+// Purge any outstanding requests on the serial port (initialize)
+//###################################################################################################
+
+HRESULT inline purge(){
+    PurgeComm(m_hCom, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
+    return S_OK;
+}
+
+SerialPort::SerialPortImpl::SerialPortImpl(const std::string com_port)
+{
+    this->m_sComPort = com_port;
+    this->m_wSerialConf = {DEFAULT_COM_RATE, DEFAULT_COM_BITS, ONESTOPBIT, 0, COMMTIMEOUTS()};
+    init();
+}
+
+SerialPort::SerialPortImpl::SerialPortImpl(const std::string comPort, WinSerialPortConf &serialConf)
+{
+    this->m_sComPort = comPort;
+    this->m_wSerialConf = serialConf;
+    init();
+}
+
+SerialPort::SerialPortImpl::~SerialPortImpl()
+{
+    purge();
+    CloseHandle(this->m_hCom);
 }
 
 //###################################################################################################
@@ -200,16 +173,6 @@ HRESULT SerialPort::SerialPortImpl::createPortFile()
         std::cout << this->m_sComPort << " is now open!" << std::endl;
     // std::cout << PortUtils::Utils::UTF16ToUTF8(this->m_wComPort)->c_str() << " is now open." << std::endl
     return hr;
-}
-
-//###################################################################################################
-// Purge any outstanding requests on the serial port (initialize)
-//###################################################################################################
-
-HRESULT SerialPort::SerialPortImpl::purgePort()
-{
-    PurgeComm(m_hCom, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
-    return S_OK;
 }
 
 //###################################################################################################

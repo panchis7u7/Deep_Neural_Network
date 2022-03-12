@@ -22,6 +22,7 @@ add_library(
     RS232Comm/include/SerialPort.hpp
     RS232Comm/src/SerialPortWin.cpp
     RS232Comm/src/SerialPortLinux.cpp
+    RS232Comm/src/SerialPortMacos.cpp
     RS232Comm/include/SerialBuffer.hpp
     RS232Comm/src/SerialBuffer.cpp
 )
