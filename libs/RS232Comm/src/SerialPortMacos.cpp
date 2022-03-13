@@ -7,11 +7,20 @@
 #include <filesystem>
 #include <iostream>
 #include <vector>
+// Serial configuration.
 #include <termios.h> // Contains POSIX terminal control definitions
 #include <fcntl.h> // Contains file controls like O_RDWR
 #include <unistd.h> // write(), read(), close()
 #include <errno.h> // Error integer and strerror() function
 #include <sys/ioctl.h>
+#include <sys/syscall.h>
+// kqueue includes.
+#include <sys/types.h>
+#include <sys/event.h>
+#include <sys/time.h>
+#include <sys/mman.h>
+// Application quit.
+#include <signal.h>
 
 class SerialPort::SerialPortImpl
 {
@@ -19,41 +28,54 @@ public:
     SerialPortImpl(SerialPort* base);
     ~SerialPortImpl();
 
+    void clean(pid_t process);
+    void clean();
     void flush();
     std::string readIfAvailable();
     std::size_t write(void *data, std::size_t data_len);
-    SerialPort* getBase() { return this->base; }
+    SerialPort* getBase() { return m_spBase; }
     
 private:
-    SerialPort* base;
+    SerialPort* m_spBase;
     static constexpr int SFD_UNAVAILABLE = -1;
-    int fd = SFD_UNAVAILABLE;
+    int m_iFd = SFD_UNAVAILABLE;
+    int m_iKq = SFD_UNAVAILABLE;
 };
 
+//###################################################################################################
+// Platform independent abstraction definitions.
+//###################################################################################################
+
 SerialPort::SerialPort(std::string com_port) : com_port(com_port), m_pimpl(std::make_unique<SerialPortImpl>(this)){}
+SerialPort::~SerialPort(){}
+void SerialPort::flush(){ pimpl()->flush(); }
+std::size_t SerialPort::write(void *data, std::size_t data_len) { return pimpl()->write(data, data_len); }
+std::string SerialPort::readIfAvailable() { return pimpl()->readIfAvailable(); }
 
-SerialPort::~SerialPort()
-{
+//###################################################################################################
+// MacOS platform implementation.
+//###################################################################################################
+
+void SerialPort::SerialPortImpl::clean(){
+    if(m_iFd != SFD_UNAVAILABLE)
+        close(m_iFd);
+    exit(0);
 }
 
-void SerialPort::flush(){ 
-    pimpl()->flush();
+void SerialPort::SerialPortImpl::clean(pid_t process){
+    kill(process, SIGKILL);
+    clean();
 }
 
-std::size_t SerialPort::write(void *data, std::size_t data_len)
-{
-    return pimpl()->write(data, data_len);
-}
-
-std::string SerialPort::readIfAvailable()
-{
-    return pimpl()->readIfAvailable();
-}
+//###################################################################################################
+// Serial Port Initzialization. (Constructor)
+//###################################################################################################
 
 SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){
-    this->base = base;
-    if((fd = open(base->com_port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY)) < 0){
+    m_spBase = base;
+    if((m_iFd = open(base->com_port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY)) < 0){
         std::cerr << "Error opening serial port: " << base->com_port << "\n";
+        clean();
     }
 
     // Reference: https://blog.mbedded.ninja/programming/operating-systems/linux/linux-serial-ports-using-c-cpp/
@@ -66,8 +88,9 @@ SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){
     // NOTE: This is important! POSIX states that the struct passed to tcsetattr()
     // must have been initialized with a call to tcgetattr() overwise behaviour
     // is undefined.
-    if(tcgetattr(fd, &tty) != 0) {
+    if(tcgetattr(m_iFd, &tty) != 0) {
         std::cerr << "Error: " << errno << " from tcgetattr: " << strerror(errno) << "\n";
+        clean();
     }
 
     tty.c_cflag &= ~PARENB; // Clear parity bit, disabling parity (most common)
@@ -98,16 +121,64 @@ SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){
     cfsetospeed(&tty, B9600);
 
     // Save tty settings, also checking for error
-    if (tcsetattr(fd, TCSANOW, &tty) != 0) {
+    if (tcsetattr(m_iFd, TCSANOW, &tty) != 0) {
         std::cerr << "Error: " << errno << " from tcgetattr: " << strerror(errno) << "\n";
+        clean();
     }
 
     sleep(2);
+
+    pid_t process;
+    if((process = fork()) == 0){
+
+        int kq; // kqueue file descriptor.
+        struct kevent m_kRead;  // Event we want to monitor.
+        struct kevent m_kEvent; // Event triggered.
+
+        // Create a new kernel event queue;
+        if((kq = kqueue()) < 0) {
+            std::cerr << "Error: " << errno << " from kqueue: " << strerror(errno) << "\n";
+            clean();
+        }
+
+        // Initialize kevent structure.
+        EV_SET(&m_kRead, m_iFd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+
+        // Attach event to the kqueue.
+        int ret = kevent(kq, &m_kRead, 1, NULL, 0, NULL);
+        if (ret < 0){
+            std::cerr << "Kevent failed: " << strerror(errno) << "\n";
+            clean();
+        } else if (m_kRead.flags & EV_ERROR){
+	        std::cerr << "Kevent error: " << strerror(errno) << "\n";
+            clean();
+        }
+
+        struct timespec sleep_time;
+        sleep_time.tv_sec = 1;
+        sleep_time.tv_nsec = 0;
+
+        for (;;) {
+	        /*	Sleep until something happens. */
+	        ret = kevent(kq, NULL, 0, &m_kEvent, 1, &sleep_time);
+	        if	(ret == -1) {
+                std::cerr << "Kevent wait: " << strerror(errno) << "\n";
+		        clean(process);
+	        } else if (ret > 0) {
+		        std::cout << "Recieved data on serial device: " << base->com_port << "\n";
+                std::cout << readIfAvailable() << "\n";
+	        }
+	    }
+    }
 }
 
+//###################################################################################################
+// Serial Port Cleanup. (Destructor)
+//###################################################################################################
+
 SerialPort::SerialPortImpl::~SerialPortImpl(){
-    if(fd != SFD_UNAVAILABLE) {
-        close(fd);
+    if(m_iFd != SFD_UNAVAILABLE) {
+        close(m_iFd);
     }
 }
 
@@ -117,18 +188,22 @@ void SerialPort::SerialPortImpl::flush() {
 
 std::string SerialPort::SerialPortImpl::readIfAvailable()
 {
-    int bytes;
-    ioctl(fd, FIONREAD, &bytes);
+    /*int bytes;
+    ioctl(m_iFd, FIONREAD, &bytes);
     char buf[255] = {0};
     if(bytes > 0)
-        read(fd, buf, 255);
+        read(m_iFd, buf, 255);
     std::cout << buf << "\n";
+    return std::string(buf);*/
+    
+    char buf[255] = {0};
+    read(m_iFd, buf, 255);
     return std::string(buf);
 }
 
 std::size_t SerialPort::SerialPortImpl::write(void *data, std::size_t data_len)
 {
-    if (::write(fd, (char*)data, data_len) < 0) {
+    if (::write(m_iFd, (char*)data, data_len) < 0) {
         std::cerr << "Error writing to device! ( " << data << ") "<< "\n";
     }
     return data_len;

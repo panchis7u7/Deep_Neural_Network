@@ -54,13 +54,13 @@ int main(int argc, char* argv[])
 	
 	SerialPort::getAvailablePorts();
 
-	SerialPort arduino("/dev/cu.usbserial-14240");
+	SerialPort arduino("/dev/cu.usbserial-14140");
 	arduino << "encendido";
 
 	std::string mensaje;
 	arduino >> mensaje;
 
-	std::cout << "El mensaje es : " << mensaje << std::endl;
+	std::cout << "El mensaje es : "  << mensaje << std::endl;
 
 	return app.exec();
 }

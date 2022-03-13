@@ -5,7 +5,8 @@
             "name": "MacOS",
             "request": "launch",
             "type": "lldb",
-            "program": "${workspaceRoot}/out/build/Debug/MacOS/NeuralNetworkd",
+            //"program": "${workspaceRoot}/out/build/Debug/MacOS/NeuralNetworkd",
+            "program": "${workspaceRoot}/out/build/Debug/MacOS/NeuralNetwork.app/Contents/MacOS/NeuralNetwork",
             "targetArchitecture": "x64",
             "internalConsoleOptions": "openOnSessionStart",
             "logging": {
