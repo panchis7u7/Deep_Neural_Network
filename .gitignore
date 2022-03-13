@@ -21,3 +21,4 @@ x64/
 *.pidb
 *.svclog
 *.scc
+CMakeLists.txt.user
