@@ -2,6 +2,7 @@
 
 #include <include/AbstractPort.hpp>
 #include <memory>
+#include <../platform.hpp>
 
 class SerialPort : public AbstractPort
 {
@@ -9,10 +10,10 @@ public:
     SerialPort(std::string com_port);
     ~SerialPort();
 
-    void flush() override;
-    std::string readIfAvailable() override;
-    std::size_t write(void *data, std::size_t data_len) override;
-    static std::vector<std::string> getAvailablePorts();
+    LIBEXP void flush() override;
+    LIBEXP std::string readIfAvailable() override;
+    LIBEXP std::size_t write(void *data, std::size_t data_len) override;
+    LIBEXP static std::vector<std::string> getAvailablePorts();
 
 private: 
     std::string com_port;

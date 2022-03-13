@@ -1,3 +1,4 @@
+add_dependencies(RS232Comm Logger)
 add_dependencies(NeuralNet Matrix RapidXML RS232Comm)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -46,6 +47,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
+target_link_libraries(RS232Comm PRIVATE Logger)
 target_link_libraries(NeuralNet PRIVATE Matrix)
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(${PROJECT_NAME} PRIVATE Matrix)

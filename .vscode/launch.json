@@ -9,6 +9,13 @@
             "program": "${workspaceRoot}/out/build/Debug/MacOS/NeuralNetwork.app/Contents/MacOS/NeuralNetwork",
             "targetArchitecture": "x64",
             "internalConsoleOptions": "openOnSessionStart",
+            "setupCommands": [
+                {
+                    "description": "The new process is debugged after a fork. The parent process runs unimpeded.",
+                    "text": "-gdb-set follow-fork-mode child",
+                    "ignoreFailures": true
+                }
+            ],
             "logging": {
                 "moduleLoad": true,
                 "programOutput": true,

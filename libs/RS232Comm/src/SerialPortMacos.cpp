@@ -1,9 +1,11 @@
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 // Serial Port MacOS Implementation class.
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#include "../platform.hpp"
 
-#ifdef __APPLE__
+#ifdef APPLE_PLATFORM
 #include <include/SerialPort.hpp>
+#include <include/Logger.hpp>
 #include <filesystem>
 #include <iostream>
 #include <vector>
@@ -36,6 +38,7 @@ public:
     SerialPort* getBase() { return m_spBase; }
     
 private:
+    pid_t m_pPollProcess;
     SerialPort* m_spBase;
     static constexpr int SFD_UNAVAILABLE = -1;
     int m_iFd = SFD_UNAVAILABLE;
@@ -74,7 +77,7 @@ void SerialPort::SerialPortImpl::clean(pid_t process){
 SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){
     m_spBase = base;
     if((m_iFd = open(base->com_port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY)) < 0){
-        std::cerr << "Error opening serial port: " << base->com_port << "\n";
+        LERROR("pid(%d) Error opening serial port: %s", getpid(), base->com_port.c_str());
         clean();
     }
 
@@ -89,7 +92,7 @@ SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){
     // must have been initialized with a call to tcgetattr() overwise behaviour
     // is undefined.
     if(tcgetattr(m_iFd, &tty) != 0) {
-        std::cerr << "Error: " << errno << " from tcgetattr: " << strerror(errno) << "\n";
+        LERROR("pid(%d) From tcgetattr: %s", getpid(), strerror(errno));
         clean();
     }
 
@@ -122,23 +125,26 @@ SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){
 
     // Save tty settings, also checking for error
     if (tcsetattr(m_iFd, TCSANOW, &tty) != 0) {
-        std::cerr << "Error: " << errno << " from tcgetattr: " << strerror(errno) << "\n";
+        LERROR("pid(%d) From tcgetattr: %s", getpid(), strerror(errno));
         clean();
     }
 
     sleep(2);
 
-    pid_t process;
-    if((process = fork()) == 0){
+    // Spawn process for serial buffer check.
+    if((m_pPollProcess = fork()) == 0){
+        pid_t childId = getpid();
+        LDEBUG("pid(%d) Created child process.", childId);
 
-        int kq; // kqueue file descriptor.
+        int kq;                 // kqueue file descriptor.
         struct kevent m_kRead;  // Event we want to monitor.
         struct kevent m_kEvent; // Event triggered.
 
         // Create a new kernel event queue;
         if((kq = kqueue()) < 0) {
-            std::cerr << "Error: " << errno << " from kqueue: " << strerror(errno) << "\n";
-            clean();
+            //std::cerr << "Error: " << errno << " from kqueue: " << strerror(errno) << "\n";
+            LERROR("pid(%d) Error %d from kqueue: %s", errno, strerror(errno));
+            clean(childId);
         }
 
         // Initialize kevent structure.
@@ -147,11 +153,11 @@ SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){
         // Attach event to the kqueue.
         int ret = kevent(kq, &m_kRead, 1, NULL, 0, NULL);
         if (ret < 0){
-            std::cerr << "Kevent failed: " << strerror(errno) << "\n";
-            clean();
+            LERROR("pid(%d) Kevent failed: %s", strerror(errno));
+            clean(childId);
         } else if (m_kRead.flags & EV_ERROR){
-	        std::cerr << "Kevent error: " << strerror(errno) << "\n";
-            clean();
+	        LERROR("pid(%d) Kevent failed: %s", strerror(errno));
+            clean(childId);
         }
 
         struct timespec sleep_time;
@@ -162,10 +168,10 @@ SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){
 	        /*	Sleep until something happens. */
 	        ret = kevent(kq, NULL, 0, &m_kEvent, 1, &sleep_time);
 	        if	(ret == -1) {
-                std::cerr << "Kevent wait: " << strerror(errno) << "\n";
-		        clean(process);
+                LERROR("pid(%d) Kevent wait: %s", strerror(errno));
+		        clean(childId);
 	        } else if (ret > 0) {
-		        std::cout << "Recieved data on serial device: " << base->com_port << "\n";
+                LINFO("pid(%d) Recieved data on Serial Device: %s", base->com_port.c_str());
                 std::cout << readIfAvailable() << "\n";
 	        }
 	    }
@@ -182,9 +188,17 @@ SerialPort::SerialPortImpl::~SerialPortImpl(){
     }
 }
 
+//###################################################################################################
+// Clean serial buffer.
+//###################################################################################################
+
 void SerialPort::SerialPortImpl::flush() {
 
 }
+
+//###################################################################################################
+// Read serial buffer data if available.
+//###################################################################################################
 
 std::string SerialPort::SerialPortImpl::readIfAvailable()
 {
@@ -197,17 +211,29 @@ std::string SerialPort::SerialPortImpl::readIfAvailable()
     return std::string(buf);*/
     
     char buf[255] = {0};
-    read(m_iFd, buf, 255);
+    if(::read(m_iFd, buf, 255) < 0) {
+        LERROR("pid(%d) Error reading from device: %s", getpid(), strerror(errno));
+        return "";
+    }
     return std::string(buf);
 }
+
+//###################################################################################################
+// Write to serial buffer if available.
+//###################################################################################################
 
 std::size_t SerialPort::SerialPortImpl::write(void *data, std::size_t data_len)
 {
     if (::write(m_iFd, (char*)data, data_len) < 0) {
-        std::cerr << "Error writing to device! ( " << data << ") "<< "\n";
+        LERROR("pid(%d) Error writing to device: %s", getpid(), strerror(errno));
+        return 0;
     }
     return data_len;
 }
+
+//###################################################################################################
+// Get available serial ports on the machine.
+//###################################################################################################
 
 std::vector<std::string> SerialPort::getAvailablePorts()
 {
@@ -216,7 +242,7 @@ std::vector<std::string> SerialPort::getAvailablePorts()
     for(const auto& entry : std::filesystem::directory_iterator(path)) {
         if(entry.path().string().find("cu") != std::string::npos) {
             ports.push_back(entry.path());
-            std::cout << entry.path() << std::endl;
+            LINFO("%s", entry.path().string().c_str());
         }
     }
     return ports;

@@ -3,9 +3,15 @@
 
 add_subdirectory(googletest)
 
+add_library( 
+    Logger SHARED
+    Logger/src/Logger.cpp
+    Logger/include/Logger.hpp
+)
+
 add_library(
     Matrix SHARED
-    "Matrix/src/Matrix.cpp"
+    Matrix/src/Matrix.cpp
     Matrix/include/Matrix.hpp
 )
 
@@ -34,6 +40,7 @@ add_library( RapidXML INTERFACE )
 #    LIBRARY DESTINATION "${PROJECT_SOURCE_DIR}/out/build/Win64"
 #)
 
+target_include_directories(Logger PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Logger")
 target_include_directories(Matrix PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Matrix")
 target_include_directories(NeuralNet PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/NeuralNetwork")
 target_include_directories(RS232Comm PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/RS232Comm")
