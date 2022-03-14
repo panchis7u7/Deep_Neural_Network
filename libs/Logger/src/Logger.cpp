@@ -23,6 +23,8 @@
 
 //-------------------------------------------------------------------------------------------------------------
 #elif WINDOWS_PLATFORM
+    #include <Windows.h>
+
     void platform_console_write(const char* message, u8 colour) {
         HANDLE console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
         // FATAL, ERROR, WARN, INFO, DEBUG, TRACE.
@@ -82,8 +84,11 @@ void log_output(Log_Level level, const char* message, ...) {
     const i32 msg_length = 32000;
     char out_message[msg_length];
     memset(out_message, 0, sizeof(out_message));
-
+#if _MSC_VER || __INTEL_COMPILER
+    va_list args_ptr;
+#else
     __builtin_va_list args_ptr;
+#endif
     va_start(args_ptr, message);
     vsnprintf(out_message, msg_length, message, args_ptr);
     va_end(args_ptr);

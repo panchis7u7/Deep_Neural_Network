@@ -2,7 +2,7 @@
 // Serial Port Windows Implementation class.
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+#if defined(WIN32) || defined(_WIN64) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 
 #include <include/AbstractPort.hpp>
 #include <include/SerialBuffer.hpp>
@@ -11,6 +11,7 @@
 #include <iostream>
 #include <assert.h>
 #include <process.h>
+#include <Windows.h>
 
 using namespace PortUtils::Serial;
 
@@ -22,8 +23,8 @@ typedef struct WinSerialPortConfig : SerialPortConfig
 class SerialPort::SerialPortImpl
 {
 public:
-    SerialPortImpl(const std::string com_port);
-    SerialPortImpl(const std::string com_port, WinSerialPortConf &serialConf);
+    SerialPortImpl(std::string com_port);
+    SerialPortImpl(std::string com_port, WinSerialPortConf &serialConf);
     ~SerialPortImpl();
 
     static unsigned int __stdcall eventThreadFn(void *pvParam);
@@ -32,6 +33,7 @@ public:
     HRESULT setComParms();
     HRESULT setupEvent();
     HRESULT canProcess();
+    HRESULT inline purge();
 
     void invalidateHandle(HANDLE &hHandle);
     void closeAndCleanHandle(HANDLE &hHandle);
@@ -43,7 +45,6 @@ public:
     void flush();
     std::size_t write(void *data, std::size_t data_len);
     std::string readIfAvailable();
-    std::vector<std::string> getAvailablePorts();
 
 private:
     std::string m_sComPort;
@@ -63,12 +64,30 @@ private:
 // Windows platform implementation.
 //###################################################################################################
 
+SerialPort::SerialPort(std::string com_port) : com_port(com_port), m_pimpl(std::make_unique<SerialPortImpl>(com_port)) {}
+SerialPort::~SerialPort() {}
+void SerialPort::flush() { pimpl()->flush(); }
+std::size_t SerialPort::write(void* data, std::size_t data_len) { return pimpl()->write(data, data_len); }
+std::string SerialPort::readIfAvailable() { return pimpl()->readIfAvailable(); }
+
+//###################################################################################################
+// Purge any outstanding requests on the serial port (initialize)
+//###################################################################################################
+
+HRESULT inline SerialPort::SerialPortImpl::purge(){
+    PurgeComm(m_hCom, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
+    return S_OK;
+}
+
 //###################################################################################################
 // Includes the functions for serial communication via RS232.
 // Initializes the port and sets the communication parameters.
 //###################################################################################################
 
-HRESULT init(){
+SerialPort::SerialPortImpl::SerialPortImpl(std::string com_port)
+{
+    this->m_sComPort = com_port;
+    this->m_wSerialConf = {DEFAULT_COM_RATE, DEFAULT_COM_BITS, ONESTOPBIT, 0, COMMTIMEOUTS()};
     invalidateHandle(m_hThread);
     invalidateHandle(m_hThreadStarted);
     invalidateHandle(m_hThreadTerm);
@@ -82,31 +101,25 @@ HRESULT init(){
     setComParms();
     // Set event handles for reading / writing.
     setupEvent();
-    // purgePort();
-    return SS_Init;
 }
 
-//###################################################################################################
-// Purge any outstanding requests on the serial port (initialize)
-//###################################################################################################
-
-HRESULT inline purge(){
-    PurgeComm(m_hCom, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
-    return S_OK;
-}
-
-SerialPort::SerialPortImpl::SerialPortImpl(const std::string com_port)
-{
-    this->m_sComPort = com_port;
-    this->m_wSerialConf = {DEFAULT_COM_RATE, DEFAULT_COM_BITS, ONESTOPBIT, 0, COMMTIMEOUTS()};
-    init();
-}
-
-SerialPort::SerialPortImpl::SerialPortImpl(const std::string comPort, WinSerialPortConf &serialConf)
+SerialPort::SerialPortImpl::SerialPortImpl(std::string comPort, WinSerialPortConf &serialConf)
 {
     this->m_sComPort = comPort;
     this->m_wSerialConf = serialConf;
-    init();
+    invalidateHandle(m_hThread);
+    invalidateHandle(m_hThreadStarted);
+    invalidateHandle(m_hThreadTerm);
+    invalidateHandle(m_hCom);
+    invalidateHandle(m_hDataRx);
+    // Initializes hCom to point to COM PORT#.
+    createPortFile();
+    // Purges the COM port
+    // purgePort();
+    // Uses the DCB structure to set up the COM port.
+    setComParms();
+    // Set event handles for reading / writing.
+    setupEvent();
 }
 
 SerialPort::SerialPortImpl::~SerialPortImpl()
@@ -469,6 +482,14 @@ std::size_t SerialPort::SerialPortImpl::read(void *buf, std::size_t buf_len)
 }
 
 //###################################################################################################
+// Clear serial buffers.
+//###################################################################################################
+
+void SerialPort::SerialPortImpl::flush() {
+
+}
+
+//###################################################################################################
 // Read data from COM port if data is in the buffer, else, just wait.
 //###################################################################################################
 
@@ -482,7 +503,7 @@ std::string SerialPort::SerialPortImpl::readIfAvailable()
 // List com ports available on the device.
 //###################################################################################################
 
-std::vector<std::string> SerialPort::SerialPortImpl::getAvailablePorts()
+std::vector<std::string> SerialPort::getAvailablePorts()
 {
     // Buffer to store the path of the COM PORTS
     LPWSTR lpTargetPath = (LPWSTR)calloc(5000, sizeof(wchar_t));
