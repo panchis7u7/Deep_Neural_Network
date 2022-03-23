@@ -21,21 +21,18 @@ public:
 	// Operator Overloading.
 	//###################################################################################################
 
-	friend const char *operator<<(AbstractPort &port, const char *text);
-	friend void operator>>(AbstractPort &port, std::string &str);
+    friend const char *operator<<(AbstractPort &port, const char *text)
+    {
+        port.write((void *)text, strlen(text));
+        return text;
+    }
+
+    friend void operator>>(AbstractPort &port, std::string &str)
+    {
+        str += port.readIfAvailable();
+    }
 
 protected:
 	AbstractPort(){};
 	virtual ~AbstractPort(){};
 };
-
-const char *operator<<(AbstractPort &port, const char *text)
-{
-	port.write((void *)text, strlen(text));
-	return text;
-}
-
-void operator>>(AbstractPort &port, std::string &str)
-{
-	str += port.readIfAvailable();
-}

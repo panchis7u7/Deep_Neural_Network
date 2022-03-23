@@ -14,6 +14,9 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private slots:
+    void on_cbxComPorts_activated(int index);
+
 private:
     Ui::MainWindow *ui;
 };
