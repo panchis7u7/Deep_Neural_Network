@@ -1,5 +1,6 @@
-add_dependencies(RS232Comm Logger)
-add_dependencies(NeuralNet Matrix RapidXML RS232Comm)
+add_dependencies(IOPorts Logger)
+add_dependencies(IPCom Logger RapidXML RapidJson)
+add_dependencies(NeuralNet Logger Matrix)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
@@ -47,10 +48,14 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
-target_link_libraries(RS232Comm PRIVATE Logger)
-target_link_libraries(NeuralNet PRIVATE Matrix)
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-target_link_libraries(${PROJECT_NAME} PRIVATE Matrix)
-target_link_libraries(${PROJECT_NAME} PRIVATE NeuralNet)
-target_link_libraries(${PROJECT_NAME} PRIVATE RapidXML)
-target_link_libraries(${PROJECT_NAME} PRIVATE RS232Comm)
+target_link_libraries(IOPorts PRIVATE Logger)
+target_link_libraries(IPCom PRIVATE Logger)
+target_link_libraries(NeuralNet PRIVATE Logger Matrix)
+target_link_libraries(${PROJECT_NAME} PRIVATE 
+    Qt${QT_VERSION_MAJOR}::Widgets 
+    NeuralNet 
+    Matrix 
+    IPCom
+    IOPorts
+    RapidXML 
+)

@@ -1,4 +1,5 @@
 #pragma once
+#include "../../platform.hpp"
 #include <include/Matrix.hpp>
 using namespace voxel;
 
@@ -8,11 +9,11 @@ template <class T>
 class NeuralNetwork
 {
 public:
-	NeuralNetwork(unsigned inputNodes, unsigned hiddenNodes, unsigned outputNodes);
-	virtual ~NeuralNetwork();
-	virtual std::vector<T> *feedForward(std::vector<T> *inputVec);
-	virtual void train(std::vector<T> *guessesVec, std::vector<T> *answersVec);
-	virtual inline void printWeights();
+	LIBEXP NeuralNetwork(unsigned inputNodes, unsigned hiddenNodes, unsigned outputNodes);
+	LIBEXP virtual ~NeuralNetwork();
+	LIBEXP virtual std::vector<T> *feedForward(std::vector<T> *inputVec);
+	LIBEXP virtual void train(std::vector<T> *guessesVec, std::vector<T> *answersVec);
+	LIBEXP virtual inline void printWeights();
 
 	static T sigmoid(T n)
 	{
@@ -43,11 +44,11 @@ template <class T>
 class DeepNeuralNetwork : public NeuralNetwork<T>
 {
 public:
-	DeepNeuralNetwork(uint_fast64_t inputLayerNodes, std::vector<uint_fast64_t> &hiddenLayerNodes, uint_fast64_t outputLayerNodes);
-	~DeepNeuralNetwork();
-	std::vector<T> *feedForward(std::vector<T> *inputData);
-	void train(std::vector<T> *guesses, std::vector<T> *answers);
-	void printWeights();
+	LIBEXP DeepNeuralNetwork(uint_fast64_t inputLayerNodes, std::vector<uint_fast64_t> &hiddenLayerNodes, uint_fast64_t outputLayerNodes);
+	LIBEXP ~DeepNeuralNetwork() override;
+	LIBEXP std::vector<T> *feedForward(std::vector<T> *inputData) override;
+	LIBEXP void train(std::vector<T> *guesses, std::vector<T> *answers) override;
+	LIBEXP void printWeights() override;
 
 private:
 	// Number of Hidden Layers.

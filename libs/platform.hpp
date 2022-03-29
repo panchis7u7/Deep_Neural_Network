@@ -16,7 +16,7 @@ typedef char bool8;
 #define TRUE 1
 #define FALSE 0
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
+#if defined(WIN32) || defined(_WIN64) || defined(_WIN32) || defined(__WIN32__)
 #define WINDOWS_PLATFORM TRUE
 #ifndef _WIN64
 #error "64 Bit Windows is required!"

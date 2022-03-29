@@ -24,3 +24,9 @@ void MainWindow::on_cbxComPorts_activated(int index)
     (void)index;
 }
 
+
+void MainWindow::on_pbConnectSerial_clicked()
+{
+
+}
+

@@ -21,10 +21,14 @@ rrtLinux:
 # MacOS build-related commands.
 # ===================================================================
 
-cmdMac:
+cmdMacU:
 	cmake -S . -B out/build/Debug/MacOS -G 'Unix Makefiles' -DCMAKE_BUILD_TYPE=Debug
-cmrMac:
+cmrMacU:
 	cmake -S . -B out/build/Release/MacOS -G 'Unix Makefiles' -DCMAKE_BUILD_TYPE=Release
+cmdMac:
+	cmake -S . -B out/build/Debug/MacOS -DCMAKE_BUILD_TYPE=Debug
+cmrMac:
+	cmake -S . -B out/build/Release/MacOS -DCMAKE_BUILD_TYPE=Release
 bdMac:
 	make -C out/build/Debug/MacOS
 brMac:

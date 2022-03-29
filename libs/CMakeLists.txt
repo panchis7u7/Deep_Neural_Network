@@ -1,5 +1,5 @@
-#set(MATRIX_LIB_SRC Matrix/src/Matrix.cpp)
-#set(MATRIX_LIB_HEADERS Matrix/src/Matrix.hpp)
+include("${CMAKE_SOURCE_DIR}/libs/RapidJson/RapidJson.cmake")
+include_directories(${RAPIDJSON_INCLUDE_DIR})
 
 add_subdirectory(googletest)
 
@@ -21,16 +21,29 @@ add_library(
     NeuralNetwork/include/NeuralNetwork.hpp
 )
 
+#file(GLOB IPComSources CONFIGURE_DEPENDS "IPCom/include/*.hpp" "IPCom/src/*.cpp")
+#add_library( IPCom SHARED ${IPComSources})
+
 add_library(
-    RS232Comm SHARED
-    RS232Comm/include/PortUtils.hpp
-    RS232Comm/include/AbstractPort.hpp
-    RS232Comm/include/SerialPort.hpp
-    RS232Comm/src/SerialPortWin.cpp
-    RS232Comm/src/SerialPortLinux.cpp
-    RS232Comm/src/SerialPortMacos.cpp
-    RS232Comm/include/SerialBuffer.hpp
-    RS232Comm/src/SerialBuffer.cpp
+    IPCom SHARED
+    IPCom/include/LockGuard.hpp
+    IPCom/include/Semaphore.hpp
+    IPCom/include/SharedMessage.hpp
+    IPCom/include/SpinLock.hpp
+    IPCom/include/SharedBufferQueue.hpp
+    IPCom/src/SharedBufferQueue.cpp
+)
+
+add_library(
+    IOPorts SHARED
+    IOPorts/include/PortUtils.hpp
+    IOPorts/include/AbstractPort.hpp
+    IOPorts/include/SerialPort.hpp
+    IOPorts/src/SerialPortWin.cpp
+    IOPorts/src/SerialPortLinux.cpp
+    IOPorts/src/SerialPortMacos.cpp
+    IOPorts/include/SerialBuffer.hpp
+    IOPorts/src/SerialBuffer.cpp
 )
 
 add_library( RapidXML INTERFACE )
@@ -40,8 +53,10 @@ add_library( RapidXML INTERFACE )
 #    LIBRARY DESTINATION "${PROJECT_SOURCE_DIR}/out/build/Win64"
 #)
 
+include_directories(${RAPIDJSON_INCLUDE_DIR})
 target_include_directories(Logger PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Logger")
 target_include_directories(Matrix PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Matrix")
 target_include_directories(NeuralNet PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/NeuralNetwork")
-target_include_directories(RS232Comm PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/RS232Comm")
+target_include_directories(IPCom PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/IPCom")
+target_include_directories(IOPorts PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/IOPorts")
 target_include_directories(RapidXML INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/RapidXML")

@@ -15,6 +15,9 @@ public:
     ~MainWindow();
 
 private slots:
+    void on_pbConnectSerial_clicked();
+
+private slots:
     void on_cbxComPorts_activated(int index);
 
 private:

@@ -1,4 +1,5 @@
 #include <include/NeuralNetwork.hpp>
+#include <include/Logger.hpp>
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
 
@@ -13,7 +14,6 @@
 template <typename T>
 NeuralNetwork<T>::NeuralNetwork(unsigned inputLayerNodes, unsigned hiddenLayerNodes, unsigned outputLayerNodes)
 {
-
 	m_uInputLayerNodes = inputLayerNodes;
 	m_uHiddenLayerNodes = hiddenLayerNodes;
 	m_uOutputLayerNodes = outputLayerNodes;
@@ -38,6 +38,8 @@ NeuralNetwork<T>::NeuralNetwork(unsigned inputLayerNodes, unsigned hiddenLayerNo
 	m_hBias->randomize();
 	m_oBias->randomize();
 	m_HiddenOutputWeights = nullptr;
+
+	LINFO("Created Simple Neural Network { Input: %u, Hidden: %u, Output: %u}", inputLayerNodes, hiddenLayerNodes, outputLayerNodes);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -47,6 +49,7 @@ NeuralNetwork<T>::NeuralNetwork(unsigned inputLayerNodes, unsigned hiddenLayerNo
 template <typename T>
 NeuralNetwork<T>::~NeuralNetwork()
 {
+	LDEBUG("Neural Network Destroyed.");
 	delete (m_ihWeights);
 	delete (m_hoWeights);
 	delete (m_hBias);
@@ -228,6 +231,8 @@ DeepNeuralNetwork<T>::DeepNeuralNetwork(uint_fast64_t inputLayerNodes, std::vect
 	/********************************************************************************/
 	m_vBiases.push_back(new Matrix<T>(outputLayerNodes, 1));
 	m_vBiases.at(m_vBiases.size() - 1)->randomize();
+
+	LINFO("Created Deep Neural Network { Input Nodes: %u, Hidden Layers: %u, Output Nodes: %u}", inputLayerNodes, hiddenLayerNodes.size(), outputLayerNodes);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

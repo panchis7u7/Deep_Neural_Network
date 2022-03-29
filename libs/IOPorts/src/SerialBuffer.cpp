@@ -1,7 +1,7 @@
 #include <include/SerialBuffer.hpp>
 #include <assert.h>
 #include <iostream>
-
+//https://stackoverflow.com/questions/54392470/how-to-handle-buffering-serial-data
 #ifndef _WIN32
 typedef void *HANDLE;
 #else

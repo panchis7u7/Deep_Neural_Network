@@ -92,5 +92,5 @@ LIBEXP void log_output(Log_Level level, const char *message, ...);
 #define LTRACE(message, ...)
 #endif
 
-void platform_console_write(const char* message, u8 colour);
-void platform_console_write_error(const char* message, u8 colour);
+LIBEXP void platform_console_write(const char* message, u8 colour);
+LIBEXP void platform_console_write_error(const char* message, u8 colour);

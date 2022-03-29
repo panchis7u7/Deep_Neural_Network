@@ -96,6 +96,7 @@
     "cmake.sourceDirectory": "${workspaceFolder}",
     "cmake.configureOnStart": false,
     "cmake.reconfigureOnChange": false,
+    "cmake.useCMakePresets": "never",
     "C_Cpp.default.configurationProvider": "go2sh.cmake-integration",
     "cmake.debugConfig": {
         "stopAtEntry": false,

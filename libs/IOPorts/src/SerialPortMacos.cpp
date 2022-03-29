@@ -4,28 +4,27 @@
 #include "../platform.hpp"
 
 #ifdef APPLE_PLATFORM
+// Custom library import.
 #include <include/SerialPort.hpp>
 #include <include/Logger.hpp>
 #include <filesystem>
 #include <iostream>
 #include <vector>
 // Serial configuration.
-#include <termios.h> // Contains POSIX terminal control definitions
-#include <fcntl.h> // Contains file controls like O_RDWR
-#include <unistd.h> // write(), read(), close()
-#include <errno.h> // Error integer and strerror() function
 #include <sys/ioctl.h>
 #include <sys/syscall.h>
+#include <termios.h>// Contains POSIX terminal control definitions
+#include <unistd.h> // write(), read(), close()
+#include <fcntl.h>  // Contains file controls like O_RDWR
+#include <errno.h>  // Error integer and strerror() function
+#include <signal.h>
 // kqueue includes.
 #include <sys/types.h>
 #include <sys/event.h>
 #include <sys/time.h>
 #include <sys/mman.h>
-// Application quit.
-#include <signal.h>
 
-class SerialPort::SerialPortImpl
-{
+class SerialPort::SerialPortImpl {
 public:
     SerialPortImpl(SerialPort* base);
     ~SerialPortImpl();
@@ -33,13 +32,13 @@ public:
     void clean(pid_t process);
     void clean();
     void flush();
-    std::string readIfAvailable();
+    std::string read();
     std::size_t write(void *data, std::size_t data_len);
     SerialPort* getBase() { return m_spBase; }
     
 private:
-    pid_t m_pPollProcess;
     SerialPort* m_spBase;
+    void* m_vpSerialBuffer = nullptr;
     static constexpr int SFD_UNAVAILABLE = -1;
     int m_iFd = SFD_UNAVAILABLE;
     int m_iKq = SFD_UNAVAILABLE;
@@ -53,7 +52,7 @@ SerialPort::SerialPort(std::string com_port) : com_port(com_port), m_pimpl(std::
 SerialPort::~SerialPort(){}
 void SerialPort::flush(){ pimpl()->flush(); }
 std::size_t SerialPort::write(void *data, std::size_t data_len) { return pimpl()->write(data, data_len); }
-std::string SerialPort::readIfAvailable() { return pimpl()->readIfAvailable(); }
+std::string SerialPort::read() { return pimpl()->read(); }
 
 //###################################################################################################
 // MacOS platform implementation.
@@ -125,14 +124,19 @@ SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){
 
     // Save tty settings, also checking for error
     if (tcsetattr(m_iFd, TCSANOW, &tty) != 0) {
-        LERROR("pid(%d) From tcgetattr: %s", getpid(), strerror(errno));
+        LERROR("pid(%d) From tcsetattr: %s", getpid(), strerror(errno));
+        clean();
+    }
+
+    if((m_vpSerialBuffer = mmap(NULL, 1024, PROT_READ | PROT_WRITE, MAP_ANON | MAP_SHARED, -1, 0)) == MAP_FAILED){
+        LERROR("pid(%d) Shared memory allocation failed: %s", getpid(), strerror(errno));
         clean();
     }
 
     sleep(2);
 
     // Spawn process for serial buffer check.
-    if((m_pPollProcess = fork()) == 0){
+    if(fork() == 0){
         pid_t childId = getpid();
         LDEBUG("pid(%d) Created child process.", childId);
 
@@ -172,7 +176,7 @@ SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){
 		        clean(childId);
 	        } else if (ret > 0) {
                 LINFO("pid(%d) Recieved data on Serial Device: %s", base->com_port.c_str());
-                std::cout << readIfAvailable() << "\n";
+                std::cout << read() << "\n";
 	        }
 	    }
     }
@@ -193,14 +197,15 @@ SerialPort::SerialPortImpl::~SerialPortImpl(){
 //###################################################################################################
 
 void SerialPort::SerialPortImpl::flush() {
-
+    ioctl(m_iFd, TCIOFLUSH, 2);
+    memset(m_vpSerialBuffer, 0, 1024);
 }
 
 //###################################################################################################
 // Read serial buffer data if available.
 //###################################################################################################
 
-std::string SerialPort::SerialPortImpl::readIfAvailable()
+std::string SerialPort::SerialPortImpl::read()
 {
     /*int bytes;
     ioctl(m_iFd, FIONREAD, &bytes);

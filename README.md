@@ -79,3 +79,4 @@ References:
 Helpful statements:
 //"program": "${workspaceRoot}/out/build/${command:cmake.buildType}/${env:OS}/NeuralNetworkd",
 //"preLaunchTask": "cmake",
+https://wang-yimu.com/a-tutorial-on-shared-memory-inter-process-communication/

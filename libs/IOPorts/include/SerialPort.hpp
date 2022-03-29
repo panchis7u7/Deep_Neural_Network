@@ -7,11 +7,11 @@
 class SerialPort : public AbstractPort
 {
 public:
-    SerialPort(std::string com_port);
-    ~SerialPort();
+    LIBEXP SerialPort(std::string com_port);
+    LIBEXP ~SerialPort();
 
     LIBEXP void flush() override;
-    LIBEXP std::string readIfAvailable() override;
+    LIBEXP std::string read() override;
     LIBEXP std::size_t write(void *data, std::size_t data_len) override;
     LIBEXP static std::vector<std::string> getAvailablePorts();
 
