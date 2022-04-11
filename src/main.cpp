@@ -52,15 +52,15 @@ int main(int argc, char* argv[])
 		std::cout << "COM" << *it << std::endl;
 	}*/
 	
-	SerialPort::getAvailablePorts();
+    //SerialPort::getAvailablePorts();
 
-	SerialPort arduino("/dev/cu.usbserial-14140");
-	arduino << "encendido";
+    //SerialPort arduino("/dev/cu.usbserial-14140");
+    //arduino << "encendido";
 
-	std::string mensaje;
-	arduino >> mensaje;
+    //std::string mensaje;
+    //arduino >> mensaje;
 
-	std::cout << "El mensaje es : "  << mensaje << std::endl;
+    //std::cout << "El mensaje es : "  << mensaje << std::endl;
 
 	return app.exec();
 }

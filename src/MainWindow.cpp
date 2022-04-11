@@ -1,5 +1,6 @@
-#include <include/MainWindow.hpp>
 #include "ui/ui_MainWindow.h"
+#include <include/MainWindow.hpp>
+#include <include/SerialPort.hpp>
 #include <include/SerialPort.hpp>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -20,13 +21,16 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_cbxComPorts_activated(int index)
 {
-
     (void)index;
 }
 
 
 void MainWindow::on_pbConnectSerial_clicked()
 {
-
+    QString selectedItem = ui->cbxComPorts->currentText();
+    if(selectedItem != "") {
+        SerialPort port(selectedItem.toStdString());
+        port.connect();
+    }
 }
 

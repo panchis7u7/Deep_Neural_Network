@@ -11,6 +11,7 @@ public:
     LIBEXP ~SerialPort();
 
     LIBEXP void flush() override;
+    LIBEXP int connect() override;
     LIBEXP std::string read() override;
     LIBEXP std::size_t write(void *data, std::size_t data_len) override;
     LIBEXP static std::vector<std::string> getAvailablePorts();

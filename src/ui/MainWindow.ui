@@ -30,9 +30,9 @@
    <widget class="QComboBox" name="cbxComPorts">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>30</y>
-      <width>141</width>
+      <x>3</x>
+      <y>33</y>
+      <width>140</width>
       <height>25</height>
      </rect>
     </property>
@@ -40,7 +40,7 @@
    <widget class="QPushButton" name="pbConnectSerial">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>8</x>
       <y>60</y>
       <width>100</width>
       <height>32</height>

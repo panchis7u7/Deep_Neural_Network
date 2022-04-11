@@ -14,11 +14,15 @@ public:
     ~SharedBufferQueue();
     bool try_write(DataGlob& dataGlob);
     bool write(DataGlob& dataGlob);
+    Lock& getOperationLock() { return m_lOperationLock; }
+    std::atomic<int32_t>& getWriteIdx() { return m_atiWrite_idx; }
+    std::atomic<int32_t>& getFarthestReadIdx() { return m_atiFarthest_Read_idx; }
+    Cell* getQueueSharedMessages() { return m_ceQueueSharedMessages; }
 private:
     unsigned m_uQueueLength;
     // Circular Buffer begin read and write indexes.
-    std::atomic<int32_t> m_atiWrite_Idx{ 0 };
-    std::atomic<int32_t> m_atiFarthest_Read_Idx{ 0 };
+    std::atomic<int32_t> m_atiWrite_idx{ 0 };
+    std::atomic<int32_t> m_atiFarthest_Read_idx{ 0 };
     Lock m_lOperationLock;
     Cell* m_ceQueueSharedMessages;
 

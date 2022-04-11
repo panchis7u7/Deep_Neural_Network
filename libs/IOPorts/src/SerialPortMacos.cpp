@@ -32,6 +32,7 @@ public:
     void clean(pid_t process);
     void clean();
     void flush();
+    int connect();
     std::string read();
     std::size_t write(void *data, std::size_t data_len);
     SerialPort* getBase() { return m_spBase; }
@@ -51,6 +52,7 @@ private:
 SerialPort::SerialPort(std::string com_port) : com_port(com_port), m_pimpl(std::make_unique<SerialPortImpl>(this)){}
 SerialPort::~SerialPort(){}
 void SerialPort::flush(){ pimpl()->flush(); }
+int SerialPort::connect(){ pimpl()->connect(); }
 std::size_t SerialPort::write(void *data, std::size_t data_len) { return pimpl()->write(data, data_len); }
 std::string SerialPort::read() { return pimpl()->read(); }
 
@@ -61,23 +63,46 @@ std::string SerialPort::read() { return pimpl()->read(); }
 void SerialPort::SerialPortImpl::clean(){
     if(m_iFd != SFD_UNAVAILABLE)
         close(m_iFd);
-    exit(0);
 }
 
 void SerialPort::SerialPortImpl::clean(pid_t process){
     kill(process, SIGKILL);
-    clean();
 }
 
 //###################################################################################################
 // Serial Port Initzialization. (Constructor)
 //###################################################################################################
 
-SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){
-    m_spBase = base;
-    if((m_iFd = open(base->com_port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY)) < 0){
-        LERROR("pid(%d) Error opening serial port: %s", getpid(), base->com_port.c_str());
+SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){ m_spBase = base; }
+
+//###################################################################################################
+// Serial Port Cleanup. (Destructor)
+//###################################################################################################
+
+SerialPort::SerialPortImpl::~SerialPortImpl(){
+    if(m_iFd != SFD_UNAVAILABLE) {
+        close(m_iFd);
+    }
+}
+
+//###################################################################################################
+// Clean serial buffer.
+//###################################################################################################
+
+void SerialPort::SerialPortImpl::flush() {
+    ioctl(m_iFd, TCIOFLUSH, 2);
+    memset(m_vpSerialBuffer, 0, 1024);
+}
+
+//###################################################################################################
+// Open a serial port.
+//###################################################################################################
+
+int SerialPort::SerialPortImpl::connect() {
+    if((m_iFd = open(m_spBase->com_port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY)) < 0){
+        LERROR("pid(%d) Error opening serial port: %s", getpid(), m_spBase->com_port.c_str());
         clean();
+        return(-1);
     }
 
     // Reference: https://blog.mbedded.ninja/programming/operating-systems/linux/linux-serial-ports-using-c-cpp/
@@ -93,6 +118,7 @@ SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){
     if(tcgetattr(m_iFd, &tty) != 0) {
         LERROR("pid(%d) From tcgetattr: %s", getpid(), strerror(errno));
         clean();
+        return -1;
     }
 
     tty.c_cflag &= ~PARENB; // Clear parity bit, disabling parity (most common)
@@ -126,11 +152,13 @@ SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){
     if (tcsetattr(m_iFd, TCSANOW, &tty) != 0) {
         LERROR("pid(%d) From tcsetattr: %s", getpid(), strerror(errno));
         clean();
+        return -1;
     }
 
     if((m_vpSerialBuffer = mmap(NULL, 1024, PROT_READ | PROT_WRITE, MAP_ANON | MAP_SHARED, -1, 0)) == MAP_FAILED){
         LERROR("pid(%d) Shared memory allocation failed: %s", getpid(), strerror(errno));
         clean();
+        return -1;
     }
 
     sleep(2);
@@ -159,9 +187,11 @@ SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){
         if (ret < 0){
             LERROR("pid(%d) Kevent failed: %s", strerror(errno));
             clean(childId);
+            return -1;
         } else if (m_kRead.flags & EV_ERROR){
 	        LERROR("pid(%d) Kevent failed: %s", strerror(errno));
             clean(childId);
+            return -1;
         }
 
         struct timespec sleep_time;
@@ -174,31 +204,14 @@ SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){
 	        if	(ret == -1) {
                 LERROR("pid(%d) Kevent wait: %s", strerror(errno));
 		        clean(childId);
+                return -1;
 	        } else if (ret > 0) {
-                LINFO("pid(%d) Recieved data on Serial Device: %s", base->com_port.c_str());
+                LINFO("pid(%d) Recieved data on Serial Device: %s", m_spBase->com_port.c_str());
                 std::cout << read() << "\n";
 	        }
 	    }
     }
-}
-
-//###################################################################################################
-// Serial Port Cleanup. (Destructor)
-//###################################################################################################
-
-SerialPort::SerialPortImpl::~SerialPortImpl(){
-    if(m_iFd != SFD_UNAVAILABLE) {
-        close(m_iFd);
-    }
-}
-
-//###################################################################################################
-// Clean serial buffer.
-//###################################################################################################
-
-void SerialPort::SerialPortImpl::flush() {
-    ioctl(m_iFd, TCIOFLUSH, 2);
-    memset(m_vpSerialBuffer, 0, 1024);
+    return 0;
 }
 
 //###################################################################################################
