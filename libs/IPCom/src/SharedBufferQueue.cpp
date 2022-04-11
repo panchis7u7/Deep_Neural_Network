@@ -31,7 +31,7 @@ bool SharedBufferQueue::try_write(DataGlob& dataGlob){
             ++m_atiWrite_idx;
 
             // Queue warp around.
-            if (m_atiWrite_idx - m_atiFarthest_Read_idx > m_uQueueLength) {
+            if ((m_atiWrite_idx - m_atiFarthest_Read_idx) > (int)m_uQueueLength) {
                 int32_t last_farest_read_idx = m_atiFarthest_Read_idx;
                 m_atiFarthest_Read_idx++;
                 assert(m_atiFarthest_Read_idx = m_atiWrite_idx - m_uQueueLength);
