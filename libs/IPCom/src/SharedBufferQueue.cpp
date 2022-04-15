@@ -12,7 +12,7 @@ SharedBufferQueue::~SharedBufferQueue(){
     delete[] m_ceQueueSharedMessages;
 }
 
-bool SharedBufferQueue::try_write(DataGlob& dataGlob){
+bool SharedBufferQueue::try_write(const DataGlob& dataGlob){
     Cell& m = m_ceQueueSharedMessages[m_atiWrite_idx % m_uQueueLength];
 
     // If some processes is reading, do nothing
@@ -43,7 +43,7 @@ bool SharedBufferQueue::try_write(DataGlob& dataGlob){
     return true;
 }
 
-bool SharedBufferQueue::write(DataGlob& dataGlob){
+bool SharedBufferQueue::write(const DataGlob& dataGlob){
     while (!try_write(dataGlob)) {
         // Unlikely. Happends when the queue warp around.
         LDEBUG("write|spinning");

@@ -32,6 +32,9 @@ add_library(
     IPCom/include/SpinLock.hpp
     IPCom/include/SharedBufferQueue.hpp
     IPCom/src/SharedBufferQueue.cpp
+    IPCom/include/BufferQueue.hpp
+    IPCom/src/BufferQueue.cpp
+    IPCom/include/SharedAlloc.hpp
 )
 
 add_library(

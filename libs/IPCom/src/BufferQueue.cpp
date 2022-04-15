@@ -1,8 +1,14 @@
 #include <include/BufferQueue.hpp>
 #include <include/LockGuard.hpp>
+#include <include/SharedMessage.hpp>
+#include <include/Logger.hpp>
 #include <assert.h>
 
-BufferQueue::try_read(DataGlob& d){
+BufferQueue::BufferQueue(unsigned queueLen, std::string& shmem_name, std::string& err_message): 
+    m_uQueueLength(queueLen), 
+    m_qShared(new(shmem_name, err_message) SharedBufferQueue(queueLen)) {}
+
+bool BufferQueue::try_read(DataGlob& d){
     Cell* cellPtr;
     
     {
@@ -22,7 +28,7 @@ BufferQueue::try_read(DataGlob& d){
             assert(last_read_idx < m_iRead_idx);
         }
 
-        cellPtr = &m_qShared->getQueueSharedMessages[m_iRead_idx % QUEUE_LEN];
+        cellPtr = &m_qShared->getQueueSharedMessages()[m_iRead_idx % m_uQueueLength];
 
         // Using a semaphore to track how many process is reading the current message.
         // "signal" a reader is here
@@ -30,15 +36,14 @@ BufferQueue::try_read(DataGlob& d){
 
         // Check if someone is writing to this cell
         // This only happen if the queue warp around.
-        if (!cellPtr->m_lWriterLock.try_lock()) {
+        if (!cellPtr->m_lWriterLock.tryLock()) {
             cellPtr->m_sSem.decrease();
             LINFO("try_read|someone is writing");
             LINFO("try_read|m.test_num :%f", cellPtr->m_dgData.m_dCheckSum);
-            std::cout << "try_read|m.test_num :" << m_ptr->data.check_sum << std::endl;
             return false;
         } else {
             // Unlock it since I lock the cell in if statement.
-            cellPtr->m_lWriterLock.unlock();
+            cellPtr->m_lWriterLock.unLock();
         }
 
         ++m_iRead_idx;
@@ -51,8 +56,8 @@ BufferQueue::try_read(DataGlob& d){
     return true;
 }
 
-bool BufferQueue::read(dataGlob& d) { return try_read(d); }
-bool BufferQueue::write(dataGlob& d) { 
+bool BufferQueue::read(DataGlob& d) { return try_read(d); }
+bool BufferQueue::write(const DataGlob& d) { 
     m_qShared->write(d); 
     return true;
 }

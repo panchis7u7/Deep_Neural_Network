@@ -1,10 +1,11 @@
 #pragma once
 
-#include "../platform.hpp"
-#include <include/SharedMessage.hpp>
-#include <include/SpinLock.hpp>
 #include <memory>
 #include <atomic>
+#include <include/SharedAlloc.hpp>
+#include <include/SharedMessage.hpp>
+#include <include/SpinLock.hpp>
+#include "../platform.hpp"
 
 using Lock = SpinLock;
 
@@ -12,12 +13,18 @@ LIBEXP class SharedBufferQueue {
 public:
     SharedBufferQueue(unsigned QueueLength);
     ~SharedBufferQueue();
-    bool try_write(DataGlob& dataGlob);
-    bool write(DataGlob& dataGlob);
+    bool try_write(const DataGlob& dataGlob);
+    bool write(const DataGlob& dataGlob);
+
     Lock& getOperationLock() { return m_lOperationLock; }
     std::atomic<int32_t>& getWriteIdx() { return m_atiWrite_idx; }
     std::atomic<int32_t>& getFarthestReadIdx() { return m_atiFarthest_Read_idx; }
     Cell* getQueueSharedMessages() { return m_ceQueueSharedMessages; }
+
+    void* operator new(size_t size, std::string& shmem_name, std::string& err_message) {
+        return (void*)shalloc<SharedBufferQueue>(shmem_name, err_message);
+    }
+
 private:
     unsigned m_uQueueLength;
     // Circular Buffer begin read and write indexes.
