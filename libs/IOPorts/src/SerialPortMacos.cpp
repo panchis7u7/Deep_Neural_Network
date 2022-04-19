@@ -14,7 +14,7 @@
 #include <sys/ioctl.h>
 #include <sys/syscall.h>
 #include <termios.h>// Contains POSIX terminal control definitions
-#include <unistd.h> // write(), read(), close()
+#include <unistd.h> // write(), read(), close(), fork()
 #include <fcntl.h>  // Contains file controls like O_RDWR
 #include <errno.h>  // Error integer and strerror() function
 #include <signal.h>
@@ -73,7 +73,15 @@ void SerialPort::SerialPortImpl::clean(pid_t process){
 // Serial Port Initzialization. (Constructor)
 //###################################################################################################
 
-SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){ m_spBase = base; }
+SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){ 
+    m_spBase = base; 
+    
+    if((m_vpSerialBuffer = mmap(NULL, 1024, PROT_READ | PROT_WRITE, MAP_ANON | MAP_SHARED, -1, 0)) == MAP_FAILED){
+        LERROR("pid(%d) Shared memory allocation failed: %s", getpid(), strerror(errno));
+        clean();
+        return;
+    }
+}
 
 //###################################################################################################
 // Serial Port Cleanup. (Destructor)
@@ -155,12 +163,6 @@ int SerialPort::SerialPortImpl::connect() {
         return -1;
     }
 
-    if((m_vpSerialBuffer = mmap(NULL, 1024, PROT_READ | PROT_WRITE, MAP_ANON | MAP_SHARED, -1, 0)) == MAP_FAILED){
-        LERROR("pid(%d) Shared memory allocation failed: %s", getpid(), strerror(errno));
-        clean();
-        return -1;
-    }
-
     sleep(2);
 
     // Spawn process for serial buffer check.
@@ -228,8 +230,9 @@ std::string SerialPort::SerialPortImpl::read()
     std::cout << buf << "\n";
     return std::string(buf);*/
     
-    char buf[255] = {0};
-    if(::read(m_iFd, buf, 255) < 0) {
+    //char buf[255] = {0};
+
+    if(::read(m_iFd, m_vpSerialBuffer, sizeof(m_vpSerialBuffer)) < 0) {
         LERROR("pid(%d) Error reading from device: %s", getpid(), strerror(errno));
         return "";
     }
