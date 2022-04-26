@@ -45,7 +45,7 @@
             "cwd": "${workspaceRoot}",
             "environment": [],
             "externalConsole": true,
-            "visualizerFile": "/home/panchis/.config/Code/User/workspaceStorage/5c93aed96c66b21e422897d139e40ac9/tonka3000.qtvsctools/qt.natvis.xml"
+            "visualizerFile": "/Users/semadrig/Library/Application Support/Code/User/workspaceStorage/67050ea70345ee98a89fd4d6aab5b5af/tonka3000.qtvsctools/qt.natvis.xml"
         }
     ]
 }

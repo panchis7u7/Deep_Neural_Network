@@ -236,7 +236,7 @@ std::string SerialPort::SerialPortImpl::read()
         LERROR("pid(%d) Error reading from device: %s", getpid(), strerror(errno));
         return "";
     }
-    return std::string(buf);
+    return std::string((char*)m_vpSerialBuffer);
 }
 
 //###################################################################################################

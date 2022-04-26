@@ -48,8 +48,8 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
-target_link_libraries(IOPorts PRIVATE Logger)
 target_link_libraries(IPCom PRIVATE Logger)
+target_link_libraries(IOPorts PRIVATE Logger IPCom)
 target_link_libraries(NeuralNet PRIVATE Logger Matrix)
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     Qt${QT_VERSION_MAJOR}::Widgets 

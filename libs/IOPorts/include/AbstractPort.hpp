@@ -1,7 +1,8 @@
 #pragma once
 #include <string>
-#include <string.h>
 #include <vector>
+#include <string.h>
+#include <include/SharedBufferQueue.hpp>
 
 class AbstractPort
 {
@@ -30,6 +31,9 @@ public:
 	friend void operator>>(AbstractPort &port, std::string &str) {
 		str += port.read();
 	}
+
+private:
+	SharedBufferQueue* m_sbqBuffer;
 
 protected:
 	AbstractPort(){};

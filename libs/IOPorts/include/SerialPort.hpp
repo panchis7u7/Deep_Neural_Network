@@ -3,7 +3,6 @@
 #include <include/AbstractPort.hpp>
 #include <memory>
 #include <../platform.hpp>
-
 class SerialPort : public AbstractPort
 {
 public:

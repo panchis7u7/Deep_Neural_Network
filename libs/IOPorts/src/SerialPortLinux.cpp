@@ -4,9 +4,11 @@
 
 #ifdef __linux__
 
-#include <include/SerialPort.hpp>
-#include <include/Logger.hpp>
 #include <filesystem>
+#include <include/Logger.hpp>
+#include <include/SerialPort.hpp>
+#include <include/SharedAlloc.hpp>
+#include <include/SharedBufferQueue.hpp>
 // Serial configuration.
 #include <signal.h>
 #include <termios.h>
@@ -43,8 +45,16 @@ private:
 // Platform independent abstraction definitions.
 //###################################################################################################
 
-SerialPort::SerialPort(std::string com_port) : com_port(com_port), m_pimpl(std::make_unique<SerialPortImpl>(this)) {}
-SerialPort::~SerialPort() {}
+SerialPort::SerialPort(std::string com_port) : com_port(com_port), m_pimpl(std::make_unique<SerialPortImpl>(this), m_sbqBuffer(new SharedBufferQueue(12))) {
+    std::string err;
+    SharedBufferQueue* sh_mem = shalloc(com_port, &err);
+    memcpy(sh_mem, m_sbqBuffer, sizeof(SharedBufferQueue));
+}
+
+SerialPort::~SerialPort() {
+    //munmap();
+}
+
 int SerialPort::connect() { return pimpl()->connect(); }
 void SerialPort::flush(){ pimpl()->flush(); }
 std::size_t SerialPort::write(void *data, std::size_t data_len) { return pimpl()->write(data, data_len); }
