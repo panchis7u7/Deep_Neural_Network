@@ -1,12 +1,15 @@
+#pragma once
+
 #include <include/SharedMessage.hpp>
 #include <include/SharedBufferQueue.hpp>
 
 LIBEXP class BufferQueue {
 public:
     BufferQueue(unsigned queueLen, std::string& shmem_name, std::string& err_message);
-    bool try_read(DataGlob& d);
-    bool read(DataGlob& d);
-    bool write(const DataGlob& d);
+    ~BufferQueue();
+    bool try_read(DataBlob& d);
+    bool read(DataBlob& d);
+    bool write(const DataBlob& d);
 private:
      // The read idx for this reader.
     int32_t m_iRead_idx{ 0 };

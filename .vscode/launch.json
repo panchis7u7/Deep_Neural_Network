@@ -34,18 +34,27 @@
             "program": "${workspaceRoot}/out/build/Debug/Linux/NeuralNetworkd",
             "targetArchitecture": "x64",
             "internalConsoleOptions": "openOnSessionStart",
+            "MIMode": "gdb",
+            "processId": "${command:pickProcess}",
             "logging": {
                 "moduleLoad": true,
                 "programOutput": true,
                 "trace": false
             },
+            "setupCommands": [
+                {
+                    "description": "The new process is debugged after a fork. The parent process runs unimpeded.",
+                    "text": "-gdb-set follow-fork-mode child",
+                    "ignoreFailures": true
+                }
+            ],
             "showDisplayString": false,
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",
             "environment": [],
             "externalConsole": true,
-            "visualizerFile": "/Users/semadrig/Library/Application Support/Code/User/workspaceStorage/67050ea70345ee98a89fd4d6aab5b5af/tonka3000.qtvsctools/qt.natvis.xml"
+            "visualizerFile": "/home/panchis/.config/Code/User/workspaceStorage/5c93aed96c66b21e422897d139e40ac9/tonka3000.qtvsctools/qt.natvis.xml"
         }
     ]
 }

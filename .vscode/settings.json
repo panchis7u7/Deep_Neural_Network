@@ -100,14 +100,31 @@
     "cmake.reconfigureOnChange": false,
     "cmake.useCMakePresets": "never",
     "C_Cpp.default.configurationProvider": "go2sh.cmake-integration",
-    "cmake.debugConfig": {
-        "stopAtEntry": false,
-        "MIMode": "lldb",
-        "miDebuggerPath": "/Users/semadrig/.vscode/extensions/ms-vscode.cpptools-1.8.4/debugAdapters/lldb/bin/lldb-mi",
-        "logging": {
-            "trace": true,
-            "engineLogging": true,
-            "traceResponse": true
+    "platformSettings.autoLoad": true,
+    "platformSettings.platforms": {
+        "darwin": {
+            "cmake.debugConfig": {
+                "stopAtEntry": false,
+                "MIMode": "lldb",
+                "miDebuggerPath": "/Users/semadrig/.vscode/extensions/ms-vscode.cpptools-1.8.4/debugAdapters/lldb/bin/lldb-mi",
+                "logging": {
+                    "trace": true,
+                    "engineLogging": true,
+                    "traceResponse": true
+                }
+            }
+        },
+        "linux": {
+            "cmake.debugConfig": {
+                "stopAtEntry": false,
+                "MIMode": "gdb",
+                "miDebuggerPath": "/usr/bin/gdb",
+                "logging": {
+                    "trace": true,
+                    "engineLogging": true,
+                    "traceResponse": true
+                }
+            }
         }
     }
 }

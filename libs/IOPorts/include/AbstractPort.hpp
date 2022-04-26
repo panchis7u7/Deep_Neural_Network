@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 #include <string.h>
-#include <include/SharedBufferQueue.hpp>
+#include <include/BufferQueue.hpp>
 
 class AbstractPort
 {
@@ -32,10 +32,10 @@ public:
 		str += port.read();
 	}
 
-private:
-	SharedBufferQueue* m_sbqBuffer;
-
 protected:
 	AbstractPort(){};
 	virtual ~AbstractPort(){};
+	BufferQueue* m_bqBuffer;
+
+	std::string m_sError;
 };

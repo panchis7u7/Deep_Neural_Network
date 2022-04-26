@@ -3,8 +3,7 @@
 #include <include/AbstractPort.hpp>
 #include <memory>
 #include <../platform.hpp>
-class SerialPort : public AbstractPort
-{
+class SerialPort : public AbstractPort {
 public:
     LIBEXP SerialPort(std::string com_port);
     LIBEXP ~SerialPort();

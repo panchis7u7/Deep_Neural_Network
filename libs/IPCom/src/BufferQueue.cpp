@@ -2,13 +2,19 @@
 #include <include/LockGuard.hpp>
 #include <include/SharedMessage.hpp>
 #include <include/Logger.hpp>
+#include <sys/mman.h>
 #include <assert.h>
+
 
 BufferQueue::BufferQueue(unsigned queueLen, std::string& shmem_name, std::string& err_message): 
     m_uQueueLength(queueLen), 
     m_qShared(new(shmem_name, err_message) SharedBufferQueue(queueLen)) {}
 
-bool BufferQueue::try_read(DataGlob& d){
+BufferQueue::~BufferQueue() {
+    munmap(m_qShared, sizeof(*m_qShared));
+}
+
+bool BufferQueue::try_read(DataBlob& d){
     Cell* cellPtr;
     
     {
@@ -56,8 +62,8 @@ bool BufferQueue::try_read(DataGlob& d){
     return true;
 }
 
-bool BufferQueue::read(DataGlob& d) { return try_read(d); }
-bool BufferQueue::write(const DataGlob& d) { 
+bool BufferQueue::read(DataBlob& d) { return try_read(d); }
+bool BufferQueue::write(const DataBlob& d) { 
     m_qShared->write(d); 
     return true;
 }

@@ -13,8 +13,8 @@ LIBEXP class SharedBufferQueue {
 public:
     SharedBufferQueue(unsigned QueueLength);
     ~SharedBufferQueue();
-    bool try_write(const DataGlob& dataGlob);
-    bool write(const DataGlob& dataGlob);
+    bool try_write(const DataBlob& DataBlob);
+    bool write(const DataBlob& DataBlob);
 
     Lock& getOperationLock() { return m_lOperationLock; }
     std::atomic<int32_t>& getWriteIdx() { return m_atiWrite_idx; }

@@ -2,13 +2,17 @@
 // Serial Port Linux Implementation class.
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-#ifdef __linux__
+#include "../platform.hpp"
+
+#ifdef LINUX_PLATFORM
 
 #include <filesystem>
+#include <cstring>
 #include <include/Logger.hpp>
 #include <include/SerialPort.hpp>
 #include <include/SharedAlloc.hpp>
-#include <include/SharedBufferQueue.hpp>
+#include <include/BufferQueue.hpp>
+#include <include/SharedMessage.hpp>
 // Serial configuration.
 #include <signal.h>
 #include <termios.h>
@@ -34,7 +38,6 @@ public:
     std::vector<std::string> getAvailablePorts();
 private:
     SerialPort* m_spBase;
-    void* m_vpSerialBuffer = nullptr;
     static constexpr int SFD_UNAVAILABLE = -1;
     static constexpr unsigned MAX_EVENTS = 64;
     int m_iFd = SFD_UNAVAILABLE;
@@ -45,16 +48,22 @@ private:
 // Platform independent abstraction definitions.
 //###################################################################################################
 
-SerialPort::SerialPort(std::string com_port) : com_port(com_port), m_pimpl(std::make_unique<SerialPortImpl>(this), m_sbqBuffer(new SharedBufferQueue(12))) {
-    std::string err;
-    SharedBufferQueue* sh_mem = shalloc(com_port, &err);
-    memcpy(sh_mem, m_sbqBuffer, sizeof(SharedBufferQueue));
+SerialPort::SerialPort(std::string com_port) : com_port(com_port), m_pimpl(std::make_unique<SerialPortImpl>(this)) {
+    std::string err = "";
+
+    // Generate an appropriate name for the shared memory id based of the com port name.
+    std::vector<char*> vec;
+    char* token = strtok(const_cast<char*>(com_port.c_str()), "/");
+    while(token != nullptr) {
+        vec.push_back(token);
+        token = strtok(nullptr, "/");
+    }
+
+    m_bqBuffer = new BufferQueue(12, std::string(vec.back()).insert(0, "/"), err);
+    if (err != "") LERROR(err.c_str());
 }
 
-SerialPort::~SerialPort() {
-    //munmap();
-}
-
+SerialPort::~SerialPort() { delete m_bqBuffer; }
 int SerialPort::connect() { return pimpl()->connect(); }
 void SerialPort::flush(){ pimpl()->flush(); }
 std::size_t SerialPort::write(void *data, std::size_t data_len) { return pimpl()->write(data, data_len); }
@@ -77,14 +86,8 @@ void SerialPort::SerialPortImpl::clean(pid_t process){
 // Serial Port Initzialization. (Constructor)
 //###################################################################################################
 
-SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base) { 
-    m_spBase = base; 
-    
-    if((m_vpSerialBuffer = mmap(NULL, 1024, PROT_READ | PROT_WRITE, MAP_ANON | MAP_SHARED, -1, 0)) == MAP_FAILED){
-        LERROR("pid(%d) Shared memory allocation failed: %s", getpid(), strerror(errno));
-        clean();
-        return;
-    }
+SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){
+    m_spBase = base;
 }
 
 //###################################################################################################
@@ -98,7 +101,7 @@ SerialPort::SerialPortImpl::~SerialPortImpl(){ clean(); }
 //###################################################################################################
 
 void SerialPort::SerialPortImpl::flush(){
-    
+    LINFO("Prepend");
 }
 
 //###################################################################################################
@@ -106,6 +109,7 @@ void SerialPort::SerialPortImpl::flush(){
 //###################################################################################################
 
 int SerialPort::SerialPortImpl::connect() {
+    LINFO("Prepend");
     if((m_iFd = open(m_spBase->com_port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY)) < 0){
         LERROR("pid(%d) Error opening serial port: %s", getpid(), m_spBase->com_port.c_str());
         return -1;
@@ -162,7 +166,7 @@ int SerialPort::SerialPortImpl::connect() {
     }
 
     sleep(2);
-
+    
     if(fork() == 0) {
         pid_t childId = getpid();
         LDEBUG("pid(%d) Created child process.", childId);
@@ -180,10 +184,12 @@ int SerialPort::SerialPortImpl::connect() {
 
         for(;;) {
             int n;
+            struct DataBlob* buffer = new DataBlob;
             if((n = epoll_wait(m_iEpollFd, events, MAX_EVENTS, 5000)) > 0) {
-                if((length = ::read(events[0].data.fd, m_vpSerialBuffer, sizeof(m_vpSerialBuffer))) > 0) {
-                    ((char*)m_vpSerialBuffer)[length] = 0;
-                    LINFO("epoll: %s\n", m_vpSerialBuffer);
+                if((length = ::read(events[0].data.fd, buffer->m_carrRawData, sizeof(buffer->m_carrRawData))) > 0) {
+                    //buffer.m_carrRawData[length] = 0;
+                    m_spBase->m_bqBuffer->write(*buffer);
+                    LINFO("epoll: %s\n", buffer->m_carrRawData);
                 } else LINFO("No data within 5 seconds. \n");
             }
         }
