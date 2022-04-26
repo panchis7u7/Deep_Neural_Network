@@ -182,9 +182,9 @@ int SerialPort::SerialPortImpl::connect() {
         epoll_ctl(m_iEpollFd, EPOLL_CTL_ADD, m_iFd, &event);
         events = (struct epoll_event*)calloc(MAX_EVENTS, sizeof(event));
 
+        int n;
+        struct DataBlob* buffer = new DataBlob;
         for(;;) {
-            int n;
-            struct DataBlob* buffer = new DataBlob;
             if((n = epoll_wait(m_iEpollFd, events, MAX_EVENTS, 5000)) > 0) {
                 if((length = ::read(events[0].data.fd, buffer->m_carrRawData, sizeof(buffer->m_carrRawData))) > 0) {
                     //buffer.m_carrRawData[length] = 0;

@@ -5,11 +5,14 @@
 
 #ifdef APPLE_PLATFORM
 // Custom library import.
-#include <include/SerialPort.hpp>
-#include <include/Logger.hpp>
 #include <filesystem>
+#include <cstring>
 #include <iostream>
 #include <vector>
+#include <include/Logger.hpp>
+#include <include/SerialPort.hpp>   
+#include <include/BufferQueue.hpp>
+#include <include/SharedMessage.hpp>
 // Serial configuration.
 #include <sys/ioctl.h>
 #include <sys/syscall.h>
@@ -39,7 +42,6 @@ public:
     
 private:
     SerialPort* m_spBase;
-    void* m_vpSerialBuffer = nullptr;
     static constexpr int SFD_UNAVAILABLE = -1;
     int m_iFd = SFD_UNAVAILABLE;
     int m_iKq = SFD_UNAVAILABLE;
@@ -49,10 +51,24 @@ private:
 // Platform independent abstraction definitions.
 //###################################################################################################
 
-SerialPort::SerialPort(std::string com_port) : com_port(com_port), m_pimpl(std::make_unique<SerialPortImpl>(this)){}
-SerialPort::~SerialPort(){}
+SerialPort::SerialPort(std::string com_port) : com_port(com_port), m_pimpl(std::make_unique<SerialPortImpl>(this)){
+    std::string err = "";
+
+    // Generate an appropriate name for the shared memory id based of the com port name.
+    std::vector<char*> vec;
+    char* token = strtok(const_cast<char*>(com_port.c_str()), "/");
+    while (token != nullptr) {
+        vec.push_back(token);
+        token = strtok(nullptr, "/");
+    }
+
+    m_bqBuffer = new BufferQueue(12, std::string(vec.back()).insert(0, "/"), err);
+    if (err != "") LERROR(err.c_str());
+}
+
+SerialPort::~SerialPort(){ if(m_bqBuffer){ delete m_bqBuffer;}}
 void SerialPort::flush(){ pimpl()->flush(); }
-int SerialPort::connect(){ pimpl()->connect(); }
+int SerialPort::connect(){ return pimpl()->connect(); }
 std::size_t SerialPort::write(void *data, std::size_t data_len) { return pimpl()->write(data, data_len); }
 std::string SerialPort::read() { return pimpl()->read(); }
 
@@ -73,15 +89,7 @@ void SerialPort::SerialPortImpl::clean(pid_t process){
 // Serial Port Initzialization. (Constructor)
 //###################################################################################################
 
-SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){ 
-    m_spBase = base; 
-    
-    if((m_vpSerialBuffer = mmap(NULL, 1024, PROT_READ | PROT_WRITE, MAP_ANON | MAP_SHARED, -1, 0)) == MAP_FAILED){
-        LERROR("pid(%d) Shared memory allocation failed: %s", getpid(), strerror(errno));
-        clean();
-        return;
-    }
-}
+SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base): m_spBase(base){}
 
 //###################################################################################################
 // Serial Port Cleanup. (Destructor)
@@ -99,7 +107,6 @@ SerialPort::SerialPortImpl::~SerialPortImpl(){
 
 void SerialPort::SerialPortImpl::flush() {
     ioctl(m_iFd, TCIOFLUSH, 2);
-    memset(m_vpSerialBuffer, 0, 1024);
 }
 
 //###################################################################################################
@@ -231,12 +238,14 @@ std::string SerialPort::SerialPortImpl::read()
     return std::string(buf);*/
     
     //char buf[255] = {0};
-
-    if(::read(m_iFd, m_vpSerialBuffer, sizeof(m_vpSerialBuffer)) < 0) {
+    struct DataBlob* buffer = new DataBlob();
+    if(::read(m_iFd, buffer->m_carrRawData, sizeof(buffer->m_carrRawData)) < 0) {
         LERROR("pid(%d) Error reading from device: %s", getpid(), strerror(errno));
         return "";
     }
-    return std::string((char*)m_vpSerialBuffer);
+    m_spBase->m_bqBuffer->write(*buffer);
+    LDEBUG("kevent: %s", buffer->m_carrRawData);
+    return std::string((char*)buffer->m_carrRawData);
 }
 
 //###################################################################################################
