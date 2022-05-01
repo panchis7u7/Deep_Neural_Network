@@ -1,11 +1,13 @@
 #pragma once
 
 #include <include/AbstractPort.hpp>
+#include <include/PortUtils.hpp>
 #include <memory>
 #include <../platform.hpp>
 class SerialPort : public AbstractPort {
 public:
-    LIBEXP SerialPort(std::string com_port);
+    LIBEXP SerialPort(std::string comPort, PortUtils::Serial::BaudRate baudRate = PortUtils::Serial::DEFAULT_COM_RATE);
+    LIBEXP SerialPort(std::string comPort, PortUtils::Serial::PortConfig config);
     LIBEXP ~SerialPort();
 
     LIBEXP void flush() override;
@@ -15,7 +17,8 @@ public:
     LIBEXP static std::vector<std::string> getAvailablePorts();
 
 private: 
-    std::string com_port;
+    std::string comPort;
+    PortUtils::Serial::PortConfig config;
     class SerialPortImpl;
     const SerialPortImpl *pimpl() const { return m_pimpl.get(); }
     SerialPortImpl *pimpl() { return m_pimpl.get(); }

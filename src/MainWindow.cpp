@@ -29,7 +29,7 @@ void MainWindow::on_pbConnectSerial_clicked()
 {
     QString selectedItem = ui->cbxComPorts->currentText();
     if(selectedItem != "") {
-        SerialPort port(selectedItem.toStdString());
+        SerialPort port(selectedItem.toStdString(), PortUtils::Serial::BaudRate::B9600);
         port.connect();
     }
 }

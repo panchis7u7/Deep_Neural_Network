@@ -5,7 +5,6 @@
 
 #ifdef APPLE_PLATFORM
 // Custom library import.
-#include <filesystem>
 #include <cstring>
 #include <iostream>
 #include <vector>
@@ -13,6 +12,7 @@
 #include <include/SerialPort.hpp>   
 #include <include/BufferQueue.hpp>
 #include <include/SharedMessage.hpp>
+#include <include/PortUtils.hpp>
 // Serial configuration.
 #include <sys/ioctl.h>
 #include <sys/syscall.h>
@@ -29,7 +29,8 @@
 
 class SerialPort::SerialPortImpl {
 public:
-    SerialPortImpl(SerialPort* base);
+    SerialPortImpl(SerialPort* base, PortUtils::Serial::BaudRate baudRate = PortUtils::Serial::DEFAULT_COM_RATE);
+    SerialPortImpl(SerialPort* base, PortUtils::Serial::PortConfig serialConfig);
     ~SerialPortImpl();
 
     void clean(pid_t process);
@@ -51,19 +52,21 @@ private:
 // Platform independent abstraction definitions.
 //###################################################################################################
 
-SerialPort::SerialPort(std::string com_port) : com_port(com_port), m_pimpl(std::make_unique<SerialPortImpl>(this)){
+SerialPort::SerialPort(std::string comPort, PortUtils::Serial::BaudRate baudRate) : comPort(comPort), m_pimpl(std::make_unique<SerialPortImpl>(this, baudRate)) {
     std::string err = "";
-
-    // Generate an appropriate name for the shared memory id based of the com port name.
-    std::vector<char*> vec;
-    char* token = strtok(const_cast<char*>(com_port.c_str()), "/");
-    while (token != nullptr) {
-        vec.push_back(token);
-        token = strtok(nullptr, "/");
-    }
-
-    m_bqBuffer = new BufferQueue(12, std::string(vec.back()).insert(0, "/"), err);
+    std::string bufferName = PortUtils::shMemPortNameParser(comPort, "/");
+    m_bqBuffer = new BufferQueue(12, bufferName, err);
     if (err != "") LERROR(err.c_str());
+    config = PortUtils::Serial::PortConfig();
+    config.nComRate = baudRate;
+}
+
+SerialPort::SerialPort(std::string comPort, PortUtils::Serial::PortConfig config): comPort(comPort), m_pimpl(std::make_unique<SerialPortImpl>(this, config)) {
+    std::string err = "";
+    std::string bufferName = PortUtils::shMemPortNameParser(comPort, "/");
+    m_bqBuffer = new BufferQueue(12, bufferName, err);
+    if (err != "") LERROR(err.c_str());
+    this->config = config;
 }
 
 SerialPort::~SerialPort(){ if(m_bqBuffer){ delete m_bqBuffer;}}
@@ -89,7 +92,8 @@ void SerialPort::SerialPortImpl::clean(pid_t process){
 // Serial Port Initzialization. (Constructor)
 //###################################################################################################
 
-SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base): m_spBase(base){}
+SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base, PortUtils::Serial::BaudRate baudRate): m_spBase(base) {}
+SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base, PortUtils::Serial::PortConfig serialConfig): m_spBase(base) {}
 
 //###################################################################################################
 // Serial Port Cleanup. (Destructor)
@@ -114,8 +118,8 @@ void SerialPort::SerialPortImpl::flush() {
 //###################################################################################################
 
 int SerialPort::SerialPortImpl::connect() {
-    if((m_iFd = open(m_spBase->com_port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY)) < 0){
-        LERROR("pid(%d) Error opening serial port: %s", getpid(), m_spBase->com_port.c_str());
+    if((m_iFd = open(m_spBase->comPort.c_str(), O_RDWR | O_NOCTTY | O_NDELAY)) < 0){
+        LERROR("pid(%d) Error opening serial port: %s", getpid(), m_spBase->comPort.c_str());
         clean();
         return(-1);
     }
@@ -215,7 +219,7 @@ int SerialPort::SerialPortImpl::connect() {
 		        clean(childId);
                 return -1;
 	        } else if (ret > 0) {
-                LINFO("pid(%d) Recieved data on Serial Device: %s", m_spBase->com_port.c_str());
+                LINFO("pid(%d) Recieved data on Serial Device: %s", m_spBase->comPort.c_str());
                 std::cout << read() << "\n";
 	        }
 	    }
@@ -265,17 +269,8 @@ std::size_t SerialPort::SerialPortImpl::write(void *data, std::size_t data_len)
 // Get available serial ports on the machine.
 //###################################################################################################
 
-std::vector<std::string> SerialPort::getAvailablePorts()
-{
-    std::string path = "/dev";
-    std::vector<std::string> ports;
-    for(const auto& entry : std::filesystem::directory_iterator(path)) {
-        if(entry.path().string().find("cu") != std::string::npos) {
-            ports.push_back(entry.path());
-            LINFO("%s", entry.path().string().c_str());
-        }
-    }
-    return ports;
+std::vector<std::string> SerialPort::getAvailablePorts() {
+    return PortUtils::getAvailablePortsName(PortUtils::PortType::SERIAL, "/dev");
 }
 
 #endif // __APPLE__
