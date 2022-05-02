@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMainWindow>
+#include <include/SerialPort.hpp>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -22,4 +23,5 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    SerialPort* m_spPort;
 };

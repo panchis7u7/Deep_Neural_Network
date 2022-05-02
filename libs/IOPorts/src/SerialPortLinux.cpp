@@ -40,6 +40,7 @@ public:
     std::vector<std::string> getAvailablePorts();
 private:
     SerialPort* m_spBase;
+    pid_t* m_pidChildProcess;
     static constexpr int SFD_UNAVAILABLE = -1;
     static constexpr unsigned MAX_EVENTS = 64;
     int m_iFd = SFD_UNAVAILABLE;
@@ -81,18 +82,28 @@ std::string SerialPort::read() { return pimpl()->read(); }
 void SerialPort::SerialPortImpl::clean(){
     if(m_iFd != SFD_UNAVAILABLE)
         close(m_iFd);
-}
-
-void SerialPort::SerialPortImpl::clean(pid_t process){
-    kill(process, SIGKILL);
+    if(m_iEpollFd != SFD_UNAVAILABLE)
+        close(m_iEpollFd);
+    if(m_pidChildProcess)
+        kill(*m_pidChildProcess, SIGTERM);
+    munmap(m_pidChildProcess, sizeof(*m_pidChildProcess));
 }
 
 //###################################################################################################
 // Serial Port Initzialization. (Constructor)
 //###################################################################################################
 
-SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base, PortUtils::Serial::BaudRate baudRate): m_spBase(base) {}
-SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base, PortUtils::Serial::PortConfig config): m_spBase(base) {}
+SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base, PortUtils::Serial::BaudRate baudRate): m_spBase(base) {
+    std::string err = "";
+    m_pidChildProcess = shalloc<pid_t>("child", err);
+    if(err != "") LERROR(err.c_str());
+}
+
+SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base, PortUtils::Serial::PortConfig config): m_spBase(base) {
+    std::string err = "";
+    m_pidChildProcess = shalloc<pid_t>("child", err);
+    if(err != "") LERROR(err.c_str());
+}
 
 //###################################################################################################
 // Serial Port Cleanup. (Destructor)
@@ -172,8 +183,8 @@ int SerialPort::SerialPortImpl::connect() {
     sleep(2);
     
     if(fork() == 0) {
-        pid_t childId = getpid();
-        LDEBUG("pid(%d) Created child process.", childId);
+        *m_pidChildProcess = getpid();
+        LDEBUG("pid(%d) Created child process.", m_pidChildProcess);
 
         struct epoll_event event;
         struct epoll_event* events;
@@ -188,15 +199,11 @@ int SerialPort::SerialPortImpl::connect() {
 
         int n;
         struct DataBlob* buffer = new DataBlob;
-        struct DataBlob* readBuffer = new DataBlob;
         for(;;) {
             if((n = epoll_wait(m_iEpollFd, events, MAX_EVENTS, 5000)) > 0) {
                 if((length = ::read(events[0].data.fd, buffer->m_carrRawData, sizeof(buffer->m_carrRawData))) > 0) {
-                    //buffer.m_carrRawData[length] = 0;
                     m_spBase->m_bqBuffer->write(*buffer);
-                    LINFO("epoll: %s\n", buffer->m_carrRawData);
-                    m_spBase->m_bqBuffer->read(*readBuffer);
-                    LINFO("epoll: buffer: %s\n", readBuffer->m_carrRawData);
+                    LINFO("epoll: buffer: %s\n", buffer->m_carrRawData);
                 } else LINFO("No data within 5 seconds. \n");
             }
         }
