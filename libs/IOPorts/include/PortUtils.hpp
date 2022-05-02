@@ -18,7 +18,7 @@ namespace PortUtils {
 
 	////////////////////////////////////////////////
 	#ifdef WINDOWS_PLATFORM //WINDOWS_PLATFORM
-	#include <Windows.h>
+	#include <windows.h>
 
 	constexpr std::string_view PortTypeName[] = {
     	[PortType::SERIAL] = "COM";
@@ -35,7 +35,7 @@ namespace PortUtils {
 	#elif defined(LINUX_PLATFORM) // LINUX_PLATFORM.
 
 	constexpr std::string_view PortTypeName[] = {
-    	[PortType::SERIAL] = "ttyUSB";
+    	[PortType::SERIAL] = "ttyUSB"
 	};
 
 	////////////////////////////////////////////////
@@ -47,7 +47,6 @@ namespace PortUtils {
 
 	#endif
 
-	// Generate an appropriate name for the shared memory id based of the com port name.
 	LIBEXP static std::vector<std::string> getAvailablePortsName(PortType type, std::string deviceDirPath) {
 	    std::vector<std::string> ports;
 	    for(const auto& entry : std::filesystem::directory_iterator(deviceDirPath)) {
@@ -59,6 +58,7 @@ namespace PortUtils {
 	    return ports;
 	}
 
+	// Generate an appropriate name for the shared memory id based of the com port name.
 	LIBEXP static std::string shMemPortNameParser(std::string name, std::string delimiter) {
 		std::vector<char*> vec;
     	char* token = strtok(const_cast<char*>(name.c_str()), delimiter.c_str());
@@ -69,8 +69,8 @@ namespace PortUtils {
 		return std::string(vec.back()).insert(0, "/");
 	}
 
-	LIBEXP namespace Serial {
-		typedef enum State {
+	namespace Serial {
+		LIBEXP typedef enum State {
 			SS_Unknown,
 			SS_UnInit,
 			SS_Init,
@@ -78,7 +78,7 @@ namespace PortUtils {
 			SS_Stopped
 		} SerialState;
 
-		typedef enum BaudRate {
+		LIBEXP typedef enum BaudRate {
     		B50 = 50,
     		B75 = 75,
     		B110 = 110,
@@ -96,11 +96,11 @@ namespace PortUtils {
     		B38400 = 38400
 		} SerialBaudRate;
 
-		constexpr SerialBaudRate DEFAULT_COM_RATE = BaudRate::B9600;
-		constexpr int DEFAULT_COM_BITS = 8;
-		constexpr int DEFAULT_PARITY_BITS = 1;
+		LIBEXP constexpr SerialBaudRate DEFAULT_COM_RATE = BaudRate::B9600;
+		LIBEXP constexpr int DEFAULT_COM_BITS = 8;
+		LIBEXP constexpr int DEFAULT_PARITY_BITS = 1;
 
-		typedef struct PortConfig {
+		LIBEXP typedef struct PortConfig {
 			SerialBaudRate nComRate = DEFAULT_COM_RATE;
 			unsigned nComBits = DEFAULT_COM_BITS;
 			unsigned byStopBits;

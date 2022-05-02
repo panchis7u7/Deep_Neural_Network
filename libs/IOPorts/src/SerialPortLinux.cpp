@@ -13,6 +13,7 @@
 #include <include/SharedAlloc.hpp>
 #include <include/BufferQueue.hpp>
 #include <include/SharedMessage.hpp>
+#include <include/PortUtils.hpp>
 // Serial configuration.
 #include <signal.h>
 #include <termios.h>
@@ -26,7 +27,8 @@
 class SerialPort::SerialPortImpl
 {
 public:
-    SerialPortImpl(SerialPort* base);
+    SerialPortImpl(SerialPort* base, PortUtils::Serial::BaudRate baudRate = PortUtils::Serial::DEFAULT_COM_RATE);
+    SerialPortImpl(SerialPort* base, PortUtils::Serial::PortConfig config);
     ~SerialPortImpl();
 
     void clean();
@@ -48,19 +50,22 @@ private:
 // Platform independent abstraction definitions.
 //###################################################################################################
 
-SerialPort::SerialPort(std::string com_port) : com_port(com_port), m_pimpl(std::make_unique<SerialPortImpl>(this)) {
+SerialPort::SerialPort(std::string comPort, PortUtils::Serial::BaudRate baudRate) : comPort(comPort), m_pimpl(std::make_unique<SerialPortImpl>(this, baudRate)) {
     std::string err = "";
+    std::string shmemName = PortUtils::shMemPortNameParser(comPort, "/");
 
-    // Generate an appropriate name for the shared memory id based of the com port name.
-    std::vector<char*> vec;
-    char* token = strtok(const_cast<char*>(com_port.c_str()), "/");
-    while(token != nullptr) {
-        vec.push_back(token);
-        token = strtok(nullptr, "/");
-    }
-
-    m_bqBuffer = new BufferQueue(12, std::string(vec.back()).insert(0, "/"), err);
+    m_bqBuffer = new BufferQueue(12, shmemName, err);
     if (err != "") LERROR(err.c_str());
+    config.nComRate = baudRate;
+}
+
+SerialPort::SerialPort(std::string comPort, PortUtils::Serial::PortConfig config): comPort(comPort), m_pimpl(std::make_unique<SerialPortImpl>(this, config)) {
+    std::string err = "";
+    std::string shmemName = PortUtils::shMemPortNameParser(comPort, "/");
+
+    m_bqBuffer = new BufferQueue(12, shmemName, err);
+    if (err != "") LERROR(err.c_str());
+    this->config = config;
 }
 
 SerialPort::~SerialPort() { delete m_bqBuffer; }
@@ -86,9 +91,8 @@ void SerialPort::SerialPortImpl::clean(pid_t process){
 // Serial Port Initzialization. (Constructor)
 //###################################################################################################
 
-SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base){
-    m_spBase = base;
-}
+SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base, PortUtils::Serial::BaudRate baudRate): m_spBase(base) {}
+SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base, PortUtils::Serial::PortConfig config): m_spBase(base) {}
 
 //###################################################################################################
 // Serial Port Cleanup. (Destructor)
@@ -110,8 +114,8 @@ void SerialPort::SerialPortImpl::flush(){
 
 int SerialPort::SerialPortImpl::connect() {
     LINFO("Prepend");
-    if((m_iFd = open(m_spBase->com_port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY)) < 0){
-        LERROR("pid(%d) Error opening serial port: %s", getpid(), m_spBase->com_port.c_str());
+    if((m_iFd = open(m_spBase->comPort.c_str(), O_RDWR | O_NOCTTY | O_NDELAY)) < 0){
+        LERROR("pid(%d) Error opening serial port: %s", getpid(), m_spBase->comPort.c_str());
         return -1;
     }
 
@@ -184,12 +188,15 @@ int SerialPort::SerialPortImpl::connect() {
 
         int n;
         struct DataBlob* buffer = new DataBlob;
+        struct DataBlob* readBuffer = new DataBlob;
         for(;;) {
             if((n = epoll_wait(m_iEpollFd, events, MAX_EVENTS, 5000)) > 0) {
                 if((length = ::read(events[0].data.fd, buffer->m_carrRawData, sizeof(buffer->m_carrRawData))) > 0) {
                     //buffer.m_carrRawData[length] = 0;
                     m_spBase->m_bqBuffer->write(*buffer);
                     LINFO("epoll: %s\n", buffer->m_carrRawData);
+                    m_spBase->m_bqBuffer->read(*readBuffer);
+                    LINFO("epoll: buffer: %s\n", readBuffer->m_carrRawData);
                 } else LINFO("No data within 5 seconds. \n");
             }
         }
@@ -224,17 +231,8 @@ std::size_t SerialPort::SerialPortImpl::write(void *data, std::size_t data_len)
 // Get available serial ports on the machine.
 //###################################################################################################
 
-std::vector<std::string> SerialPort::getAvailablePorts()
-{
-    std::string path = "/dev";
-    std::vector<std::string> ports;
-    for(const auto& entry : std::filesystem::directory_iterator(path)) {
-        if(entry.path().string().find("USB") != std::string::npos) {
-            ports.push_back(entry.path());
-            LINFO("%s", entry.path().string().c_str());
-        }
-    }
-    return ports;
+std::vector<std::string> SerialPort::getAvailablePorts() {
+    return PortUtils::getAvailablePortsName(PortUtils::PortType::SERIAL, "/dev");
 }
 
 

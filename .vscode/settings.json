@@ -90,7 +90,8 @@
         "locale": "cpp",
         "stack": "cpp",
         "codecvt": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "future": "cpp"
     },
     "cmake.configureOnOpen": false,
     "cmake.default.buildDirectory": "${workspaceFolder}/out/build/${buildType}/${env:OS}",
