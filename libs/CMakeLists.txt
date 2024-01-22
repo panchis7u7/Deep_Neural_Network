@@ -1,6 +1,6 @@
 include("${CMAKE_SOURCE_DIR}/libs/RapidJson/RapidJson.cmake")
 include_directories(${RAPIDJSON_INCLUDE_DIR})
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/sdplib/include")
+# include_directories("${CMAKE_CURRENT_SOURCE_DIR}/sdplib/include")
 
 
 # ###################################################################################################
@@ -21,26 +21,7 @@ FetchContent_MakeAvailable(googletest)
 # spdlog.
 # ###################################################################################################
 
-find_package(Git QUIET)
-if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
-# Update submodules as needed
-    option(GIT_SUBMODULE "Check submodules during build" ON)
-    if(GIT_SUBMODULE)
-        message(STATUS "Submodule update")
-        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
-                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                        RESULT_VARIABLE GIT_SUBMOD_RESULT)
-        if(NOT GIT_SUBMOD_RESULT EQUAL "0")
-            message(FATAL_ERROR "git submodule update --init --recursive failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
-        endif()
-    endif()
-endif()
-
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/libs/sdplog/CMakeLists.txt")
-    message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
-endif()
-
-add_subdirectory(spdlog)
+# add_subdirectory(spdlog)
 
 # ###################################################################################################
 # spdlog.
@@ -99,5 +80,5 @@ target_include_directories(Matrix PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Matrix")
 target_include_directories(NeuralNet PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/NeuralNetwork")
 target_include_directories(IPCom PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/IPCom")
 target_include_directories(IOPorts PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/IOPorts")
-target_include_directories(spdlog PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/sdplog/include")
+# target_include_directories(spdlog PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/sdplog/include")
 target_include_directories(RapidXML INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/RapidXML")
