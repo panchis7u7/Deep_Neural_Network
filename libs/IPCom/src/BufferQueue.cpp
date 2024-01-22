@@ -1,7 +1,7 @@
 #include <include/BufferQueue.hpp>
 #include <include/LockGuard.hpp>
 #include <include/SharedMessage.hpp>
-#include <include/Logger.hpp>
+#include "spdlog/spdlog.h"
 #include <sys/mman.h>
 #include <assert.h>
 
@@ -44,8 +44,8 @@ bool BufferQueue::try_read(DataBlob& d){
         // This only happen if the queue warp around.
         if (!cellPtr->m_lWriterLock.tryLock()) {
             cellPtr->m_sSem.decrease();
-            LINFO("try_read|someone is writing");
-            LINFO("try_read|m.test_num :%f", cellPtr->m_dgData.m_dCheckSum);
+            spdlog::info("try_read|someone is writing");
+            spdlog::info("try_read|m.test_num :{}", cellPtr->m_dgData.m_dCheckSum);
             return false;
         } else {
             // Unlock it since I lock the cell in if statement.

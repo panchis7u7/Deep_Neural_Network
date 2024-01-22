@@ -1,7 +1,7 @@
 #include <include/SharedBufferQueue.hpp>
 #include <include/SharedMessage.hpp>
 #include <include/LockGuard.hpp>
-#include <include/Logger.hpp>
+#include "spdlog/spdlog.h"
 #include <assert.h>
 
 SharedBufferQueue::SharedBufferQueue(unsigned QueueLength): m_uQueueLength(QueueLength){
@@ -46,7 +46,7 @@ bool SharedBufferQueue::try_write(const DataBlob& DataBlob){
 bool SharedBufferQueue::write(const DataBlob& DataBlob){
     while (!try_write(DataBlob)) {
         // Unlikely. Happends when the queue warp around.
-        LDEBUG("write|spinning");
+        spdlog::debug("write|spinning");
         usleep(1000);
     }
     return true;

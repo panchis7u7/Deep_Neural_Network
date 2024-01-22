@@ -4,7 +4,7 @@
 #include <vector>
 #include <filesystem>
 #include <cstring>
-#include <include/Logger.hpp>
+#include "spdlog/spdlog.h"
 
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 // Port utility namespace.
@@ -52,7 +52,7 @@ namespace PortUtils {
 	    for(const auto& entry : std::filesystem::directory_iterator(deviceDirPath)) {
 	        if(entry.path().string().find(PortTypeName[PortType::SERIAL]) != std::string::npos) {
 	            ports.push_back(entry.path());
-	            LINFO("%s", entry.path().string().c_str());
+	            spdlog::info("{}", entry.path().string().c_str());
 	        }
 	    }
 	    return ports;

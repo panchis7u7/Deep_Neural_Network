@@ -9,8 +9,11 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 enable_testing()
 
-#Compilador a usar.
+# Compiler to use.
 message ("${CMAKE_CXX_COMPILER}")
+
+# Validation for GUI based compilation.
+option(GUI_COMPILE "Use for GUI compilation" OFF) #OFF by default
 
 if (CMAKE_BUILD_TYPE EQUAL "Debug")
     message(STATUS "Debug mode")

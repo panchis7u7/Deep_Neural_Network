@@ -1,13 +1,27 @@
 include("${CMAKE_SOURCE_DIR}/libs/RapidJson/RapidJson.cmake")
 include_directories(${RAPIDJSON_INCLUDE_DIR})
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/sdplib/include")
 
-add_subdirectory(googletest)
 
-add_library( 
-    Logger SHARED
-    Logger/src/Logger.cpp
-    Logger/include/Logger.hpp
+# ###################################################################################################
+# Google Test.
+# ###################################################################################################
+include(FetchContent)
+
+FetchContent_Declare( 
+    googletest
+    URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
 )
+
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+# ###################################################################################################
+# spdlog.
+# ###################################################################################################
+
+add_subdirectory(spdlog)
 
 add_library(
     Matrix SHARED
@@ -57,9 +71,10 @@ add_library( RapidXML INTERFACE )
 #)
 
 include_directories(${RAPIDJSON_INCLUDE_DIR})
-target_include_directories(Logger PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Logger")
+
 target_include_directories(Matrix PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Matrix")
 target_include_directories(NeuralNet PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/NeuralNetwork")
 target_include_directories(IPCom PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/IPCom")
 target_include_directories(IOPorts PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/IOPorts")
+target_include_directories(spdlog PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/sdplog/include")
 target_include_directories(RapidXML INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/RapidXML")

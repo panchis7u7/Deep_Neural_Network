@@ -17,6 +17,8 @@ runLinux:
 	out/build/Release/Linux/NeuralNetworkd
 rrtLinux:
 	out/build/Release/Linux/NeuralNetwork_test
+cleanLinux:
+	rm -r out/build/Release/Linux/
 
 # MacOS build-related commands.
 # ===================================================================
@@ -42,4 +44,7 @@ rdtMac:
 runMac:
 	out/build/Release/MacOS/NeuralNetworkd
 rrtMac:
-	out/build/Release/MacOS/NeuralNetwork_test	
+	out/build/Release/MacOS/NeuralNetwork_test
+cleanMac:
+	rm -r out/build/Release/MacOS/
+	rm -r out/build/Debug/MacOS/

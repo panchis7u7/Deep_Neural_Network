@@ -1,42 +1,56 @@
-add_dependencies(IOPorts Logger)
-add_dependencies(IPCom Logger RapidXML RapidJson)
-add_dependencies(NeuralNet Logger Matrix)
+add_dependencies(IPCom RapidXML RapidJson spdlog::spdlog)
+add_dependencies(NeuralNet Matrix spdlog::spdlog)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
-if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-    message("Linux Operating System Detected!")
-    set(CMAKE_PREFIX_PATH "/home/panchis/Qt/6.2.3/gcc_64/lib/cmake/")
-elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
-    message("Windows Operating System Detected!")
-    set(CMAKE_PREFIX_PATH "C:\\Qt\\6.2.3\\msvc2019_64\\lib\\cmake\\")
-elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
-    message("MacOS Operating System Detected!")
-    set(CMAKE_PREFIX_PATH "/Users/semadrig/Qt/6.2.3/macos/lib/cmake/")
-endif()
+# Check for GUI compilation flag.
+if(GUI_COMPILE)
 
-message("Looking for QT...")
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
+    set(CMAKE_AUTOMOC ON)
+    set(CMAKE_AUTORCC ON)
+    set(CMAKE_AUTOUIC ON)
 
-set(PROJECT_SOURCES
-        main.cpp
-        MainWindow.cpp
-        include/MainWindow.hpp
-        ui/MainWindow.ui
-)
+    if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+        message("Linux Operating System Detected!")
+        set(CMAKE_PREFIX_PATH "/home/panchis/Qt/6.2.3/gcc_64/lib/cmake/")
+    elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
+        message("Windows Operating System Detected!")
+        set(CMAKE_PREFIX_PATH "C:\\Qt\\6.2.3\\msvc2019_64\\lib\\cmake\\")
+    elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+        message("MacOS Operating System Detected!")
+        set(CMAKE_PREFIX_PATH "/Users/semadrig/Qt/6.2.3/macos/lib/cmake/")
+    endif()
 
-if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(${PROJECT_NAME}
-        MANUAL_FINALIZATION
-        ${PROJECT_SOURCES}
+    message("Looking for QT...")
+    find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
+    find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
+
+    set(PROJECT_SOURCES
+            main.cpp
+            MainWindow.cpp
+            include/MainWindow.hpp
+            ui/MainWindow.ui
     )
-endif()
 
-#add_executable(${PROJECT_NAME} main.cpp)
+    if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+        qt_add_executable(${PROJECT_NAME}
+            MANUAL_FINALIZATION
+            ${PROJECT_SOURCES}
+        )
+    endif()
+    
+    # Assign the widgets to link it with the project later if defined.
+    set(QT_WIDGETS Qt${QT_VERSION_MAJOR}::Widgets)
+
+# Perform CLI-based compilation.
+else()
+
+    set(PROJECT_SOURCES main.cpp)
+    add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
+    target_include_directories(${PROJECT_NAME} PUBLIC "../libs/spdlog/include/")
+
+endif()
+unset(GUI_COMPILE CACHE)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
 
@@ -48,15 +62,15 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
-target_link_libraries(IPCom PRIVATE Logger)
-target_link_libraries(IOPorts PRIVATE Logger IPCom)
-target_link_libraries(NeuralNet PRIVATE Logger Matrix)
+target_link_libraries(IPCom PRIVATE spdlog::spdlog)
+target_link_libraries(IOPorts PRIVATE IPCom spdlog::spdlog)
+target_link_libraries(NeuralNet PRIVATE Matrix spdlog::spdlog)
 target_link_libraries(${PROJECT_NAME} PRIVATE 
-    Qt${QT_VERSION_MAJOR}::Widgets 
+    ${QT_WIDGETS} 
     NeuralNet 
     Matrix 
     IPCom
     IOPorts
-    RapidXML 
-    Logger
+    RapidXML
+    spdlog::spdlog
 )

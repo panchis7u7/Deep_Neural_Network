@@ -8,7 +8,6 @@
 
 #include <filesystem>
 #include <cstring>
-#include <include/Logger.hpp>
 #include <include/SerialPort.hpp>
 #include <include/SharedAlloc.hpp>
 #include <include/BufferQueue.hpp>
@@ -56,7 +55,7 @@ SerialPort::SerialPort(std::string comPort, PortUtils::Serial::BaudRate baudRate
     std::string shmemName = PortUtils::shMemPortNameParser(comPort, "/");
 
     m_bqBuffer = new BufferQueue(12, shmemName, err);
-    if (err != "") LERROR(err.c_str());
+    if (err != "") spdlog::error(err.c_str());
     config.nComRate = baudRate;
 }
 
@@ -65,7 +64,7 @@ SerialPort::SerialPort(std::string comPort, PortUtils::Serial::PortConfig config
     std::string shmemName = PortUtils::shMemPortNameParser(comPort, "/");
 
     m_bqBuffer = new BufferQueue(12, shmemName, err);
-    if (err != "") LERROR(err.c_str());
+    if (err != "") spdlog::error(err.c_str());
     this->config = config;
 }
 
@@ -96,13 +95,13 @@ void SerialPort::SerialPortImpl::clean(){
 SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base, PortUtils::Serial::BaudRate baudRate): m_spBase(base) {
     std::string err = "";
     m_pidChildProcess = shalloc<pid_t>("child", err);
-    if(err != "") LERROR(err.c_str());
+    if(err != "") spdlog::error(err.c_str());
 }
 
 SerialPort::SerialPortImpl::SerialPortImpl(SerialPort* base, PortUtils::Serial::PortConfig config): m_spBase(base) {
     std::string err = "";
     m_pidChildProcess = shalloc<pid_t>("child", err);
-    if(err != "") LERROR(err.c_str());
+    if(err != "") spdlog::error(err.c_str());
 }
 
 //###################################################################################################
@@ -126,7 +125,7 @@ void SerialPort::SerialPortImpl::flush(){
 int SerialPort::SerialPortImpl::connect() {
     LINFO("Prepend");
     if((m_iFd = open(m_spBase->comPort.c_str(), O_RDWR | O_NOCTTY | O_NDELAY)) < 0){
-        LERROR("pid(%d) Error opening serial port: %s", getpid(), m_spBase->comPort.c_str());
+        spdlog::error("pid({}) Error opening serial port: {}", getpid(), m_spBase->comPort.c_str());
         return -1;
     }
 
@@ -141,7 +140,7 @@ int SerialPort::SerialPortImpl::connect() {
     // must have been initialized with a call to tcgetattr() overwise behaviour
     // is undefined.
     if(tcgetattr(m_iFd, &tty) != 0){
-         LERROR("pid(%d) From tcgetattr: %s", getpid(), strerror(errno));
+         spdlog::error("pid({}) From tcgetattr: {}", getpid(), strerror(errno));
          clean();
          return -1;
     }
@@ -175,7 +174,7 @@ int SerialPort::SerialPortImpl::connect() {
 
     // Save tty settings, also checking for error
     if (tcsetattr(m_iFd, TCSANOW, &tty) != 0) {
-        LERROR("pid(%d) From tcsetattr: %s", getpid(), strerror(errno));
+        spdlog::error("pid({}) From tcsetattr: {}", getpid(), strerror(errno));
         clean();
         return -1;
     }
@@ -184,7 +183,7 @@ int SerialPort::SerialPortImpl::connect() {
     
     if(fork() == 0) {
         *m_pidChildProcess = getpid();
-        LDEBUG("pid(%d) Created child process.", m_pidChildProcess);
+        spdlog::debug("pid({}) Created child process.", m_pidChildProcess);
 
         struct epoll_event event;
         struct epoll_event* events;
@@ -203,8 +202,8 @@ int SerialPort::SerialPortImpl::connect() {
             if((n = epoll_wait(m_iEpollFd, events, MAX_EVENTS, 5000)) > 0) {
                 if((length = ::read(events[0].data.fd, buffer->m_carrRawData, sizeof(buffer->m_carrRawData))) > 0) {
                     m_spBase->m_bqBuffer->write(*buffer);
-                    LINFO("epoll: buffer: %s\n", buffer->m_carrRawData);
-                } else LINFO("No data within 5 seconds. \n");
+                    spdlog::info("epoll: buffer: {}\n", buffer->m_carrRawData);
+                } else spdlog::info("No data within 5 seconds. \n");
             }
         }
 

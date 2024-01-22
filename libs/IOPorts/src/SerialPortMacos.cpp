@@ -8,7 +8,7 @@
 #include <cstring>
 #include <iostream>
 #include <vector>
-#include <include/Logger.hpp>
+#include <spdlog/spdlog.h>
 #include <include/SerialPort.hpp>   
 #include <include/BufferQueue.hpp>
 #include <include/SharedMessage.hpp>
@@ -56,7 +56,7 @@ SerialPort::SerialPort(std::string comPort, PortUtils::Serial::BaudRate baudRate
     std::string err = "";
     std::string bufferName = PortUtils::shMemPortNameParser(comPort, "/");
     m_bqBuffer = new BufferQueue(12, bufferName, err);
-    if (err != "") LERROR(err.c_str());
+    if (err != "") spdlog::error(err.c_str());
     config = PortUtils::Serial::PortConfig();
     config.nComRate = baudRate;
 }
@@ -65,7 +65,7 @@ SerialPort::SerialPort(std::string comPort, PortUtils::Serial::PortConfig config
     std::string err = "";
     std::string bufferName = PortUtils::shMemPortNameParser(comPort, "/");
     m_bqBuffer = new BufferQueue(12, bufferName, err);
-    if (err != "") LERROR(err.c_str());
+    if (err != "") spdlog::error(err.c_str());
     this->config = config;
 }
 
@@ -119,7 +119,7 @@ void SerialPort::SerialPortImpl::flush() {
 
 int SerialPort::SerialPortImpl::connect() {
     if((m_iFd = open(m_spBase->comPort.c_str(), O_RDWR | O_NOCTTY | O_NDELAY)) < 0){
-        LERROR("pid(%d) Error opening serial port: %s", getpid(), m_spBase->comPort.c_str());
+        spdlog::error("pid({}) Error opening serial port: {}",  getpid(), m_spBase->comPort.c_str());
         clean();
         return(-1);
     }
@@ -135,7 +135,7 @@ int SerialPort::SerialPortImpl::connect() {
     // must have been initialized with a call to tcgetattr() overwise behaviour
     // is undefined.
     if(tcgetattr(m_iFd, &tty) != 0) {
-        LERROR("pid(%d) From tcgetattr: %s", getpid(), strerror(errno));
+        spdlog::error("pid({}) From tcgetattr: {}",  getpid(), m_spBase->comPort.c_str());
         clean();
         return -1;
     }
@@ -169,7 +169,7 @@ int SerialPort::SerialPortImpl::connect() {
 
     // Save tty settings, also checking for error
     if (tcsetattr(m_iFd, TCSANOW, &tty) != 0) {
-        LERROR("pid(%d) From tcsetattr: %s", getpid(), strerror(errno));
+        spdlog::error("pid({}) From tcsetattr: {}", getpid(), strerror(errno));
         clean();
         return -1;
     }
@@ -179,7 +179,7 @@ int SerialPort::SerialPortImpl::connect() {
     // Spawn process for serial buffer check.
     if(fork() == 0){
         pid_t childId = getpid();
-        LDEBUG("pid(%d) Created child process.", childId);
+        spdlog::debug("pid({}) Created child process.", childId);
 
         int kq;                 // kqueue file descriptor.
         struct kevent m_kRead;  // Event we want to monitor.
@@ -188,7 +188,7 @@ int SerialPort::SerialPortImpl::connect() {
         // Create a new kernel event queue;
         if((kq = kqueue()) < 0) {
             //std::cerr << "Error: " << errno << " from kqueue: " << strerror(errno) << "\n";
-            LERROR("pid(%d) Error %d from kqueue: %s", errno, strerror(errno));
+            spdlog::error("pid({}) Error {} from kqueue: {}", errno, strerror(errno));
             clean(childId);
         }
 
@@ -198,11 +198,11 @@ int SerialPort::SerialPortImpl::connect() {
         // Attach event to the kqueue.
         int ret = kevent(kq, &m_kRead, 1, NULL, 0, NULL);
         if (ret < 0){
-            LERROR("pid(%d) Kevent failed: %s", strerror(errno));
+            spdlog::error("pid({}) Kevent failed: {}", strerror(errno));
             clean(childId);
             return -1;
         } else if (m_kRead.flags & EV_ERROR){
-	        LERROR("pid(%d) Kevent failed: %s", strerror(errno));
+	        spdlog::error("pid({}) Kevent failed: {}", strerror(errno));
             clean(childId);
             return -1;
         }
@@ -215,11 +215,11 @@ int SerialPort::SerialPortImpl::connect() {
 	        /*	Sleep until something happens. */
 	        ret = kevent(kq, NULL, 0, &m_kEvent, 1, &sleep_time);
 	        if	(ret == -1) {
-                LERROR("pid(%d) Kevent wait: %s", strerror(errno));
+                spdlog::error("pid({}) Kevent wait: {}", strerror(errno));
 		        clean(childId);
                 return -1;
 	        } else if (ret > 0) {
-                LINFO("pid(%d) Recieved data on Serial Device: %s", m_spBase->comPort.c_str());
+                spdlog::info("pid({}) Recieved data on Serial Device: {}", m_spBase->comPort.c_str());
                 std::cout << read() << "\n";
 	        }
 	    }
@@ -244,11 +244,11 @@ std::string SerialPort::SerialPortImpl::read()
     //char buf[255] = {0};
     struct DataBlob* buffer = new DataBlob();
     if(::read(m_iFd, buffer->m_carrRawData, sizeof(buffer->m_carrRawData)) < 0) {
-        LERROR("pid(%d) Error reading from device: %s", getpid(), strerror(errno));
+        spdlog::error("pid({}) Error reading from device: {}", getpid(), strerror(errno));
         return "";
     }
     m_spBase->m_bqBuffer->write(*buffer);
-    LDEBUG("kevent: %s", buffer->m_carrRawData);
+    spdlog::debug("kevent: {}", buffer->m_carrRawData);
     return std::string((char*)buffer->m_carrRawData);
 }
 
@@ -259,7 +259,7 @@ std::string SerialPort::SerialPortImpl::read()
 std::size_t SerialPort::SerialPortImpl::write(void *data, std::size_t data_len)
 {
     if (::write(m_iFd, (char*)data, data_len) < 0) {
-        LERROR("pid(%d) Error writing to device: %s", getpid(), strerror(errno));
+        spdlog::error("pid({}) Error writing to device: {}", getpid(), strerror(errno));
         return 0;
     }
     return data_len;
