@@ -47,7 +47,7 @@ else()
 
     set(PROJECT_SOURCES main.cpp)
     add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
-    target_include_directories(${PROJECT_NAME} PUBLIC "../libs/spdlog/include/")
+    target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/spdlog/include")
 
 endif()
 unset(GUI_COMPILE CACHE)
