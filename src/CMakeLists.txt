@@ -64,6 +64,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 target_link_libraries(IPCom PRIVATE spdlog::spdlog)
 target_link_libraries(IOPorts PRIVATE IPCom spdlog::spdlog)
+target_link_libraries(Matrix PRIVATE tabulate)
 target_link_libraries(NeuralNet PRIVATE Matrix spdlog::spdlog)
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     ${QT_WIDGETS} 

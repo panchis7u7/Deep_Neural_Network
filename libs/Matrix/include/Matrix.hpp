@@ -21,6 +21,7 @@ namespace voxel
 		Matrix(std::vector<T> &vec);
 		~Matrix();
 		void print();
+		void setDescription(std::string);
 		void add(T addend);
 		void add(Matrix<T> *addend);
 		void subtract(Matrix<T> *minuend);
@@ -217,6 +218,7 @@ namespace voxel
 		unsigned rows;
 		unsigned columns;
 		T **alloc(uint_fast64_t rows, uint_fast64_t columns);
+		std::string description;
 
 	protected:
 	};

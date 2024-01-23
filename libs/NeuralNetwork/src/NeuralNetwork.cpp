@@ -21,7 +21,9 @@ NeuralNetwork<T>::NeuralNetwork(unsigned inputLayerNodes, unsigned hiddenLayerNo
 	// Create matrices based upon the number of nodes supplied.
 	/********************************************************************************/
 	m_ihWeights = new Matrix<T>(m_uHiddenLayerNodes, m_uInputLayerNodes);
+	m_ihWeights->setDescription("Input-Hidden Weights");
 	m_hoWeights = new Matrix<T>(m_uOutputLayerNodes, m_uHiddenLayerNodes);
+	m_ihWeights->setDescription("Hidden-Output Weights");
 
 	// Initialize random values into the weights matrices.
 	/********************************************************************************/
@@ -169,12 +171,8 @@ void NeuralNetwork<T>::train(std::vector<T> *vInputs, std::vector<T> *vAnswers)
 template <typename T>
 inline void NeuralNetwork<T>::printWeights()
 {
-	std::cout << "---- [Input - Hidden Layer Weights] ----"
-			  << "\n\n"
-			  << m_ihWeights << std::endl;
-	std::cout << "---- [Hidden - Output Layer Weights] ----"
-			  << "\n\n"
-			  << m_hoWeights << std::endl;
+	this->m_ihWeights->print();
+	this->m_hoWeights->print();
 }
 
 /*################################################################################################*/
@@ -208,7 +206,9 @@ DeepNeuralNetwork<T>::DeepNeuralNetwork(uint_fast64_t inputLayerNodes, std::vect
 	{
 		m_vGradients.push_back(nullptr);
 		m_vDeltas.push_back(nullptr);
-		m_vHWeights.push_back(new Matrix<T>(hiddenLayerNodes[i + 1], hiddenLayerNodes[i]));
+		Matrix<T>* nMatrix = new Matrix<T>(hiddenLayerNodes[i + 1], hiddenLayerNodes[i]);
+		nMatrix->setDescription("Hidden Layers " + std::to_string(i) + " to " + std::to_string(i+1));
+		m_vHWeights.push_back(nMatrix);
 		m_vHWeights.at(i)->randomize();
 
 		m_vErrors.push_back(nullptr);
@@ -218,7 +218,9 @@ DeepNeuralNetwork<T>::DeepNeuralNetwork(uint_fast64_t inputLayerNodes, std::vect
 	}
 
 	m_vHiddenOutputWeights.push_back(nullptr);
-	m_vBiases.push_back(new Matrix<T>(hiddenLayerNodes[m_uHiddenLayerSize - 1], 1));
+	Matrix<T>* hoMatrix = new Matrix<T>(hiddenLayerNodes[m_uHiddenLayerSize - 1], 1);
+	hoMatrix->setDescription("Hidden Layer " + std::to_string(m_uHiddenLayerSize - 1) + " to output Layer");
+	m_vBiases.push_back(hoMatrix);
 	m_vBiases[(m_uHiddenLayerSize - 1)]->randomize();
 	m_vErrors.push_back(nullptr);
 
@@ -410,27 +412,12 @@ void DeepNeuralNetwork<T>::train(std::vector<T> *vGuesses, std::vector<T> *vAnsw
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-inline void DeepNeuralNetwork<T>::printWeights()
-{
-	std::cout << "---- [Input - Hidden[0] Layer Weights] ----"
-			  << "\n\n"
-			  << this->m_ihWeights << std::endl;
-	std::cout << "---- [Hidden (n - n+1) Layer Weights] ----"
-			  << "\n\n";
-	int layer = 0;
-
-	// nth Hidden wieghts matrix print.
-	/********************************************************************************/
-	for (auto nth_hidden_weights : this->m_vHWeights)
-	{
-		std::cout << "#### Layer " << layer << " ####"
-				  << "\n\n"
-				  << nth_hidden_weights;
-		layer++;
+inline void DeepNeuralNetwork<T>::printWeights() {
+	this->m_ihWeights->print();
+	for(auto weight : this->m_vHWeights) {
+		weight->print();
 	}
-	std::cout << "---- [Hidden[n-1] - Output Layer Weights] ----"
-			  << "\n\n"
-			  << this->m_hoWeights << std::endl;
+	this->m_hoWeights->print();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

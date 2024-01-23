@@ -1,4 +1,5 @@
 #include <include/Matrix.hpp>
+#include <tabulate/table.hpp>
 
 using namespace voxel;
 
@@ -55,19 +56,33 @@ Matrix<T>::~Matrix()
 }
 
 template <typename T>
-void Matrix<T>::print()
-{
-	for (uint_fast64_t i = 0; i < this->rows; i++)
-	{
-		std::cout << "|";
-		for (uint_fast64_t j = 0; j < this->columns; j++)
-		{
-			std::cout << "  " << this->data[i][j] << "  ";
+void Matrix<T>::print() {
+	tabulate::Table matrix_table;
+	std::vector<variant<std::string, const char *, string_view, tabulate::Table>> row(this->columns);
+	std::fill(row.begin(), row.end(), "");
+
+	for (uint_fast64_t i = 0; i < this->rows; i++) {
+		for (uint_fast64_t j = 0; j < this->columns; j++) {
+			row.at(j) = std::to_string(this->data[i][j]);
 		}
-		std::cout << "|";
-		std::cout << std::endl;
+		matrix_table.add_row((const std::vector<variant<std::string, const char *, string_view, tabulate::Table>>)row);
 	}
-	std::cout << std::endl;
+
+	if(!this->description.empty()) {
+		tabulate::Table title_table;
+		title_table.add_row(tabulate::Table::Row_t{this->description});
+		title_table.column(0).format().font_align(tabulate::FontAlign::center);
+		title_table.add_row(tabulate::Table::Row_t{matrix_table});
+		std::cout << title_table << std::endl;
+
+	} else {
+		std::cout << matrix_table << std::endl;
+	}
+}
+
+template <typename T>
+void Matrix<T>::setDescription(std::string description) {
+	this->description = description;
 }
 
 template <typename T>
