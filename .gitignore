@@ -22,3 +22,5 @@ x64/
 *.svclog
 *.scc
 CMakeLists.txt.user
+spdlog/
+tabulate/

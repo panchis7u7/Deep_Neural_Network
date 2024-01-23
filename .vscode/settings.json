@@ -91,7 +91,12 @@
         "stack": "cpp",
         "codecvt": "cpp",
         "regex": "cpp",
-        "future": "cpp"
+        "future": "cpp",
+        "__std_stream": "cpp",
+        "__verbose_abort": "cpp",
+        "charconv": "cpp",
+        "queue": "cpp",
+        "span": "cpp"
     },
     "cmake.configureOnOpen": false,
     "cmake.default.buildDirectory": "${workspaceFolder}/out/build/${buildType}/${env:OS}",

@@ -1,6 +1,6 @@
 include("${CMAKE_SOURCE_DIR}/libs/RapidJson/RapidJson.cmake")
 include_directories(${RAPIDJSON_INCLUDE_DIR})
-# include_directories("${CMAKE_CURRENT_SOURCE_DIR}/sdplib/include")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/sdplib/include")
 
 
 # ###################################################################################################
@@ -21,10 +21,10 @@ FetchContent_MakeAvailable(googletest)
 # spdlog.
 # ###################################################################################################
 
-# add_subdirectory(spdlog)
+add_subdirectory(spdlog)
 
 # ###################################################################################################
-# spdlog.
+# Custom Matrix Lib.
 # ###################################################################################################
 
 add_library(
@@ -33,14 +33,19 @@ add_library(
     Matrix/include/Matrix.hpp
 )
 
+# ###################################################################################################
+# Neural Net Lib.
+# ###################################################################################################
+
 add_library(
     NeuralNet SHARED
     NeuralNetwork/src/NeuralNetwork.cpp
     NeuralNetwork/include/NeuralNetwork.hpp
 )
 
-#file(GLOB IPComSources CONFIGURE_DEPENDS "IPCom/include/*.hpp" "IPCom/src/*.cpp")
-#add_library( IPCom SHARED ${IPComSources})
+# ###################################################################################################
+# IPCom Lib.
+# ###################################################################################################
 
 add_library(
     IPCom SHARED
@@ -68,6 +73,7 @@ add_library(
 )
 
 add_library( RapidXML INTERFACE )
+add_library( tabulate INTERFACE )
 
 #install(TARGETS NeuralNets Matrix
 #    RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/out/build/Win64"
@@ -80,5 +86,6 @@ target_include_directories(Matrix PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Matrix")
 target_include_directories(NeuralNet PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/NeuralNetwork")
 target_include_directories(IPCom PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/IPCom")
 target_include_directories(IOPorts PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/IOPorts")
-# target_include_directories(spdlog PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/sdplog/include")
+target_include_directories(spdlog PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/sdplog/include")
+target_include_directories(tabulate INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/tabulate/include")
 target_include_directories(RapidXML INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/RapidXML")

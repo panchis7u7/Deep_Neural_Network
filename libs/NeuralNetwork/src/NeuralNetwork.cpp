@@ -39,7 +39,7 @@ NeuralNetwork<T>::NeuralNetwork(unsigned inputLayerNodes, unsigned hiddenLayerNo
 	m_oBias->randomize();
 	m_HiddenOutputWeights = nullptr;
 
-	spdlog::info("Created Simple Neural Network { Input: {}, Hidden: {}, Output: {}}", inputLayerNodes, hiddenLayerNodes, outputLayerNodes);
+	spdlog::info("Created Simple Neural Network {{ Input: {0:d}, Hidden: {0:d}, Output: {0:d} }}", inputLayerNodes, hiddenLayerNodes, outputLayerNodes);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -232,7 +232,7 @@ DeepNeuralNetwork<T>::DeepNeuralNetwork(uint_fast64_t inputLayerNodes, std::vect
 	m_vBiases.push_back(new Matrix<T>(outputLayerNodes, 1));
 	m_vBiases.at(m_vBiases.size() - 1)->randomize();
 
-	spdlog::info("Created Deep Neural Network { Input Nodes: {}, Hidden Layers: {}, Output Nodes: {}}", inputLayerNodes, hiddenLayerNodes.size(), outputLayerNodes);
+	spdlog::info("Created Deep Neural Network {{ Input Nodes: {}, Hidden Layers: {}, Output Nodes: {} }}", inputLayerNodes, hiddenLayerNodes.size(), outputLayerNodes);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
