@@ -3,9 +3,9 @@
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
 
-/*################################################################################################*/
+// #################################################################################################
 // Simple Neural Network.
-/*################################################################################################*/
+// #################################################################################################
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Simple Neural Net Constructor.
@@ -23,7 +23,7 @@ NeuralNetwork<T>::NeuralNetwork(unsigned inputLayerNodes, unsigned hiddenLayerNo
 	m_ihWeights = new Matrix<T>(m_uHiddenLayerNodes, m_uInputLayerNodes);
 	m_ihWeights->setDescription("Input-Hidden Weights");
 	m_hoWeights = new Matrix<T>(m_uOutputLayerNodes, m_uHiddenLayerNodes);
-	m_ihWeights->setDescription("Hidden-Output Weights");
+	m_hoWeights->setDescription("Hidden-Output Weights");
 
 	// Initialize random values into the weights matrices.
 	/********************************************************************************/
@@ -227,6 +227,7 @@ DeepNeuralNetwork<T>::DeepNeuralNetwork(uint_fast64_t inputLayerNodes, std::vect
 	// Create nth-Hidden-Output weight Matrix.
 	/********************************************************************************/
 	this->m_hoWeights = new Matrix<T>(outputLayerNodes, hiddenLayerNodes[m_uHiddenLayerSize - 1]);
+	this->m_hoWeights->setDescription("Last Hidden layer - Output Layer");
 	this->m_hoWeights->randomize();
 
 	// Create nth-Hidden-Output bias Matrix.
