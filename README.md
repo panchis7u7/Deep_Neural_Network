@@ -52,7 +52,7 @@ The product of the input neurons and the weights can be represented by a matrix.
 
 #### Terminology
 
-$ \\
+$$
 i = \text{Number of Input layer Nodes} \\
 h_n = \text{Number of the nth Hidden layer Nodes} \\
 o = \text{Number of the nth Output layer Nodes} \\
@@ -71,7 +71,7 @@ E^{h_nh_{n+1}} = \text{nth Hidden to nth+1 Hidden layer Error} \\
 E^{h_no} = \text{nth Hidden-Output layer Error} \\
 m = \text{Individual Matrix Cell/Unit} \\
 m' = \text{Individual Matrix Cell/Unit mapped with the Activation Function} \\
-$
+$$
 
 #### Creating a Neural Network
 ```c++
@@ -102,7 +102,7 @@ this->hidden_weights_output = Matrix<T>::map(hidden_input_weights, sigmoid);
 
 Where F() is the vector function that takes f() on all elements of it’s argument and B the bias matrix.
 
-$$ V^o = F( M^{h_{}o} \times O^{ih_{0}})$$
+$$ V^o = F( M^{h_{}o} \times O^{ih_{0}}) $$
 
 #### Backpropagation
 this neural network implementation will keep track of all errors, gradients and deltas that are calculated once the backpropagation algorithm is performed. These matrices dimensions can be calculated at creation time to optimize memory allocation count and time, since allocations are quite expensive.
@@ -110,11 +110,11 @@ this neural network implementation will keep track of all errors, gradients and 
 e.g. using a 2 input layer, 2x3 hidden layers ($ h_{0} $ and $ h_{1} $) and 2 output layers: 
 
 * Weights pre-allocations
-  * $ [M^{ih_{0}}, M^{h_0h_{1}}, M^{h_{1}o}, V^o] \implies{[(h_0,i) =(3 \times 2), (h_1,h_0)=(3 \times 3), (o,h_1)=(1 \times 3), (1,o)=(1 \times 2)]} $
+  * $$ [M^{ih_{0}}, M^{h_0h_{1}}, M^{h_{1}o}, V^o] \implies{[(h_0,i) =(3 \times 2), (h_1,h_0)=(3 \times 3), (o,h_1)=(1 \times 3), (1,o)=(1 \times 2)]} $$
 * Product weight pre-allocations
-  * $ [M^{ih_{0}}()] $
+  * $$ [M^{ih_{0}}()] $4
 * Errors pre-allocations
-  * $ [E^{ih}(M^{ih_{0}}_T \times E^{h_0h_{1}}), E^{h_0h_{1}}(M^{h_0h_{1}}_T \times E^{h_1o}), E^{h_1o}(h_1o^T \times V^{o_e}), V^{o_e}] \implies{[(2 \times 2), (3 \times 2), (3 \times 2), (1 \times 2)]} $
+  * $$ [E^{ih}(M^{ih_{0}}_T \times E^{h_0h_{1}}), E^{h_0h_{1}}(M^{h_0h_{1}}_T \times E^{h_1o}), E^{h_1o}(h_1o^T \times V^{o_e}), V^{o_e}] \implies{[(2 \times 2), (3 \times 2), (3 \times 2), (1 \times 2)]} $$
 * Gradients pre-allocations =
 * Deltas pre-allocations =
 
