@@ -1,10 +1,10 @@
 #pragma once
 
-#include <iostream>
 #include <time.h>
 #include <math.h>
 #include <vector>
 #include <cstdlib>
+#include <iostream>
 #include <functional>
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
@@ -113,6 +113,17 @@ namespace voxel
 					}
 				}
 				return result;
+			}
+		}
+
+		static void element_wise_substraction(Matrix<T>* to, Matrix<T>* lhs, Matrix<T>* rhs) {
+			if ((lhs->rows != rhs->rows) || (lhs->columns != rhs->columns))
+				return;
+
+			for (uint_fast64_t i = 0; i < lhs->rows; i++) {
+				for (uint_fast64_t j = 0; j < rhs->columns; j++) {
+					to->data[i][j] = lhs->data[i][j] - rhs->data[i][j];
+				}
 			}
 		}
 

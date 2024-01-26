@@ -1,4 +1,7 @@
 #pragma once
+#include <vector>
+#include <utility>
+#include <functional>
 #include "../../platform.hpp"
 #include <include/Matrix.hpp>
 using namespace voxel;
@@ -9,11 +12,13 @@ template <class T>
 class NeuralNetwork
 {
 public:
-	LIBEXP NeuralNetwork(unsigned inputNodes, unsigned hiddenNodes, unsigned outputNodes);
+	LIBEXP NeuralNetwork(unsigned input_nodes, std::vector<unsigned>& hidden_layer_nodes, unsigned output_nodes);
 	LIBEXP virtual ~NeuralNetwork();
-	LIBEXP virtual std::vector<T> *feedForward(std::vector<T> *inputVec);
+	LIBEXP virtual std::vector<T> *feed_forward(std::vector<T> *inputVec);
 	LIBEXP virtual void train(std::vector<T> *guessesVec, std::vector<T> *answersVec);
-	LIBEXP virtual inline void printWeights();
+	LIBEXP virtual inline void print_weights();
+	LIBEXP void feed_forward_input_unit(std::vector<T>* inputs, std::function<T(T)> activation_function);
+	LIBEXP void feed_forward_hidden_unit(std::function<T(T)> activation_function);
 
 	static T sigmoid(T n)
 	{
@@ -27,13 +32,17 @@ public:
 	}
 
 protected:
-	float m_fLearningRate = 0.25f;
-	unsigned m_uInputLayerNodes;
-	unsigned m_uOutputLayerNodes;
-	Matrix<T> *m_ihWeights;
-	Matrix<T> *m_hoWeights;
-	Matrix<T> *m_hBias;
-	Matrix<T> *m_oBias;
+	float mf_learning_rate = 0.25f;
+	unsigned mu_input_layer_nodes;
+	std::vector<unsigned>* mvu_hidden_layer_nodes;
+	unsigned mu_output_layer_nodes;
+	unsigned mu_total_layers;
+
+	std::vector<std::pair<Matrix<T>*, Matrix<T>*>> m_vpm_weights_biases;
+	std::vector<Matrix<T>*> m_vm_dot_outputs;
+	std::vector<Matrix<T>*> m_vm_errors;
+	std::vector<Matrix<T>*> m_vm_gradients;
+	std::vector<Matrix<T>*> m_vm_deltas;
 
 private:
 	unsigned m_uHiddenLayerNodes;
@@ -46,9 +55,9 @@ class DeepNeuralNetwork : public NeuralNetwork<T>
 public:
 	LIBEXP DeepNeuralNetwork(uint_fast64_t inputLayerNodes, std::vector<uint_fast64_t> &hiddenLayerNodes, uint_fast64_t outputLayerNodes);
 	LIBEXP ~DeepNeuralNetwork() override;
-	LIBEXP std::vector<T> *feedForward(std::vector<T> *inputData) override;
+	LIBEXP std::vector<T>* feed_forward(std::vector<T> *inputData) override;
 	LIBEXP void train(std::vector<T> *guesses, std::vector<T> *answers) override;
-	LIBEXP void printWeights() override;
+	LIBEXP void print_weights() override;
 
 private:
 	// Number of Hidden Layers.

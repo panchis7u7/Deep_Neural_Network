@@ -48,10 +48,10 @@ int main(int argc, char* argv[])
 
 	// Populate the table with the calculated data.
 	nn_results.add_row({"Inputs", "Outputs"});
-	nn_results.add_row({"0,0", std::to_string(nn->feedForward(&inputs[0])->at(0))});
-	nn_results.add_row({"0,1", std::to_string(nn->feedForward(&inputs[1])->at(0))});
-	nn_results.add_row({"1,0", std::to_string(nn->feedForward(&inputs[2])->at(0))});
-	nn_results.add_row({"1,1", std::to_string(nn->feedForward(&inputs[3])->at(0))});
+	nn_results.add_row({"0,0", std::to_string(nn->feed_forward(&inputs[0])->at(0))});
+	nn_results.add_row({"0,1", std::to_string(nn->feed_forward(&inputs[1])->at(0))});
+	nn_results.add_row({"1,0", std::to_string(nn->feed_forward(&inputs[2])->at(0))});
+	nn_results.add_row({"1,1", std::to_string(nn->feed_forward(&inputs[3])->at(0))});
 
 	// Print the data.
 	std::cout << "\n" << nn_results << "\n" << std::endl;
@@ -70,17 +70,17 @@ int main(int argc, char* argv[])
 
 	// Populate the table with the calculated data.
 	dnn_results.add_row({"Inputs", "Outputs"});
-	dnn_results.add_row({"0,0", std::to_string(dnn->feedForward(&inputs[0])->at(0))});
-	dnn_results.add_row({"0,1", std::to_string(dnn->feedForward(&inputs[1])->at(0))});
-	dnn_results.add_row({"1,0", std::to_string(dnn->feedForward(&inputs[2])->at(0))});
-	dnn_results.add_row({"1,1", std::to_string(dnn->feedForward(&inputs[3])->at(0))});
+	dnn_results.add_row({"0,0", std::to_string(dnn->feed_forward(&inputs[0])->at(0))});
+	dnn_results.add_row({"0,1", std::to_string(dnn->feed_forward(&inputs[1])->at(0))});
+	dnn_results.add_row({"1,0", std::to_string(dnn->feed_forward(&inputs[2])->at(0))});
+	dnn_results.add_row({"1,1", std::to_string(dnn->feed_forward(&inputs[3])->at(0))});
 
 	// Print the data.
 	std::cout << "\n" << dnn_results << "\n" << std::endl;
 
 	std::vector<float> guess{1.0, 1.0};
-	std::cout << dnn->feedForward(&guess)->at(0) << std::endl;
-	dnn->printWeights();
+	std::cout << dnn->feed_forward(&guess)->at(0) << std::endl;
+	dnn->print_weights();
 
 	/*std::list<int> ports = getAvailablePorts();
 	for (std::list<int>::iterator it = ports.begin(); it != ports.end(); ++it) {

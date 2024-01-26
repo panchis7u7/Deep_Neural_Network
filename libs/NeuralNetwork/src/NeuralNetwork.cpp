@@ -1,167 +1,264 @@
 #include <include/NeuralNetwork.hpp>
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
 
 // #################################################################################################
-// Simple Neural Network.
+// Neural Network Class.
 // #################################################################################################
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Simple Neural Net Constructor.
+// Neural Net Constructor.
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-NeuralNetwork<T>::NeuralNetwork(unsigned inputLayerNodes, unsigned hiddenLayerNodes, unsigned outputLayerNodes)
-{
-	m_uInputLayerNodes = inputLayerNodes;
-	m_uHiddenLayerNodes = hiddenLayerNodes;
-	m_uOutputLayerNodes = outputLayerNodes;
+NeuralNetwork<T>::NeuralNetwork(unsigned input_nodes, std::vector<unsigned>& hidden_layer_nodes, unsigned output_nodes) {
+	this->mu_input_layer_nodes = input_nodes;
+	this->mvu_hidden_layer_nodes = hidden_layer_nodes;
+	this->mu_output_layer_nodes = output_nodes;
+	this->mu_total_layers = input_nodes + hidden_layer_nodes.size() + output_nodes;
 
-	// Create matrices based upon the number of nodes supplied.
-	/********************************************************************************/
-	m_ihWeights = new Matrix<T>(m_uHiddenLayerNodes, m_uInputLayerNodes);
-	m_ihWeights->setDescription("Input-Hidden Weights");
-	m_hoWeights = new Matrix<T>(m_uOutputLayerNodes, m_uHiddenLayerNodes);
-	m_hoWeights->setDescription("Hidden-Output Weights");
+	// ------------------------------------------------------------------------------------
+	// Create weight and bias matrices based upon the number of nodes supplied.
+	// ------------------------------------------------------------------------------------
 
+	auto input_hidden_weights = new Matrix<T>(hidden_nodes, input_nodes);
+	auto hidden_output_weights = new Matrix<T>(output_nodes, hidden_nodes);
+	auto hidden_biases = new Matrix<T>(hidden_nodes, 1);
+	auto output_biases = new Matrix<T>(output_nodes, 1);
+
+	input_hidden_weights->setDescription("Input-Hidden Weights");
+	hidden_output_weights->setDescription("Hidden-Output Weights");
+	hidden_biases->setDescription("Hidden Biases");
+	output_biases->setDescription("Output Biases");
+
+	// ------------------------------------------------------------------------------------
 	// Initialize random values into the weights matrices.
-	/********************************************************************************/
-	m_ihWeights->randomize();
-	m_hoWeights->randomize();
+	// ------------------------------------------------------------------------------------
 
-	// Create bias matrices based upon the number of nodes supplied.
-	/********************************************************************************/
-	m_hBias = new Matrix<T>(m_uHiddenLayerNodes, 1);
-	m_oBias = new Matrix<T>(m_uOutputLayerNodes, 1);
+	input_hidden_weights->randomize();
+	hidden_output_weights->randomize();
+	hidden_biases->randomize();
+	output_biases->randomize();
 
-	// Initialize random values into the bias matrices.
-	/********************************************************************************/
-	m_hBias->randomize();
-	m_oBias->randomize();
-	m_HiddenOutputWeights = nullptr;
+	// ------------------------------------------------------------------------------------
+	// Add the input - 1st-hidden layer weight matrix to the vector.
+	// ------------------------------------------------------------------------------------
 
-	spdlog::info("Created Simple Neural Network {{ Input: {0:d}, Hidden: {0:d}, Output: {0:d} }}", inputLayerNodes, hiddenLayerNodes, outputLayerNodes);
+	this->m_vpm_weights_biases.push_back(std::make_pair(input_hidden_weights, hidden_biases));
+
+	// ------------------------------------------------------------------------------------
+	// Fill nth hidden weights to the weight vector.
+	// ------------------------------------------------------------------------------------
+	
+	for (size_t i = 0; i < m_uHiddenLayerSize - 1; i++) {
+
+		// Create the matrix for the nth-nth+1 layer and its corresponding biases.
+		Matrix<T>* n_hidden_layer = new Matrix<T>(hiddenLayerNodes[i + 1], hiddenLayerNodes[i]);
+		Matrix<T>* n_hidden_layer_biases = new Matrix<T>(hiddenLayerNodes[i], 1);
+
+		n_hidden_layer->setDescription("Hidden  " + std::to_string(i) + " - " + std::to_string(i+1) + " Weights");
+		n_hidden_layer_biases->setDescription("Hidden  " + std::to_string(i) + " - " + std::to_string(i+1) + " Weights biases");
+
+		// Initialize random values into the weights matrices.
+		n_hidden_layer->randomize();
+		n_hidden_layer_biases->randomize();
+
+		// Add the nth-nth+1 layer weight matrix to the vector.
+		this->m_vpm_weights_biases.push_back(std::make_pair(n_hidden_layer, n_hidden_layer_biases));
+	}
+
+	// ------------------------------------------------------------------------------------
+	// Add the nth-hidden - output layer weight matrix to the vector.
+	// ------------------------------------------------------------------------------------
+
+	this->m_vpm_weights_biases.push_back(std::make_pair(hidden_output_weights, output_biases));
+
+	// ------------------------------------------------------------------------------------
+	// Output weight product initialization.
+	// ------------------------------------------------------------------------------------
+
+	auto input_hidden_calc_weights = new Matrix<T>(hidden_nodes, input_nodes);
+	auto hidden_output_calc_weights = new Matrix<T>(output_nodes, hidden_nodes);
+	input_hidden_calc_weights->setDescription("Input-Hidden (Matrix Product)");
+	hidden_output_calc_weights->setDescription("Hidden-Output (Matrix Product)");
+
+	this->m_lm_dot_outputs.push_back(input_hidden_calc_weights);
+	this->m_lm_dot_outputs.push_back(hidden_output_calc_weights);
+
+	// ------------------------------------------------------------------------------------
+	// Error vector matrices initialization.
+	// ------------------------------------------------------------------------------------
+	
+	// Output layer errors.
+	output_error = new Matrix<T>(1, output_nodes);
+	output_error->setDescription("Output Layer Errors");
+	this->m_vm_errors.push_back(output_error);
+
+	// Hidden layer errors.
+	for (size_t i = hidden_layer_nodes-1; i >= 0; i--) {
+		// Create the matrix with the transposed row value and error matrix column value.
+		nth_hidden_error = new Matrix<T>(hidden_layer_nodes[i], this->m_vm_errors[hidden_layer_nodes.size()+i]);
+		nth_hidden_error->setDescription("Hidden  " + std::to_string(i) + " - " + "Hidden  " + std::to_string(i+1) + " Errors");
+		this->m_vm_errors.push_back(nth_hidden_error);
+	}
+
+	// Input layer errors.
+	input_error = new Matrix<T>(input_nodes, this->m_vm_errors[1]->getColumns());
+	output_error->setDescription("Input-Hidden Layer Errors");
+	this->m_vm_errors.push_back(input_error);
+
+	// ------------------------------------------------------------------------------------
+	// Gradient vector matrices initialization.
+	// ------------------------------------------------------------------------------------
+
+	// ------------------------------------------------------------------------------------
+	// Deltas vector matrices initialization.
+	// ------------------------------------------------------------------------------------
+
+	// ------------------------------------------------------------------------------------
+	// Log the event.
+	// ------------------------------------------------------------------------------------
+
+	spdlog::debug("Created Simple Neural Network {{ Input: {0:d}, Hidden: {0:d}, Output: {0:d} }}", input_nodes, hidden_nodes, output_nodes);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Simple Neural Net Destructor.
+// Neural Net Destructor.
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-NeuralNetwork<T>::~NeuralNetwork()
-{
+NeuralNetwork<T>::~NeuralNetwork() {
 	spdlog::debug("Neural Network Destroyed.");
-	delete (m_ihWeights);
-	delete (m_hoWeights);
-	delete (m_hBias);
-	delete (m_oBias);
+	for (auto &matrix_pair : this->m_lpm_weights_biases) {
+		delete matrix_pair.first;
+		delete matrix_pair.second;
+		// delete matrix_pair;
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Simple Neural Net FeedFoward.
+// Feed-Foward calculation units.
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Input-Hidden forwarding.
+// ------------------------------------------------------------------------------------
+
+void NeuralNetwork<T>::feed_forward_input_unit(std::vector<T>* inputs, std::function<T(T)> activation_function) {
+	Matrix<T>::dot(this->m_vm_dot_outputs[0], this->m_vpm_weights_biases[0].first, inputs);
+	this->m_vm_dot_outputs[0]->add(this->m_vpm_weights_biases[i].second);
+	this->m_vm_dot_outputs[0]->map(activation_function);
+}
+
+// nHidden-n+1Hidden and nhidden-Output forwarding.
+// ------------------------------------------------------------------------------------
+
+void NeuralNetwork<T>::feed_forward_hidden_unit(std::function<T(T)> activation_function) {
+	for (int i = 1; i < this->m_lvm_weights_biases.size(); ++i) {
+		Matrix<T>::dot(this->m_vm_dot_outputs[i], this->m_vpm_weights_biases[i].first, this->m_vm_dot_outputs[i-1]);
+		this->m_vm_dot_outputs[i]->add(this->m_vpm_weights_biases[i].second);
+		this->m_vm_dot_outputs[i]->map(activation_function);
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Neural Net Feed-Foward.
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-std::vector<T> *NeuralNetwork<T>::feedForward(std::vector<T> *vInputs)
-{
+std::vector<T> *NeuralNetwork<T>::feed_forward(std::vector<T>* inputs) {
 
-	////////////////////////////////////////////////
-	// sig((W * i) + b) process for input - hidden.
-	// W -> Weights.
+	// ---------------------------------------------
+	// sig((w * i) + b) process for input - hidden.
+	// w -> Weights.
 	// i -> Inputs.
 	// b -> Bias.
-	// sig -> Sigmoid function.
-	////////////////////////////////////////////////
-	/********************************************************************************/
+	// sig() -> Sigmoid function.
+	// ---------------------------------------------
 
-	if (m_HiddenOutputWeights)
-		delete m_HiddenOutputWeights;
-	m_HiddenOutputWeights = Matrix<T>::dot(m_ihWeights, vInputs);
-	m_HiddenOutputWeights->add(m_hBias);
-	m_HiddenOutputWeights->map(NeuralNetwork<T>::sigmoid);
+	// ---------------------------------------------
+	// 		[ 1,1,1 ] x [ 2, 5 ] = [ 4, 7 ]
+	// 		            [ 1, 1 ]
+	// 		            [ 1, 1 ]
+	//
+	//  Result Dimensions = LHs Rows x RHs Columns
+	// Condition, same rows in LHs as Columns in RHs
+	// ---------------------------------------------
 
-	// sig((W * i) + b) process for hidden - output.
-	/********************************************************************************/
-	Matrix<T> *outputs = Matrix<T>::dot(m_hoWeights, m_HiddenOutputWeights);
-	outputs->add(m_oBias);
-	outputs->map(NeuralNetwork<T>::sigmoid);
+	// Push the input vector throuh all the neural layers with a matrix multiplacation.
+	this->feed_forward_input_unit(inputs, NeuralNetwork<T>::sigmoid);
 
-	// Vector conversion.
-	/********************************************************************************/
-	std::vector<T> *vOutputs = Matrix<T>::toVector(outputs);
+	// Iterate through all the weight matrices and push the input vector forward through
+	// matrix multiplacations.
+	// sig((Wi * Iv) + b)
+	// ------------------------------------------------------------------------------------
+	this->feed_forward_hidden_unit(NeuralNetwork<T>::sigmoid);
 
-	// Memory deallocation.
-	/********************************************************************************/
-	delete outputs;
+	// Return the outputs in a vector form (must deallocate).
+	// ------------------------------------------------------------------------------------
+	return Matrix<T>::toVector(outputs);
 
-	return vOutputs;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Simple Neural Net Training.
+// Neural Net Training.
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-void NeuralNetwork<T>::train(std::vector<T> *vInputs, std::vector<T> *vAnswers)
-{
+void NeuralNetwork<T>::train(std::vector<T>* inputs, std::vector<T>* answers) {
 
-	// Convert vector to a matrix type. 		TODO: Implement native vector support.
-	/********************************************************************************/
-	std::vector<T> *vOutputs = this->feedForward(vInputs);
+	// Feed Forward to calculate the errors based on the guessed values.
+	// ------------------------------------------------------------------------------------
+	std::vector<T>* outputs = this->feed_forward(inputs);
 
-	Matrix<T> mInputs(*vInputs);
-	Matrix<T> mAnswers(*vAnswers);
-	Matrix<T> mOutputs(*vOutputs);
+	// Convert the vectors to matrix types. 		TODO: Implement native vector support.
+	// ------------------------------------------------------------------------------------
 
-	// Error calculation.
-	// 1) Output Errors -> (respuestas -  salidas).
-	/********************************************************************************/
-	Matrix<T> *mOutputErrors = Matrix<T>::elementWiseSubstraction(&mAnswers, &mOutputs);
+	Matrix<T> matrix_inputs(*inputs);
+	Matrix<T> matrix_answers(*answers);
+	Matrix<T> matrix_outputs(*outputs);
+	delete outputs;
+
+	// 1) Error calculation = (expected_output - guessed_output)
+	// ------------------------------------------------------------------------------------
+	Matrix<T>::element_wise_substraction(this->m_errors, &matrix_answers, &matrix_outputs);
 
 	// 2) Hidden Layer Errors -> (Wh^T * (Output Erros)).
-	/********************************************************************************/
-	Matrix<T> *mHoErrors = Matrix<T>::transpose(m_hoWeights);
-	mHoErrors->dot(*mOutputErrors);
+	// ------------------------------------------------------------------------------------
+	Matrix<T>* ho_errors = Matrix<T>::transpose(m_hoWeights);
+	ho_errors->dot(*output_errors);
 
-	// Calculate output layer gradient (learning_rate * outputErrors * dsigmoid(salidas)).
-	/********************************************************************************/
-	Matrix<T> *mOutputGradients = Matrix<T>::map(&mOutputs, NeuralNetwork<T>::dsigmoid);
-	mOutputGradients->hadamardProduct(mOutputErrors);
-	mOutputGradients->scalarProduct(m_fLearningRate);
+	// Calculate output layer gradient (learning_rate * output_errors * dsigmoid(outputs)).
+	// ------------------------------------------------------------------------------------
+	matrix_outputs.map(NeuralNetwork<T>::dsigmoid);
+	matrix_outputs->hadamardProduct(output_errors);
+	matrix_outputs->scalarProduct(m_fLearningRate);
 
-	// Calculate hidden layer gradient (learning_rate * HiddenErrors * dsigmoid(hidden_weights_output)).
-	/********************************************************************************/
-	Matrix<T> *mHiddenGradients = Matrix<T>::map(m_HiddenOutputWeights, NeuralNetwork<T>::dsigmoid);
-	mHiddenGradients->hadamardProduct(mHoErrors);
-	mHiddenGradients->scalarProduct(m_fLearningRate);
+	// Calculate hidden layer gradient (learning_rate * hidden_errors * dsigmoid(hidden_weights_output)).
+	// ------------------------------------------------------------------------------------
+	Matrix<T> *hidden_gradients = Matrix<T>::map(m_HiddenOutputWeights, NeuralNetwork<T>::dsigmoid);
+	hidden_gradients->hadamardProduct(ho_errors);
+	hidden_gradients->scalarProduct(m_fLearningRate);
+	delete ho_errors;
 
-	// Calculte Hidden-Output deltas (learning_rate * errors * dsigmoid(salidas) * weights(T)).
-	/********************************************************************************/
-	Matrix<T> *tHiddenOutputWeights = Matrix<T>::transpose(m_HiddenOutputWeights);
-	Matrix<T> *mHoDeltas = Matrix<T>::dot(mOutputGradients, tHiddenOutputWeights);
-	m_hoWeights->add(mHoDeltas);
-	m_oBias->add(mOutputGradients);
+	// Calculte Hidden-Output deltas (learning_rate * errors * dsigmoid(outputs) * weights(T)).
+	// ------------------------------------------------------------------------------------
+	Matrix<T> *transposed_ho_weights = Matrix<T>::transpose(m_HiddenOutputWeights);
+	Matrix<T> *ho_deltas = Matrix<T>::dot(&matrix_outputs, transposed_ho_weights);
+	m_hoWeights->add(ho_deltas);
+	m_oBias->add(&matrix_outputs);
+	delete ho_deltas;
+	delete transposed_ho_weights;
 
 	// Calculate Input-Hidden deltas.
-	/********************************************************************************/
-	Matrix<T> *tInputs = Matrix<T>::transpose(&mInputs);
-	Matrix<T> *mIhDeltas = Matrix<T>::dot(mHiddenGradients, tInputs);
-	m_ihWeights->add(mIhDeltas);
-	m_hBias->add(mHiddenGradients);
-
-	// Memory deallocation.
-	/********************************************************************************/
-
-	delete vOutputs;
-	delete mOutputErrors;
-	delete mOutputGradients;
-	delete mHiddenGradients;
-	delete tHiddenOutputWeights;
-	delete tInputs;
-	delete mHoErrors;
-	delete mIhDeltas;
-	delete mHoDeltas;
+	// ------------------------------------------------------------------------------------
+	Matrix<T> *transposed_inputs = Matrix<T>::transpose(&matrix_inputs);
+	Matrix<T> *ih_deltas = Matrix<T>::dot(hidden_gradients, transposed_inputs);
+	m_ihWeights->add(ih_deltas);
+	m_hBias->add(hidden_gradients);
+	delete hidden_gradients;
+	delete transposed_inputs;
+	delete ih_deltas;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -169,8 +266,7 @@ void NeuralNetwork<T>::train(std::vector<T> *vInputs, std::vector<T> *vAnswers)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-inline void NeuralNetwork<T>::printWeights()
-{
+inline void NeuralNetwork<T>::print_weights() {
 	this->m_ihWeights->print();
 	this->m_hoWeights->print();
 }
@@ -260,7 +356,7 @@ DeepNeuralNetwork<T>::~DeepNeuralNetwork()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-std::vector<T> *DeepNeuralNetwork<T>::feedForward(std::vector<T> *inputVec)
+std::vector<T> *DeepNeuralNetwork<T>::feed_forward(std::vector<T> *inputVec)
 {
 	// Convierte el vector de entrada a una matriz
 	// Matrix<T>* entradas = Matrix<T>::fromVector(inputData);
@@ -317,7 +413,7 @@ void DeepNeuralNetwork<T>::train(std::vector<T> *vGuesses, std::vector<T> *vAnsw
 
 	// Obtain Neural Nets outputs, given a guess vector.
 	/********************************************************************************/
-	std::vector<T> *vOutputs = this->feedForward(vGuesses);
+	std::vector<T> *vOutputs = this->feed_forward(vGuesses);
 
 	// Vector to Matrix conversion for Matrix operations.
 	/********************************************************************************/
@@ -332,6 +428,8 @@ void DeepNeuralNetwork<T>::train(std::vector<T> *vGuesses, std::vector<T> *vAnsw
 
 	// Hidden-Output error calculation. (Backpropagation)
 	/********************************************************************************/
+	this->m_vpm_weights_biases[this->mu_total_layers-2];
+
 	Matrix<T> *tHOWeights = Matrix<T>::transpose(this->m_hoWeights);
 	if (m_vErrors[m_uHiddenLayerSize - 1] != nullptr)
 		delete m_vErrors[m_uHiddenLayerSize - 1];
@@ -413,7 +511,7 @@ void DeepNeuralNetwork<T>::train(std::vector<T> *vGuesses, std::vector<T> *vAnsw
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-inline void DeepNeuralNetwork<T>::printWeights() {
+inline void DeepNeuralNetwork<T>::print_weights() {
 	this->m_ihWeights->print();
 	for(auto weight : this->m_vHWeights) {
 		weight->print();
