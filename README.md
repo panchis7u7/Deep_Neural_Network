@@ -69,9 +69,9 @@ M^{h_no} = \text{Hidden-Output Matrix} \\
 O^{ih_{0}} = \text{Output from the Input-Hidden layer product} \\
 O^{h_nh_{n+1}} = \text{Output from the Hidden-Hidden+1 layer product} \\
 O^{h_no} = \text{Output from the Hidden-Output layer product} \\
-E^{ih} = \text{Input-Hiddent Matrix Error} \\
 E^{h_nh_{n+1}} = \text{nth Hidden to nth+1 Hidden layer Error} \\
 E^{h_no} = \text{nth Hidden-Output layer Error} \\
+\vec{E}^{o} = \text{Output Error Vector} \\
 m = \text{Individual Matrix Cell/Unit} \\
 m' = \text{Individual Matrix Cell/Unit mapped with the Activation Function} \\
 ```
@@ -146,7 +146,11 @@ e.g. using a 2 input layer, 2x3 hidden layers ($ h_{0} $ and $ h_{1} $) and 2 ou
 
 **Weights pre-allocations**
 ```math
-  [M^{ih_{0}}, M^{h_0h_{1}}, M^{h_{1}o}, \vec{V}^o] \implies{[(h_0,i), (h_1,h_0), (o,h_1), (1,o)]} \implies{[(3 \times 2), (3 \times 3), (2 \times 3), (2 \times 1)]}
+[M^{ih_{0}}, M^{h_0h_{1}}, M^{h_{1}o}, \vec{V}^o] \implies{[(h_0,i), (h_1,h_0), (o,h_1), (1,o)]} \implies{[(3 \times 2), (3 \times 3), (2 \times 3), (2 \times 1)]}
+```
+**Biases pre-allocations**
+```math
+[\vec{B}^{ih},\vec{B}^{h_0h_{1}},\vec{B}^{h_{1}o}] \implies [(h_0,1),(h_1,1),(o,1)] \implies [(3 \times 1), (3 \times 1), (2 \times 1)] \\
 ```
 **Weight product pre-allocations**
 ```math
@@ -159,14 +163,17 @@ e.g. using a 2 input layer, 2x3 hidden layers ($ h_{0} $ and $ h_{1} $) and 2 ou
 ```
 **Errors pre-allocations**
 ```math
-[E^{ih}(M^{ih_{0}}_T \times E^{h_0h_{1}}), E^{h_0h_{1}}(M^{h_0h_{1}}_T \times E^{h_1o}), E^{h_1o}(h_1o^T \times \vec{V}^{o_e}), \vec{V}^{o_e}] \implies{[(2 \times 2), (3 \times 2), (3 \times 2), (1 \times 2)]}
+\text{Dimensions must match with the feed-forward output products.} \\
+[E^{h_0h_{1}}=(M^{h_0h_{1}}_T \times E^{h_1o}), E^{h_1o}=(M^{h_1o}_T \times \vec{E}^{o}), \vec{E}^{o}] \implies{[(3 \times 1), (3 \times 1), (2 \times 1)]}
 ```
 **Gradients pre-allocations**
 ```math
+\text{Dimensions must match with the biases.} \\
 [\nabla O^{ih_{0}} (\vec{B}^{ih}), \nabla O^{h_0h_{1}}(\vec{B}^{h_0h_{1}}), \nabla O^{h_1o}(\vec{B}^{h_{1}o})] \implies [(3 \times 1), (3 \times 1), (2 \times 1)]
 ```
 **Deltas pre-allocations** 
 ```math
+\text{Dimensions must match with the weights.} \\
 [M^{ih_{0}}, M^{h_0h_{1}}, M^{h_{1}o}] \implies{[(h_0,i), (h_1,h_0), (o,h_1)]} \implies{[(3 \times 2), (3 \times 3), (2 \times 3)]}
 
 ```

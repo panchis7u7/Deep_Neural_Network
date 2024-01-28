@@ -38,7 +38,7 @@ protected:
 	unsigned mu_output_layer_nodes;
 	unsigned mu_total_layers;
 
-	std::vector<Matrix<T>*> m_vm_weights;
+	std::vector<std::pair<Matrix<T>*, Matrix<T>*>> m_vpm_weights_weights_t;
 	std::vector<Matrix<T>*> m_vm_product_outputs;
 	std::vector<Matrix<T>*> m_vm_biases;
 	std::vector<Matrix<T>*> m_vm_errors;

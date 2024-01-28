@@ -178,17 +178,22 @@ namespace voxel
 			}
 		}
 
-		static Matrix<T> *transpose(Matrix<T> *A)
-		{
+		static Matrix<T> *transpose(Matrix<T> *A) {
 			Matrix<T> *result = new Matrix<T>(A->columns, A->rows);
-			for (uint_fast64_t i = 0; i < A->rows; i++)
-			{
-				for (uint_fast64_t j = 0; j < A->columns; j++)
-				{
+			for (uint_fast64_t i = 0; i < A->rows; i++) {
+				for (uint_fast64_t j = 0; j < A->columns; j++) {
 					result->data[j][i] = A->data[i][j];
 				}
 			}
 			return result;
+		}
+
+		static void transpose(Matrix<T>* to, Matrix<T>* from) {
+			for (uint_fast64_t i = 0; i < from->rows; i++) {
+				for (uint_fast64_t j = 0; j < from->columns; j++) {
+					to->data[j][i] = from->data[i][j];
+				}
+			}
 		}
 
 		static Matrix<T> *map(Matrix<T> *A, T (*func)(T))
@@ -204,6 +209,14 @@ namespace voxel
 			return result;
 		}
 
+		static void map(Matrix<T>* to, Matrix<T>* from, T (*func)(T)) {
+			for (uint_fast64_t i = 0; i < from->rows; i++) {
+				for (uint_fast64_t j = 0; j < from->columns; j++) {
+					to->data[i][j] = func(from->data[i][j]);
+				}
+			}
+			
+
 		static Matrix<T>* duplicate_dimensions(Matrix<T>* from, std::string description) {
 			Matrix<T>* result = new Matrix<T>(from->rows, from->columns);
 			result->setDescription(description);
@@ -214,6 +227,12 @@ namespace voxel
 			Matrix<T>* result = new Matrix<T>(from->rows, from->columns);
 			result->setDescription(description);
 			result->randomize();
+			return result;
+		}
+
+		static Matrix<T>* duplicate_transpose(Matrix<T>* from, std::string description) {
+			Matrix<T>* result = Matrix<T>::transpose(from);
+			result->setDescription(description);
 			return result;
 		}
 

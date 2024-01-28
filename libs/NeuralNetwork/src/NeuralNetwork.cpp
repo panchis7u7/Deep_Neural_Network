@@ -19,34 +19,29 @@ NeuralNetwork<T>::NeuralNetwork(unsigned input_nodes, std::vector<unsigned>& hid
 	this->mu_total_layers = input_nodes + hidden_layer_nodes.size() + output_nodes;
 
 	// ------------------------------------------------------------------------------------
-	// Create weight matrices and randomize its initial values.
-	// We can take advantage of the loop to also create the deltas pre-allocations.
+	// Reserve vectors for the pre-allocations to prevent array re-sizing.
+	// ------------------------------------------------------------------------------------
+
+	unsigned common_size = this->mu_total_layers-1;
+	this->m_vm_weights->reserve(common_size);
+	this->m_vm_product_outputs->reserve(common_size);
+	this->m_vm_biases->reserve(common_size);
+	this->m_vm_gradients->reserve(common_size);
+	this->m_vm_deltas->reserve(common_size);
+	this->m_vm_errors->reserve(this->mu_total_layers);
+
+	// ------------------------------------------------------------------------------------
+	// Create Input-Hidden weight matrices and randomize its initial values.
 	// ------------------------------------------------------------------------------------
 
 	auto input_hidden_weights = new Matrix<T>(hidden_nodes, input_nodes);
 	input_hidden_weights->setDescription("Input-Hidden Weights");
 	input_hidden_weights->randomize();
-	this->m_vm_weights.push_back(input_hidden_weights);
+	this->m_vpm_weights_weights_t.push_back(std::make_pair(input_hidden_weights, Matrix<T>::duplicate_transpose(input_hidden_weights, "Transposed Input-Hidden Weights")));
 	this->m_vm_deltas.push_back(Matrix<T>::duplicate_dimensions(input_hidden_weights, "Input-Hidden Deltas"));
 
-	// For the nth hidden layers.
-	for (size_t i = 0; i < m_uHiddenLayerSize - 1; i++) {
-		Matrix<T>* n_hidden_layer = new Matrix<T>(hidden_layer_nodes[i + 1], hidden_layer_nodes[i]);
-		n_hidden_layer->setDescription("Hidden  " + std::to_string(i) + " - " + std::to_string(i+1) + " Weights");
-		n_hidden_layer->randomize();
-		this->m_vm_weights.push_back(n_hidden_layer);
-		this->m_vm_deltas.push_back(Matrix<T>::duplicate_dimensions(n_hidden_layer, "Hidden  " + std::to_string(i) + " - " + std::to_string(i+1) + " Weight Deltas"));
-	}
-
-	auto hidden_output_weights = new Matrix<T>(output_nodes, hidden_nodes);
-	hidden_output_weights->setDescription("Hidden-Output Weights");
-	hidden_output_weights->randomize();
-	this->m_vm_weights.push_back(hidden_output_weights);
-	this->m_vm_deltas.push_back(Matrix<T>::duplicate_dimensions(hidden_output_weights, "Hidden-Output Deltas"));
-
 	// ------------------------------------------------------------------------------------
-	// Product weight pre-allocations.
-	// We can take advantage of the loop to also create the gradients and biases pre-allocations.
+	// Input-Hidden product weight, biases and gradients pre-allocations.
 	// ------------------------------------------------------------------------------------
 
 	auto input_hidden_product_weights = new Matrix<T>(hidden_layer_nodes[0], 1);
@@ -55,14 +50,38 @@ NeuralNetwork<T>::NeuralNetwork(unsigned input_nodes, std::vector<unsigned>& hid
 	this->m_vm_biases.push_back(Matrix<T>::duplicate_randomize(input_hidden_product_weights, "Input-Hidden (Matrix Product) Biases"));
 	this->m_vm_gradients.push_back(Matrix<T>::duplicate_dimensions(input_hidden_product_weights, "Input-Hidden (Matrix Product) Gradients"));
 
+	// ------------------------------------------------------------------------------------
+	// Take advantage of the loop to also create the gradients, deltas and biases pre-allocations.
+	// ------------------------------------------------------------------------------------
+
+	// For the nth hidden layers.
 	for (size_t i = 0; i < m_uHiddenLayerSize - 1; i++) {
-		// Create the matrix for the nth-nth+1 layer and its corresponding biases.
+		Matrix<T>* n_hidden_layer = new Matrix<T>(hidden_layer_nodes[i + 1], hidden_layer_nodes[i]);
+		n_hidden_layer->setDescription("Hidden  " + std::to_string(i) + " - " + std::to_string(i+1) + " Weights");
+		n_hidden_layer->randomize();
+		this->m_vpm_weights_weights_t.push_back(std::make_pair(n_hidden_layer, Matrix<T>::duplicate_transpose(n_hidden_layer, "Transposed Hidden  " + std::to_string(i) + " - " + std::to_string(i+1) + " Weights")));
+		this->m_vm_deltas.push_back(Matrix<T>::duplicate_dimensions(n_hidden_layer, "Hidden  " + std::to_string(i) + " - " + std::to_string(i+1) + " Weight Deltas"));
+
 		Matrix<T>* n_hidden_layer_outputs = new Matrix<T>(hidden_layer_nodes[i+1], 1);
 		n_hidden_layer->setDescription("Hidden  " + std::to_string(i) + " - " + "Hidden  " + std::to_string(i+1) + " (Matrix Product)");
 		this->m_vm_product_outputs.push_back(n_hidden_layer_outputs);
 		this->m_vm_biases.push_back(Matrix<T>::duplicate_randomize(n_hidden_layer_outputs, "Hidden  " + std::to_string(i) + " - " + std::to_string(i+1) + " Weight (Matrix Product) Biases"));
 		this->m_vm_gradients.push_back(Matrix<T>::duplicate_dimensions(n_hidden_layer_outputs, "Hidden  " + std::to_string(i) + " - " + std::to_string(i+1) + " Weight (Matrix Product) Gradient"));
 	}
+
+	// ------------------------------------------------------------------------------------
+	// Create Hidden-Output weight matrices and randomize its initial values.
+	// ------------------------------------------------------------------------------------
+
+	auto hidden_output_weights = new Matrix<T>(output_nodes, hidden_nodes);
+	hidden_output_weights->setDescription("Hidden-Output Weights");
+	hidden_output_weights->randomize();
+	this->m_vpm_weights_weights_t.push_back(std::make_pair(hidden_output_weights, Matrix<T>::duplicate_transpose(hidden_output_weights, "Transposed Hidden-Output Weights")));
+	this->m_vm_deltas.push_back(Matrix<T>::duplicate_dimensions(hidden_output_weights, "Hidden-Output Deltas"));
+
+	// ------------------------------------------------------------------------------------
+	// Hidden-Output product weight, biases and gradients pre-allocations.
+	// ------------------------------------------------------------------------------------
 
 	auto hidden_output_product_weights = new Matrix<T>(output_nodes, 1);
 	hidden_output_product_weights->setDescription("Hidden-Output (Matrix Product)");
@@ -74,23 +93,21 @@ NeuralNetwork<T>::NeuralNetwork(unsigned input_nodes, std::vector<unsigned>& hid
 	// Error vector matrices initialization (see README for more explanation on the pre-allocs)
 	// ------------------------------------------------------------------------------------
 	
-	// Output layer errors.
-	output_error = new Matrix<T>(1, output_nodes);
+	auto output_error = new Matrix<T>(1, output_nodes);
 	output_error->setDescription("Output Layer Errors");
 	this->m_vm_errors.push(output_error);
 
-	// Hidden layer errors.
-	for (size_t i = hidden_layer_nodes-1; i >= 0; i--) {
+	auto hidden_output_layer_error = new Matrix<T>(this->m_vpm_weights_weights_t[this->mu_total_layers-1].first.getColumns(), output_nodes);
+	hidden_output_layer_error->setDescription("Hidden-Output Layer Errors");
+	this->m_vm_errors.push(hidden_output_layer_error);
+
+	for (size_t i = hidden_layer_nodes-1; i > 0; i--) {
 		// Create the matrix with the transposed row value and error matrix column value.
-		nth_hidden_error = new Matrix<T>(hidden_layer_nodes[i], this->m_vm_errors[hidden_layer_nodes.size()+i]);
+		auto nth_hidden_error = new Matrix<T>(this->m_vpm_weights_weights_t[i].first.getColumns(), this->m_vm_errors[i-1].getColumns());
 		nth_hidden_error->setDescription("Hidden  " + std::to_string(i) + " - " + "Hidden  " + std::to_string(i+1) + " Errors");
 		this->m_vm_errors.push(nth_hidden_error);
 	}
 
-	// Input layer errors.
-	input_error = new Matrix<T>(input_nodes, this->m_vm_errors[1]->getColumns());
-	output_error->setDescription("Input-Hidden Layer Errors");
-	this->m_vm_errors.push(input_error);
 
 	// ------------------------------------------------------------------------------------
 	// Log the event.
@@ -195,10 +212,48 @@ void NeuralNetwork<T>::train(std::vector<T>* inputs, std::vector<T>* answers) {
 	Matrix<T> matrix_outputs(*outputs);
 	delete outputs;
 
+	// Useful variables.
+	// ------------------------------------------------------------------------------------
+
+	unsigned hidden_layers = this->mvu_hidden_layer_nodes.size();
+	unsigned indexable_total_layers = this->mu_total_layers-1;
+	unsigned weigth_matrices_count = indexable_total_layers-1;
+
 	// 1) Error calculation = (expected_output - guessed_output)
 	// ------------------------------------------------------------------------------------
-	Matrix<T>::element_wise_substraction(this->m_errors, &matrix_answers, &matrix_outputs);
+	Matrix<T>::element_wise_substraction(this->m_vm_errors[indexable_total_layers], &matrix_answers, &matrix_outputs);
 
+	// Error Calculations.
+	// ------------------------------------------------------------------------------------
+
+	Matrix<T>::transpose(this->m_vpm_weights_weights_t[hidden_layers].second, this->m_vpm_weights_weights_t[hidden_layers].first);
+	Matrix<T>::dot(this->m_vm_errors[indexable_total_layers-1], this->m_vpm_weights_weights_t[hidden_layers].second, this->m_vm_errors[indexable_total_layers]);
+
+	for (size_t i = hidden_layers - 1; i > 0; i--) {
+		Matrix<T>::transpose(this->m_vpm_weights_weights_t[i-1].second, this->m_vpm_weights_weights_t[i-1].first);
+		Matrix<T>::dot(this->m_vm_errors[i], this->m_vpm_weights_weights_t[i-1].second, this->m_vm_errors[i+1]);
+	}
+
+	// Gradient calculation. (learning_rate * outputErrors * dsigmoid(outputs))
+	// ------------------------------------------------------------------------------------
+
+	Matrix<T>::map(this->m_vm_gradients[weigth_matrices_count], &matrix_outputs, NeuralNetwork<T>::dsigmoid);
+	this->m_vm_gradients[weigth_matrices_count]->hadamardProduct(this->m_vm_errors[indexable_total_layers]);
+	this->m_vm_gradients[weigth_matrices_count]->scalarProduct(this->mf_learning_rate);
+	this->m_vm_biases[weigth_matrices_count]->add(this->m_vm_gradients[weigth_matrices_count]);
+
+	for (size_t i = hidden_layers - 1; i > 0; i--) {
+		Matrix<T>::map(this->m_vm_gradients[i], this->m_vm_product_outputs[i], NeuralNetwork<T>::dsigmoid);
+		this->m_vm_gradients[i]->hadamardProduct(this->m_vm_errors[i+1]);
+		this->m_vm_gradients[i]->scalarProduct(this->mf_learning_rate);
+		this->m_vm_biases[i]->add(this->m_vm_gradients[i]);
+	}
+
+	Matrix<T>::map(this->m_vm_gradients[1], this->m_vm_product_outputs[], NeuralNetwork<T>::dsigmoid);
+	ihGradient->hadamardProduct(m_vErrors[]);
+	ihGradient->scalarProduct(this->m_fLearningRate);
+	m_vBiases.at(0)->add(ihGradient);
+	
 	// 2) Hidden Layer Errors -> (Wh^T * (Output Erros)).
 	// ------------------------------------------------------------------------------------
 	Matrix<T>* ho_errors = Matrix<T>::transpose(m_hoWeights);
