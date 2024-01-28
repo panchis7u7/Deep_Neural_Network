@@ -204,6 +204,19 @@ namespace voxel
 			return result;
 		}
 
+		static Matrix<T>* duplicate_dimensions(Matrix<T>* from, std::string description) {
+			Matrix<T>* result = new Matrix<T>(from->rows, from->columns);
+			result->setDescription(description);
+			return result;
+		}
+
+		static Matrix<T>* duplicate_randomize(Matrix<T>* from, std::string description) {
+			Matrix<T>* result = new Matrix<T>(from->rows, from->columns);
+			result->setDescription(description);
+			result->randomize();
+			return result;
+		}
+
 		///////////////////////////////////////////////////////////////////////////////////////////
 		// Operator Overloading.
 		///////////////////////////////////////////////////////////////////////////////////////////

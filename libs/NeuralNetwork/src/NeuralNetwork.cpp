@@ -19,102 +19,78 @@ NeuralNetwork<T>::NeuralNetwork(unsigned input_nodes, std::vector<unsigned>& hid
 	this->mu_total_layers = input_nodes + hidden_layer_nodes.size() + output_nodes;
 
 	// ------------------------------------------------------------------------------------
-	// Create weight and bias matrices based upon the number of nodes supplied.
+	// Create weight matrices and randomize its initial values.
+	// We can take advantage of the loop to also create the deltas pre-allocations.
 	// ------------------------------------------------------------------------------------
 
 	auto input_hidden_weights = new Matrix<T>(hidden_nodes, input_nodes);
-	auto hidden_output_weights = new Matrix<T>(output_nodes, hidden_nodes);
-	auto hidden_biases = new Matrix<T>(hidden_nodes, 1);
-	auto output_biases = new Matrix<T>(output_nodes, 1);
-
 	input_hidden_weights->setDescription("Input-Hidden Weights");
-	hidden_output_weights->setDescription("Hidden-Output Weights");
-	hidden_biases->setDescription("Hidden Biases");
-	output_biases->setDescription("Output Biases");
-
-	// ------------------------------------------------------------------------------------
-	// Initialize random values into the weights matrices.
-	// ------------------------------------------------------------------------------------
-
 	input_hidden_weights->randomize();
-	hidden_output_weights->randomize();
-	hidden_biases->randomize();
-	output_biases->randomize();
+	this->m_vm_weights.push_back(input_hidden_weights);
+	this->m_vm_deltas.push_back(Matrix<T>::duplicate_dimensions(input_hidden_weights, "Input-Hidden Deltas"));
 
-	// ------------------------------------------------------------------------------------
-	// Add the input - 1st-hidden layer weight matrix to the vector.
-	// ------------------------------------------------------------------------------------
-
-	this->m_vpm_weights_biases.push_back(std::make_pair(input_hidden_weights, hidden_biases));
-
-	// ------------------------------------------------------------------------------------
-	// Fill nth hidden weights to the weight vector.
-	// ------------------------------------------------------------------------------------
-	
+	// For the nth hidden layers.
 	for (size_t i = 0; i < m_uHiddenLayerSize - 1; i++) {
-
-		// Create the matrix for the nth-nth+1 layer and its corresponding biases.
-		Matrix<T>* n_hidden_layer = new Matrix<T>(hiddenLayerNodes[i + 1], hiddenLayerNodes[i]);
-		Matrix<T>* n_hidden_layer_biases = new Matrix<T>(hiddenLayerNodes[i], 1);
-
+		Matrix<T>* n_hidden_layer = new Matrix<T>(hidden_layer_nodes[i + 1], hidden_layer_nodes[i]);
 		n_hidden_layer->setDescription("Hidden  " + std::to_string(i) + " - " + std::to_string(i+1) + " Weights");
-		n_hidden_layer_biases->setDescription("Hidden  " + std::to_string(i) + " - " + std::to_string(i+1) + " Weights biases");
-
-		// Initialize random values into the weights matrices.
 		n_hidden_layer->randomize();
-		n_hidden_layer_biases->randomize();
-
-		// Add the nth-nth+1 layer weight matrix to the vector.
-		this->m_vpm_weights_biases.push_back(std::make_pair(n_hidden_layer, n_hidden_layer_biases));
+		this->m_vm_weights.push_back(n_hidden_layer);
+		this->m_vm_deltas.push_back(Matrix<T>::duplicate_dimensions(n_hidden_layer, "Hidden  " + std::to_string(i) + " - " + std::to_string(i+1) + " Weight Deltas"));
 	}
 
-	// ------------------------------------------------------------------------------------
-	// Add the nth-hidden - output layer weight matrix to the vector.
-	// ------------------------------------------------------------------------------------
-
-	this->m_vpm_weights_biases.push_back(std::make_pair(hidden_output_weights, output_biases));
-
-	// ------------------------------------------------------------------------------------
-	// Output weight product initialization.
-	// ------------------------------------------------------------------------------------
-
-	auto input_hidden_calc_weights = new Matrix<T>(hidden_nodes, input_nodes);
-	auto hidden_output_calc_weights = new Matrix<T>(output_nodes, hidden_nodes);
-	input_hidden_calc_weights->setDescription("Input-Hidden (Matrix Product)");
-	hidden_output_calc_weights->setDescription("Hidden-Output (Matrix Product)");
-
-	this->m_lm_dot_outputs.push_back(input_hidden_calc_weights);
-	this->m_lm_dot_outputs.push_back(hidden_output_calc_weights);
+	auto hidden_output_weights = new Matrix<T>(output_nodes, hidden_nodes);
+	hidden_output_weights->setDescription("Hidden-Output Weights");
+	hidden_output_weights->randomize();
+	this->m_vm_weights.push_back(hidden_output_weights);
+	this->m_vm_deltas.push_back(Matrix<T>::duplicate_dimensions(hidden_output_weights, "Hidden-Output Deltas"));
 
 	// ------------------------------------------------------------------------------------
-	// Error vector matrices initialization.
+	// Product weight pre-allocations.
+	// We can take advantage of the loop to also create the gradients and biases pre-allocations.
+	// ------------------------------------------------------------------------------------
+
+	auto input_hidden_product_weights = new Matrix<T>(hidden_layer_nodes[0], 1);
+	input_hidden_product_weights->setDescription("Input-Hidden (Matrix Product)");
+	this->m_vm_product_outputs.push_back(input_hidden_product_weights);
+	this->m_vm_biases.push_back(Matrix<T>::duplicate_randomize(input_hidden_product_weights, "Input-Hidden (Matrix Product) Biases"));
+	this->m_vm_gradients.push_back(Matrix<T>::duplicate_dimensions(input_hidden_product_weights, "Input-Hidden (Matrix Product) Gradients"));
+
+	for (size_t i = 0; i < m_uHiddenLayerSize - 1; i++) {
+		// Create the matrix for the nth-nth+1 layer and its corresponding biases.
+		Matrix<T>* n_hidden_layer_outputs = new Matrix<T>(hidden_layer_nodes[i+1], 1);
+		n_hidden_layer->setDescription("Hidden  " + std::to_string(i) + " - " + "Hidden  " + std::to_string(i+1) + " (Matrix Product)");
+		this->m_vm_product_outputs.push_back(n_hidden_layer_outputs);
+		this->m_vm_biases.push_back(Matrix<T>::duplicate_randomize(n_hidden_layer_outputs, "Hidden  " + std::to_string(i) + " - " + std::to_string(i+1) + " Weight (Matrix Product) Biases"));
+		this->m_vm_gradients.push_back(Matrix<T>::duplicate_dimensions(n_hidden_layer_outputs, "Hidden  " + std::to_string(i) + " - " + std::to_string(i+1) + " Weight (Matrix Product) Gradient"));
+	}
+
+	auto hidden_output_product_weights = new Matrix<T>(output_nodes, 1);
+	hidden_output_product_weights->setDescription("Hidden-Output (Matrix Product)");
+	this->m_vm_dot_outputs.push_back(hidden_output_product_weights);
+	this->m_vm_biases.push_back(Matrix<T>::duplicate_randomize(hidden_output_product_weights, "Hidden-Output (Matrix Product) Biases"));
+	this->m_vm_gradients.push_back(Matrix<T>::duplicate_dimensions(hidden_output_product_weights, "Hidden-Output (Matrix Product) Gradients"));
+
+	// ------------------------------------------------------------------------------------
+	// Error vector matrices initialization (see README for more explanation on the pre-allocs)
 	// ------------------------------------------------------------------------------------
 	
 	// Output layer errors.
 	output_error = new Matrix<T>(1, output_nodes);
 	output_error->setDescription("Output Layer Errors");
-	this->m_vm_errors.push_back(output_error);
+	this->m_vm_errors.push(output_error);
 
 	// Hidden layer errors.
 	for (size_t i = hidden_layer_nodes-1; i >= 0; i--) {
 		// Create the matrix with the transposed row value and error matrix column value.
 		nth_hidden_error = new Matrix<T>(hidden_layer_nodes[i], this->m_vm_errors[hidden_layer_nodes.size()+i]);
 		nth_hidden_error->setDescription("Hidden  " + std::to_string(i) + " - " + "Hidden  " + std::to_string(i+1) + " Errors");
-		this->m_vm_errors.push_back(nth_hidden_error);
+		this->m_vm_errors.push(nth_hidden_error);
 	}
 
 	// Input layer errors.
 	input_error = new Matrix<T>(input_nodes, this->m_vm_errors[1]->getColumns());
 	output_error->setDescription("Input-Hidden Layer Errors");
-	this->m_vm_errors.push_back(input_error);
-
-	// ------------------------------------------------------------------------------------
-	// Gradient vector matrices initialization.
-	// ------------------------------------------------------------------------------------
-
-	// ------------------------------------------------------------------------------------
-	// Deltas vector matrices initialization.
-	// ------------------------------------------------------------------------------------
+	this->m_vm_errors.push(input_error);
 
 	// ------------------------------------------------------------------------------------
 	// Log the event.

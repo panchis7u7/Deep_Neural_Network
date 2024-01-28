@@ -56,10 +56,13 @@ The product of the input neurons and the weights can be represented by a matrix.
 i = \text{Number of Input layer Nodes} \\
 h_n = \text{Number of the nth Hidden layer Nodes} \\
 o = \text{Number of the nth Output layer Nodes} \\
-V^i = \text{Input Vector} \\
-V^o = \text{Output Vector} \\
-V^b = \text{Bias Vector} \\
-V^{o_e} \text{Output Error Vector} \\
+\vec{V}^i = \text{Input Vector} \\
+\vec{V}^o = \text{Output Vector} \\
+\vec{V}^{b_{n}} = \text{Bias Vector} \\
+\vec{B}^{ih} = \text{Input-Hidden Product Bias Vector}  \\
+\vec{B}^{h_nh_{n+1}} = \text{Hidden-Hidden+1 Product Bias Vector}  \\
+\vec{B}^{h_{n}o} = \text{Hidden-Ouptut Product Bias Vector}  \\
+Z^{o_e} \text{Output Error Vector} \\
 M^{ih_{0}} = \text{Input-Hidden Matrix} \\
 M^{h_nh_{n+1}} = \text{nth Hidden to nth+1 Hidden Layer Matrix} \\
 M^{h_no} = \text{Hidden-Output Matrix} \\
@@ -85,19 +88,19 @@ Which will populate the weight matrices for the input-hidden layer ($ M^{ih_{0}}
 The feed-forward algorithm produces an output vector given an input vector, being the calculated value for each cell in the resulting matrix (cell)
 
 ```math
-m_{j} = M^{ih_{0}}_{ji} + \sum_{i=0}^{I-1}V^i_{j} M^{ih_{0}}_{ij}
+m_{j} = M^{ih_{0}}_{ji} + \sum_{i=0}^{I-1}\vec{V}^i_{j} M^{ih_{0}}_{ij}
 ```
 
 Mapping the cell with an activation function which ends up calculating the hidden node value ($ h_j $)
 
 ```math
-m' = f(m_{j}) $$
+m' = f(m_{j})
 ```
 
 Which by using matrix-vector multiplication, the value of all hidden nodes h can be calculated in a single operation (e.g. simple neural network with one hidden layer)
 
 ```math
-O^{ih_{0}} = F(M^{ih_{0}} \times V^i + V^b) $$
+O^{ih_{0}} = F(M^{ih_{0}} \times \vec{V}^i + \vec{V}^b)
 ```
 
 ```c++
@@ -109,28 +112,64 @@ this->hidden_weights_output = Matrix<T>::map(hidden_input_weights, sigmoid);
 Where F() is the vector function that takes f() on all elements of it’s argument and B the bias matrix.
 
 ```math
-V^o = F( M^{h_{}o} \times O^{ih_{0}})
+\vec{V}^o = F( M^{h_{}o} \times O^{ih_{0}})
 ```
 
 #### Backpropagation
+
+###### Cost Function
+A cost function is a measure of how well a machine learning model performs by quantifying the difference between predicted and actual outputs. Its goal is to be minimized by adjusting the model’s parameters during training.
+
+‘Loss’ in Machine learning helps us understand the difference between the predicted value & the actual value.
+
+* Loss function: Used when we refer to the error for a single training example.
+* Cost function: Used to refer to an average of the loss functions over an entire training dataset.
+
+There are many cost functions in machine learning and each has its use cases depending on whether it is a regression problem or classification problem.
+
+* Regression cost Function
+  * Mean Error (ME)
+  * Mean Squared Error (MSE)
+  * Mean Absolute Error (MAE)
+* Binary Classification cost Functions
+* Multi-class Classification cost Functions
+
+Recovered from: https://www.analyticsvidhya.com/blog/2021/02/cost-function-is-no-rocket-science/
+
+###### Gradient Descent
+For the following network 
+
+#### Optimizations
 this neural network implementation will keep track of all errors, gradients and deltas that are calculated once the backpropagation algorithm is performed. These matrices dimensions can be calculated at creation time to optimize memory allocation count and time, since allocations are quite expensive.
 
 e.g. using a 2 input layer, 2x3 hidden layers ($ h_{0} $ and $ h_{1} $) and 2 output layers: 
 
-* Weights pre-allocations
+**Weights pre-allocations**
 ```math
-  [M^{ih_{0}}, M^{h_0h_{1}}, M^{h_{1}o}, V^o] \implies{[(h_0,i) =(3 \times 2), (h_1,h_0)=(3 \times 3), (o,h_1)=(1 \times 3), (1,o)=(1 \times 2)]}
+  [M^{ih_{0}}, M^{h_0h_{1}}, M^{h_{1}o}, \vec{V}^o] \implies{[(h_0,i), (h_1,h_0), (o,h_1), (1,o)]} \implies{[(3 \times 2), (3 \times 3), (2 \times 3), (2 \times 1)]}
 ```
-* Product weight pre-allocations
+**Weight product pre-allocations**
 ```math
-[M^{ih_{0}}()]
+[O^{ih_{0}}(M^{ih_{0}} \times \vec{V}^i),O^{h_0h_{1}}(M^{h_0h_{1}} \times O^{ih_{0}}),O^{h_1o}(M^{h_{1}o} \times O^{h_0h_{1}})] \implies [(3 \times 1), (3 \times 1), (2 \times 1)] \\
+
+\text{1st operation} = (3 \times 2) \times (2 \times 1) = (3 \times 1) \\
+\text{2nd operation} = (3 \times 3) \times (3 \times 1) = (3 \times 1) \\
+\text{3rd operation} = (2 \times 3) \times (3 \times 1) = (2 \times 1) \\
+
 ```
-* Errors pre-allocations
+**Errors pre-allocations**
 ```math
-[E^{ih}(M^{ih_{0}}_T \times E^{h_0h_{1}}), E^{h_0h_{1}}(M^{h_0h_{1}}_T \times E^{h_1o}), E^{h_1o}(h_1o^T \times V^{o_e}), V^{o_e}] \implies{[(2 \times 2), (3 \times 2), (3 \times 2), (1 \times 2)]}
+[E^{ih}(M^{ih_{0}}_T \times E^{h_0h_{1}}), E^{h_0h_{1}}(M^{h_0h_{1}}_T \times E^{h_1o}), E^{h_1o}(h_1o^T \times \vec{V}^{o_e}), \vec{V}^{o_e}] \implies{[(2 \times 2), (3 \times 2), (3 \times 2), (1 \times 2)]}
 ```
-* Gradients pre-allocations =
-* Deltas pre-allocations =
+**Gradients pre-allocations**
+```math
+[\nabla O^{ih_{0}} (\vec{B}^{ih}), \nabla O^{h_0h_{1}}(\vec{B}^{h_0h_{1}}), \nabla O^{h_1o}(\vec{B}^{h_{1}o})] \implies [(3 \times 1), (3 \times 1), (2 \times 1)]
+```
+**Deltas pre-allocations** 
+```math
+[M^{ih_{0}}, M^{h_0h_{1}}, M^{h_{1}o}] \implies{[(h_0,i), (h_1,h_0), (o,h_1)]} \implies{[(3 \times 2), (3 \times 3), (2 \times 3)]}
+
+```
 
 #### TODOS:
 
