@@ -142,17 +142,18 @@ For the following network
 #### Optimizations
 this neural network implementation will keep track of all errors, gradients and deltas that are calculated once the backpropagation algorithm is performed. These matrices dimensions can be calculated at creation time to optimize memory allocation count and time, since allocations are quite expensive.
 
-e.g. using a 2 input layer, 2x3 hidden layers ($ h_{0} $ and $ h_{1} $) and 2 output layers: 
+##### Pre-Allocations
+e.g. using a 2 input layer, 2x3 hidden layers ($ h_{0} $ and $ h_{1} $) and 2 output layers:
 
-**Weights pre-allocations**
+###### Weights
 ```math
-[M^{ih_{0}}, M^{h_0h_{1}}, M^{h_{1}o}, \vec{V}^o] \implies{[(h_0,i), (h_1,h_0), (o,h_1), (1,o)]} \implies{[(3 \times 2), (3 \times 3), (2 \times 3), (2 \times 1)]}
+[M^{ih_{0}}, M^{h_0h_{1}}, M^{h_{1}o}] \implies [(h_0,i), (h_1,h_0), (o,h_1)]  \implies [(3 \times 2), (3 \times 3), (2 \times 3)]
 ```
-**Biases pre-allocations**
+###### Biases
 ```math
 [\vec{B}^{ih},\vec{B}^{h_0h_{1}},\vec{B}^{h_{1}o}] \implies [(h_0,1),(h_1,1),(o,1)] \implies [(3 \times 1), (3 \times 1), (2 \times 1)] \\
 ```
-**Weight product pre-allocations**
+###### Feed-Forward Weight Product Outputs
 ```math
 [O^{ih_{0}}(M^{ih_{0}} \times \vec{V}^i),O^{h_0h_{1}}(M^{h_0h_{1}} \times O^{ih_{0}}),O^{h_1o}(M^{h_{1}o} \times O^{h_0h_{1}})] \implies [(3 \times 1), (3 \times 1), (2 \times 1)] \\
 
@@ -161,17 +162,17 @@ e.g. using a 2 input layer, 2x3 hidden layers ($ h_{0} $ and $ h_{1} $) and 2 ou
 \text{3rd operation} = (2 \times 3) \times (3 \times 1) = (2 \times 1) \\
 
 ```
-**Errors pre-allocations**
+###### Errors
 ```math
 \text{Dimensions must match with the feed-forward output products.} \\
 [E^{h_0h_{1}}=(M^{h_0h_{1}}_T \times E^{h_1o}), E^{h_1o}=(M^{h_1o}_T \times \vec{E}^{o}), \vec{E}^{o}] \implies{[(3 \times 1), (3 \times 1), (2 \times 1)]}
 ```
-**Gradients pre-allocations**
+###### Gradients
 ```math
 \text{Dimensions must match with the biases.} \\
 [\nabla O^{ih_{0}} (\vec{B}^{ih}), \nabla O^{h_0h_{1}}(\vec{B}^{h_0h_{1}}), \nabla O^{h_1o}(\vec{B}^{h_{1}o})] \implies [(3 \times 1), (3 \times 1), (2 \times 1)]
 ```
-**Deltas pre-allocations** 
+###### Deltas
 ```math
 \text{Dimensions must match with the weights.} \\
 [M^{ih_{0}}, M^{h_0h_{1}}, M^{h_{1}o}] \implies{[(h_0,i), (h_1,h_0), (o,h_1)]} \implies{[(3 \times 2), (3 \times 3), (2 \times 3)]}
