@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 
 	srand(static_cast<unsigned>(time(0)));
 	
-	NeuralNetwork<float> *nn = new NeuralNetwork<float>(2, 4, 1);
+	NeuralNetwork<float> *nn = new NeuralNetwork<float>(2, {3,3}, 1);
 	std::vector<float> inputs[] = {{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0}};
 	std::vector<float> expected_outputs[] = {{0}, {1}, {1}, {0}};
 	
@@ -55,32 +55,6 @@ int main(int argc, char* argv[])
 
 	// Print the data.
 	std::cout << "\n" << nn_results << "\n" << std::endl;
-
-	// Create a Deep Neural Network.
-	std::vector<uint_fast64_t> f1 = {4, 4};
-	DeepNeuralNetwork<float> *dnn = new DeepNeuralNetwork<float>(2, f1, 1);
-	
-	for (size_t i = 0; i < 150000; i++) {
-		int index = rand() % 4;
-		dnn->train(&inputs[index], &expected_outputs[index]);
-	}
-
-	// Create a table for outputting dnn training results.
-	tabulate::Table dnn_results;
-
-	// Populate the table with the calculated data.
-	dnn_results.add_row({"Inputs", "Outputs"});
-	dnn_results.add_row({"0,0", std::to_string(dnn->feed_forward(&inputs[0])->at(0))});
-	dnn_results.add_row({"0,1", std::to_string(dnn->feed_forward(&inputs[1])->at(0))});
-	dnn_results.add_row({"1,0", std::to_string(dnn->feed_forward(&inputs[2])->at(0))});
-	dnn_results.add_row({"1,1", std::to_string(dnn->feed_forward(&inputs[3])->at(0))});
-
-	// Print the data.
-	std::cout << "\n" << dnn_results << "\n" << std::endl;
-
-	std::vector<float> guess{1.0, 1.0};
-	std::cout << dnn->feed_forward(&guess)->at(0) << std::endl;
-	dnn->print_weights();
 
 	/*std::list<int> ports = getAvailablePorts();
 	for (std::list<int>::iterator it = ports.begin(); it != ports.end(); ++it) {
