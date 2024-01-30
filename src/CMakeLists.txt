@@ -1,5 +1,6 @@
-add_dependencies(IPCom RapidXML RapidJson spdlog::spdlog)
 add_dependencies(NeuralNet Matrix spdlog::spdlog tabulate)
+add_dependencies(Matrix tabulate spdlog::spdlog)
+add_dependencies(IPCom RapidXML RapidJson spdlog::spdlog)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -68,11 +69,11 @@ target_link_libraries(Matrix PRIVATE tabulate spdlog::spdlog)
 target_link_libraries(NeuralNet PRIVATE Matrix spdlog::spdlog)
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     ${QT_WIDGETS} 
-    NeuralNet 
-    Matrix 
-    IPCom
-    IOPorts
-    RapidXML
     spdlog::spdlog
+    NeuralNet
     tabulate
+    RapidXML
+    IOPorts
+    Matrix
+    IPCom
 )

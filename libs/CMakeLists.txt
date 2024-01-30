@@ -1,5 +1,5 @@
-include("${CMAKE_SOURCE_DIR}/libs/RapidJson/RapidJson.cmake")
 include_directories(${RAPIDJSON_INCLUDE_DIR})
+include("${CMAKE_SOURCE_DIR}/libs/RapidJson/RapidJson.cmake")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/sdplib/include")
 
 

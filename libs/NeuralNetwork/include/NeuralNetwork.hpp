@@ -1,7 +1,6 @@
 #pragma once
 #include <vector>
 #include <utility>
-#include <functional>
 #include "../../platform.hpp"
 #include <include/Matrix.hpp>
 using namespace voxel;
@@ -9,23 +8,20 @@ using namespace voxel;
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
 
 template <class T>
-class NeuralNetwork
-{
+class NeuralNetwork {
 public:
 	LIBEXP NeuralNetwork(unsigned input_nodes, std::vector<unsigned>& hidden_layer_nodes, unsigned output_nodes);
 	LIBEXP virtual ~NeuralNetwork();
 	LIBEXP virtual std::vector<T> *feed_forward(std::vector<T> *inputVec);
 	LIBEXP virtual void train(std::vector<T> *guessesVec, std::vector<T> *answersVec);
 	LIBEXP virtual inline void print_weights();
-	LIBEXP void feed_forward_input_unit(std::vector<T>* inputs, std::function<T(T)> activation_function);
-	LIBEXP void feed_forward_hidden_unit(std::function<T(T)> activation_function);
 
 	static T sigmoid(T n) {
 		return (1 / (1 + pow(2.718281828, (-n))));
 	}
 
 	static T dsigmoid(T y) {
-		// return sigmoid(n) * (1 - sigmoid(n));
+		// sigmoid(n) * (1 - sigmoid(n));
 		return (y * (1 - y));
 	}
 
@@ -42,8 +38,4 @@ protected:
 	std::vector<Matrix<T>*> m_vm_errors;
 	std::vector<Matrix<T>*> m_vm_gradients;
 	std::vector<Matrix<T>*> m_vm_deltas;
-
-private:
-	unsigned m_uHiddenLayerNodes;
-	Matrix<T> *m_HiddenOutputWeights;
 };

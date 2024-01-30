@@ -25,12 +25,12 @@ int main(int argc, char* argv[])
 
     spdlog::set_pattern("[%H:%M:%S %z] [%n] [%^---%L---%$] [thread %t] %v");
 	spdlog::set_level(spdlog::level::debug); // Set global log level to debug
+	srand(static_cast<unsigned>(time(0)));
 
 	// Create a Simple Neural Network.
-
-	srand(static_cast<unsigned>(time(0)));
+	std::vector<unsigned> hidden_layers_nodes = {3,3};
 	
-	NeuralNetwork<float> *nn = new NeuralNetwork<float>(2, {3,3}, 1);
+	NeuralNetwork<float> *nn = new NeuralNetwork<float>(2, hidden_layers_nodes, 1);
 	std::vector<float> inputs[] = {{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0}};
 	std::vector<float> expected_outputs[] = {{0}, {1}, {1}, {0}};
 	
