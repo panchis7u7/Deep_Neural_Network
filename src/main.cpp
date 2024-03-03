@@ -1,18 +1,24 @@
 #include <iostream>
 #include <vector>
 #include <list>
-#include <QApplication>
 #include <include/NeuralNetwork.hpp>
 #include <include/rapidxml.hpp>
 #include <include/SerialPort.hpp>
-#include <include/MainWindow.hpp>
+#ifdef QT_IS_AVAILABLE
+	#include <QApplication>
+	#include <include/MainWindow.hpp>
+#endif
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
 
 int main(int argc, char* argv[])
 {
-	QApplication app(argc, argv);
-	MainWindow w;
-	w.show();
+	#ifdef QT_IS_AVAILABLE
+		QApplication app(argc, argv);
+		MainWindow w;
+		w.show();
+		return app.exec();
+	#endif
+
 	srand(static_cast<unsigned>(time(0)));
 	NeuralNetwork<float> *nn = new NeuralNetwork<float>(2, 4, 1);
 	std::vector<float> entradas[] = {{0.0, 0.0},
@@ -62,5 +68,5 @@ int main(int argc, char* argv[])
 
     //std::cout << "El mensaje es : "  << mensaje << std::endl;
 
-	return app.exec();
+	return 0;
 }

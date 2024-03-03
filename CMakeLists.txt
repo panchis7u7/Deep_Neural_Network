@@ -12,6 +12,9 @@ enable_testing()
 #Compilador a usar.
 message ("${CMAKE_CXX_COMPILER}")
 
+# Validation for GUI based compilation.
+option(GUI_COMPILE "Use for GUI compilation" OFF) #OFF by default
+
 if (CMAKE_BUILD_TYPE EQUAL "Debug")
     message(STATUS "Debug mode")
 	set(CMAKE_C_FLAGS_DEBUG "-g -DDEBUG")
