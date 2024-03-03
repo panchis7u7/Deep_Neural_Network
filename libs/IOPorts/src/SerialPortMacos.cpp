@@ -1,7 +1,7 @@
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 // Serial Port MacOS Implementation class.
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-#include "../platform.hpp"
+#include "Platform.hpp"
 
 #ifdef APPLE_PLATFORM
 // Custom library import.
@@ -9,10 +9,10 @@
 #include <iostream>
 #include <vector>
 #include <spdlog/spdlog.h>
-#include <include/SerialPort.hpp>   
-#include <include/BufferQueue.hpp>
-#include <include/SharedMessage.hpp>
-#include <include/PortUtils.hpp>
+#include <SerialPort.hpp>   
+#include <BufferQueue.hpp>
+#include <SharedMessage.hpp>
+#include <PortUtils.hpp>
 // Serial configuration.
 #include <sys/ioctl.h>
 #include <sys/syscall.h>

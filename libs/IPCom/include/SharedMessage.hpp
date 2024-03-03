@@ -1,8 +1,8 @@
 #pragma once
 
-#include <include/SpinLock.hpp>
-#include <include/Semaphore.hpp>
-#include "../platform.hpp"
+#include <SpinLock.hpp>
+#include <Semaphore.hpp>
+#include "Platform.hpp"
 
 using Lock = SpinLock;
 

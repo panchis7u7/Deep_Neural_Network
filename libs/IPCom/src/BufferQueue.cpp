@@ -1,6 +1,6 @@
-#include <include/BufferQueue.hpp>
-#include <include/LockGuard.hpp>
-#include <include/SharedMessage.hpp>
+#include <BufferQueue.hpp>
+#include <LockGuard.hpp>
+#include <SharedMessage.hpp>
 #include "spdlog/spdlog.h"
 #include <sys/mman.h>
 #include <assert.h>

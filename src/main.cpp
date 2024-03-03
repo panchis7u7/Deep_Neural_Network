@@ -3,16 +3,15 @@
 #include <iostream>
 #include <spdlog/spdlog.h>
 #include <tabulate/table.hpp>
-#include <include/rapidxml.hpp>
-#include <include/SerialPort.hpp>
-#include <include/NeuralNetwork.hpp>
+#include <rapidxml.hpp>
+#include <SerialPort.hpp>
+#include <Neurotic.hpp>
 #ifdef QT_IS_AVAILABLE
 	#include <QApplication>
 	#include <include/MainWindow.hpp>
 #endif
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
 	// Execute if QT is defined.
 	#ifdef QT_IS_AVAILABLE
 		QApplication app(argc, argv);
@@ -21,10 +20,7 @@ int main(int argc, char* argv[])
 		return app.exec();
 	#endif
 
-	// Configure the logging library.
-
-    spdlog::set_pattern("[%H:%M:%S %z] [%n] [%^---%L---%$] [thread %t] %v");
-	spdlog::set_level(spdlog::level::debug); // Set global log level to debug
+	// Truly random number generation.
 	srand(static_cast<unsigned>(time(0)));
 
 	// Create a Simple Neural Network.
@@ -38,6 +34,9 @@ int main(int argc, char* argv[])
 		int index = rand() % 4;
 		nn->train(&inputs[index], &expected_outputs[index]);
 	}
+
+	nn->set_debugging(true);
+	nn->print_weights();
 
 	// Create a table for outputting training results.
 	tabulate::Table nn_results;

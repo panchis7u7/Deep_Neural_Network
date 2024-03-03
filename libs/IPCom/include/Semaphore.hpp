@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../platform.hpp"
+#include "Platform.hpp"
 #include <atomic>
 
 LIBEXP class Semaphore {

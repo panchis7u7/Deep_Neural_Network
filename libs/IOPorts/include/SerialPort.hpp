@@ -1,9 +1,10 @@
 #pragma once
 
-#include <include/AbstractPort.hpp>
-#include <include/PortUtils.hpp>
+#include <AbstractPort.hpp>
+#include <PortUtils.hpp>
 #include <memory>
-#include <../platform.hpp>
+#include "Platform.hpp"
+
 class SerialPort : public AbstractPort {
 public:
     LIBEXP SerialPort(std::string comPort, PortUtils::Serial::BaudRate baudRate = PortUtils::Serial::DEFAULT_COM_RATE);

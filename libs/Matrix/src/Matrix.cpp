@@ -1,4 +1,4 @@
-#include <include/Matrix.hpp>
+#include <Matrix.hpp>
 #include <tabulate/table.hpp>
 #include <spdlog/spdlog.h>
 
@@ -97,6 +97,30 @@ void Matrix<T>::print() {
 	} else {
 		std::cout << matrix_table << std::endl;
 	}
+}
+
+template <typename T>
+tabulate::Table* Matrix<T>::get_pretty_table() {
+	tabulate::Table* matrix_table = new tabulate::Table();
+	std::vector<variant<std::string, const char *, string_view, tabulate::Table>> row(this->columns);
+	std::fill(row.begin(), row.end(), "");
+
+	for (uint_fast64_t i = 0; i < this->rows; i++) {
+		for (uint_fast64_t j = 0; j < this->columns; j++) {
+			row.at(j) = std::to_string(this->data[i][j]);
+		}
+		matrix_table->add_row((const std::vector<variant<std::string, const char *, string_view, tabulate::Table>>)row);
+	}
+
+	if(!this->description.empty()) {
+		tabulate::Table* title_table = new tabulate::Table();
+		title_table->add_row(tabulate::Table::Row_t{this->description});
+		title_table->column(0).format().font_align(tabulate::FontAlign::center);
+		title_table->add_row(tabulate::Table::Row_t{*matrix_table});
+		std::cout << title_table << std::endl;
+		return title_table;
+	}
+	return matrix_table;
 }
 
 // ------------------------------------------------------------------------------------

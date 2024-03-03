@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../platform.hpp"
+#include "Platform.hpp"
 #include <string>
 #include <fcntl.h>
 #include <unistd.h>

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <include/SharedMessage.hpp>
-#include <include/SharedBufferQueue.hpp>
+#include <SharedMessage.hpp>
+#include <SharedBufferQueue.hpp>
 
 LIBEXP class BufferQueue {
 public:

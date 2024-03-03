@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <functional>
+#include <tabulate/table.hpp>
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
 namespace voxel {
@@ -50,6 +51,7 @@ namespace voxel {
 		// #########################################################################################
 
 		void print();
+		tabulate::Table* get_pretty_table();
 		void set_description(std::string);
 		void add(T addend);
 		void add(Matrix<T>* addend);

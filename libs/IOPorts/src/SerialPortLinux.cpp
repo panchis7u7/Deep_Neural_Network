@@ -2,17 +2,17 @@
 // Serial Port Linux Implementation class.
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-#include "../platform.hpp"
+#include "Platform.hpp"
 
 #ifdef LINUX_PLATFORM
 
 #include <filesystem>
 #include <cstring>
-#include <include/SerialPort.hpp>
-#include <include/SharedAlloc.hpp>
-#include <include/BufferQueue.hpp>
-#include <include/SharedMessage.hpp>
-#include <include/PortUtils.hpp>
+#include <SerialPort.hpp>
+#include <SharedAlloc.hpp>
+#include <BufferQueue.hpp>
+#include <SharedMessage.hpp>
+#include <PortUtils.hpp>
 // Serial configuration.
 #include <signal.h>
 #include <termios.h>

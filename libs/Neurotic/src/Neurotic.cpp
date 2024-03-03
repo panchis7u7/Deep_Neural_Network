@@ -1,4 +1,4 @@
-#include <include/NeuralNetwork.hpp>
+#include <Neurotic.hpp>
 #include <spdlog/spdlog.h>
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
@@ -13,6 +13,10 @@
 
 template <typename T>
 NeuralNetwork<T>::NeuralNetwork(unsigned input_nodes, std::vector<unsigned>& hidden_layer_nodes, unsigned output_nodes) {
+
+	// Initialize logging format.
+	spdlog::set_pattern("[%H:%M:%S %z] [%n] [%^---%L---%$] [thread %t] %v");
+
 	this->mu_input_layer_nodes = input_nodes;
 	this->mvu_hidden_layer_nodes = &hidden_layer_nodes;
 	this->mu_output_layer_nodes = output_nodes;
@@ -155,7 +159,7 @@ std::vector<T> *NeuralNetwork<T>::feed_forward(std::vector<T>* inputs) {
 	// sig((Wi * Iv) + b)
 	// ------------------------------------------------------------------------------------
 
-	for (int i = 1; i < this->mu_total_layers -1; ++i) {
+	for (int i = 1; i < this->mu_total_layers-2; ++i) {
 		Matrix<T>::multiply(this->m_vm_product_outputs[i].first, this->m_vpm_weights_weights_t[i].first, this->m_vm_product_outputs[i-1].first);
 		this->m_vm_product_outputs[i].first->add(this->m_vm_biases[i]);
 		this->m_vm_product_outputs[i].first->map(NeuralNetwork<T>::sigmoid);
@@ -207,7 +211,7 @@ void NeuralNetwork<T>::train(std::vector<T>* inputs, std::vector<T>* answers) {
 	// Hidden Layers Error Calculations.
 	// ------------------------------------------------------------------------------------
 
-	for(size_t i = weigth_matrices_count; i > 0; i--) {
+	for(size_t i = weigth_matrices_count-1; i > 0; i--) {
 		Matrix<T>::transpose(this->m_vpm_weights_weights_t[i].second, this->m_vpm_weights_weights_t[i].first);
 		Matrix<T>::multiply(this->m_vm_errors[i-1], this->m_vpm_weights_weights_t[i].second, this->m_vm_errors[i]);
 	}
@@ -216,7 +220,7 @@ void NeuralNetwork<T>::train(std::vector<T>* inputs, std::vector<T>* answers) {
 	// Gradient calculation. (learning_rate * output_errors * dsigmoid(outputs))
 	// ------------------------------------------------------------------------------------
 
-	for (size_t i = weigth_matrices_count; i >= 0; i--) {
+	for (size_t i = weigth_matrices_count-1; i > 0; i--) {
 		Matrix<T>::map(this->m_vm_gradients[i], this->m_vm_product_outputs[i].first, NeuralNetwork<T>::dsigmoid);
 		this->m_vm_gradients[i]->hadamard_product(this->m_vm_errors[i]);
 		this->m_vm_gradients[i]->scalar_product(this->mf_learning_rate);
@@ -227,7 +231,7 @@ void NeuralNetwork<T>::train(std::vector<T>* inputs, std::vector<T>* answers) {
 	// Deltas calculation.
 	// ------------------------------------------------------------------------------------
 
-	for (size_t i = weigth_matrices_count; i > 0; i--) {
+	for (size_t i = weigth_matrices_count-1; i > 0; i--) {
 		Matrix<T>::transpose(this->m_vm_product_outputs[i-1].second, this->m_vm_product_outputs[i-1].first);
 		Matrix<T>::multiply(this->m_vm_deltas[i], this->m_vm_gradients[i], this->m_vm_product_outputs[i-1].second);
 		this->m_vpm_weights_weights_t[i].first->add(this->m_vm_deltas[i]);
@@ -248,6 +252,49 @@ inline void NeuralNetwork<T>::print_weights() {
 	for(auto& weight : this->m_vpm_weights_weights_t) {
 		weight.first->print();
 	}
+
+	if (this->mb_debugging) {
+
+		tabulate::Table title_table;
+		tabulate::Table weight_table;
+		tabulate::Table::Row_t row;
+		title_table.add_row(tabulate::Table::Row_t{"Inter-Layer weight matrices"});
+		for(unsigned i = 0; i < this->mu_total_layers-2; i++) {
+			spdlog::debug("Inter-Layer weight matrices.");
+			row.push_back(*(this->m_vpm_weights_weights_t[i].first->get_pretty_table()));
+		}
+		title_table.add_row(row);
+		std::cout << title_table << std::endl;
+
+
+		for(unsigned i = 0; i < this->mu_total_layers-2; i++) {
+			spdlog::debug("Inter-Layer matrices.");
+
+			this->m_vpm_weights_weights_t[i].first->print();
+			this->m_vpm_weights_weights_t[i].second->print();
+			this->m_vm_product_outputs[i].first->print();
+			this->m_vm_product_outputs[i].second->print();
+			this->m_vm_biases[i]->print();
+
+			spdlog::debug("Back-Propagation related matrices.");
+
+			this->m_vm_errors[i]->print();
+			this->m_vm_gradients[i]->print();
+			this->m_vm_deltas[i]->print();
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Debugging mode tinkering.
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+inline void NeuralNetwork<T>::set_debugging(bool status) {
+	this->mb_debugging = status;
+
+	// Enable debugging or informational logging accordingly.
+	spdlog::set_level(status ? spdlog::level::debug : spdlog::level::info);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

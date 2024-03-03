@@ -2,10 +2,10 @@
 
 #include <memory>
 #include <atomic>
-#include <include/SharedAlloc.hpp>
-#include <include/SharedMessage.hpp>
-#include <include/SpinLock.hpp>
-#include "../platform.hpp"
+#include <SharedAlloc.hpp>
+#include <SharedMessage.hpp>
+#include <SpinLock.hpp>
+#include "Platform.hpp"
 
 using Lock = SpinLock;
 

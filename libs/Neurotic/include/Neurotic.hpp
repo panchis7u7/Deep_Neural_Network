@@ -1,8 +1,10 @@
 #pragma once
+
 #include <vector>
 #include <utility>
-#include "../../platform.hpp"
-#include <include/Matrix.hpp>
+#include "Platform.hpp"
+#include <Matrix.hpp>
+
 using namespace voxel;
 
 // Uploaded by panchis7u7 ~ Sebastian Madrigal
@@ -15,6 +17,7 @@ public:
 	LIBEXP virtual std::vector<T> *feed_forward(std::vector<T> *inputVec);
 	LIBEXP virtual void train(std::vector<T> *guessesVec, std::vector<T> *answersVec);
 	LIBEXP virtual inline void print_weights();
+	LIBEXP inline void set_debugging(bool status);
 
 	static T sigmoid(T n) {
 		return (1 / (1 + pow(2.718281828, (-n))));
@@ -31,6 +34,7 @@ protected:
 	std::vector<unsigned>* mvu_hidden_layer_nodes;
 	unsigned mu_output_layer_nodes;
 	unsigned mu_total_layers;
+	bool mb_debugging;
 
 	std::vector<std::pair<Matrix<T>*, Matrix<T>*>> m_vpm_weights_weights_t;
 	std::vector<std::pair<Matrix<T>*, Matrix<T>*>> m_vm_product_outputs;

@@ -1,5 +1,6 @@
 #pragma once
-#include "../platform.hpp"
+
+#include "Platform.hpp"
 #include <string>
 #include <vector>
 #include <filesystem>

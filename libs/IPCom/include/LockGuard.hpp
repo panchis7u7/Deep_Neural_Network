@@ -1,6 +1,7 @@
 #pragma once
 
-#include <include/SpinLock.hpp>
+#include <SpinLock.hpp>
+
 using Lock = SpinLock;
 
 LIBEXP class LockGuard {

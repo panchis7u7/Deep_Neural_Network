@@ -4,10 +4,10 @@
 
 #if defined(WIN32) || defined(_WIN64) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 
-#include <include/AbstractPort.hpp>
-#include <include/SerialBuffer.hpp>
-#include <include/PortUtils.hpp>
-#include <include/SerialPort.hpp>
+#include <AbstractPort.hpp>
+#include <SerialBuffer.hpp>
+#include <PortUtils.hpp>
+#include <SerialPort.hpp>
 #include <iostream>
 #include <assert.h>
 #include <process.h>
