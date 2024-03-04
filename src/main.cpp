@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
 		nn->train(&inputs[index], &expected_outputs[index]);
 	}
 
-	nn->set_debugging(true);
+	nn->set_debugging(false);
 	nn->print_weights();
 
 	// Create a table for outputting training results.
