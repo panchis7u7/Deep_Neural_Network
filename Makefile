@@ -46,5 +46,7 @@ runMac:
 rrtMac:
 	out/build/Release/MacOS/NeuralNetwork_test
 cleanMac:
-	rm -r out/build/Release/MacOS/
-	rm -r out/build/Debug/MacOS/
+	find out/build/Release/MacOS/ -type d -exec rm -rf {} +
+	find out/build/Release/MacOS/ ! -name '.gitignore' -type f -exec rm -f {} +
+	find out/build/Debug/MacOS/ -type d -exec rm -rf {} +
+	find out/build/Debug/MacOS/ ! -name '.gitignore' -type f -exec rm -rf {} +

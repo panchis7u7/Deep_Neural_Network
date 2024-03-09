@@ -52,7 +52,6 @@ NeuralNetwork<T>::NeuralNetwork(unsigned input_nodes, std::vector<unsigned>& hid
 	input_hidden_product_weights->set_description("Input-Hidden (Matrix Product)");
 	this->m_vm_product_outputs.push_back(std::make_pair(input_hidden_product_weights, Matrix<T>::duplicate_transpose(input_hidden_product_weights, "Transposed Input-Hidden (Matrix Product) Weights")));
 	this->m_vm_biases.push_back(Matrix<T>::duplicate_randomize(input_hidden_product_weights, "Input-Hidden (Matrix Product) Biases"));
-	this->m_vm_errors.push_back(Matrix<T>::duplicate_dimensions(input_hidden_product_weights, "Input-Hidden Errors"));
 	this->m_vm_gradients.push_back(Matrix<T>::duplicate_dimensions(input_hidden_product_weights, "Input-Hidden (Matrix Product) Gradients"));
 
 	// ------------------------------------------------------------------------------------
@@ -70,7 +69,6 @@ NeuralNetwork<T>::NeuralNetwork(unsigned input_nodes, std::vector<unsigned>& hid
 		Matrix<T>* n_hidden_layer_outputs = new Matrix<T>(hidden_layer_nodes[i+1], 1);
 		n_hidden_layer_outputs->set_description("Hidden  [" + std::to_string(i) + "] - Hidden [" + std::to_string(i+1) + "] (Matrix Product)");
 		this->m_vm_product_outputs.push_back(std::make_pair(n_hidden_layer_outputs, Matrix<T>::duplicate_transpose(n_hidden_layer_outputs, "Transposed Hidden [" + std::to_string(i) + "] - Hidden [" + std::to_string(i+1) + "] Weight (Matrix Product)")));
-		this->m_vm_errors.push_back(Matrix<T>::duplicate_dimensions(n_hidden_layer_outputs, "Hidden  [" + std::to_string(i) + "] - Hidden [" + std::to_string(i+1) + "] Weight (Matrix Product) Errors"));
 		this->m_vm_biases.push_back(Matrix<T>::duplicate_randomize(n_hidden_layer_outputs, "Hidden  [" + std::to_string(i) + "] - Hidden [" + std::to_string(i+1) + "] Weight (Matrix Product) Biases"));
 		this->m_vm_gradients.push_back(Matrix<T>::duplicate_dimensions(n_hidden_layer_outputs, "Hidden  [" + std::to_string(i) + "] - Hidden [" + std::to_string(i+1) + "] Weight (Matrix Product) Gradient"));
 	}
@@ -93,8 +91,23 @@ NeuralNetwork<T>::NeuralNetwork(unsigned input_nodes, std::vector<unsigned>& hid
 	hidden_output_product_weights->set_description("Hidden-Output (Matrix Product)");
 	this->m_vm_product_outputs.push_back(std::make_pair(hidden_output_product_weights, Matrix<T>::duplicate_transpose(hidden_output_product_weights,"Transposed Input-Hidden (Matrix Product) Weights")));
 	this->m_vm_biases.push_back(Matrix<T>::duplicate_randomize(hidden_output_product_weights, "Hidden-Output (Matrix Product) Biases"));
-	this->m_vm_errors.push_back(Matrix<T>::duplicate_randomize(hidden_output_product_weights, "Hidden-Output Errors"));
 	this->m_vm_gradients.push_back(Matrix<T>::duplicate_dimensions(hidden_output_product_weights, "Hidden-Output (Matrix Product) Gradients"));
+
+	// ------------------------------------------------------------------------------------
+	// Error matrices pre-allocations.
+	// ------------------------------------------------------------------------------------
+
+	// Hidden-Output Errors.
+	auto hidden_output_error = new Matrix<T>(this->m_vpm_weights_weights_t[mu_total_layers-2].second->get_rows(), hidden_output_product_weights->get_columns());
+	hidden_output_error->set_description("Hidden-Output Errors");
+	this->m_vm_errors.insert(this->m_vm_errors.begin(), hidden_output_error);
+
+
+	for(int i = mu_total_layers-3; i >= 0; --i) {
+		auto nth_hidden_errors = new Matrix<T>(this->m_vpm_weights_weights_t[i].second->get_rows(), this->m_vm_errors[0]->get_columns());
+		nth_hidden_errors->set_description(i!=0 ? "Hidden  [" + std::to_string(i-1) + "] - Hidden [" + std::to_string(i) + "] Weight (Matrix Product) Errors" : "Input-Hidden Errors");
+		this->m_vm_errors.insert(this->m_vm_errors.begin(), nth_hidden_errors);
+	}
 
 	// ------------------------------------------------------------------------------------
 	// Log the event.
@@ -213,7 +226,7 @@ void NeuralNetwork<T>::train(std::vector<T>* inputs, std::vector<T>* answers) {
 	
 	for(int i = indexable_hidden_weights; i >= 0; --i) {
 		Matrix<T>::transpose(this->m_vpm_weights_weights_t[i].second, this->m_vpm_weights_weights_t[i].first);
-		Matrix<T>::multiply(this->m_vm_errors[i], this->m_vpm_weights_weights_t[i+1].second, this->m_vm_errors[i+1]);
+		Matrix<T>::multiply(this->m_vm_errors[i], this->m_vpm_weights_weights_t[i].second, this->m_vm_errors[i+1]);
 	}
 
 	// ------------------------------------------------------------------------------------
